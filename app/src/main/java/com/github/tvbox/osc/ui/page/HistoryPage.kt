@@ -108,13 +108,7 @@ fun HistoryPage(
 
     AppTopBarScaffold(
         topBarStartInset = navStart,
-        titleContent = {
-            Text(
-                text = stringResource(R.string.history_title),
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-        },
+        titleContent = {},
         actions = {
             AnimatedContent(
                 targetState = editMode && !incognito && items.isNotEmpty(),

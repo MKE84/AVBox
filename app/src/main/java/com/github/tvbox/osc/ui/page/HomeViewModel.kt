@@ -99,7 +99,6 @@ class HomeViewModel : ViewModel() {
     var activeSortId: String? = null
         private set
 
-    var defaultLiveLaunched = false
     var lastBackTime = 0L
 
     val actionMessages = MutableSharedFlow<String>(

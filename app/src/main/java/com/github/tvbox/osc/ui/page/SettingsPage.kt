@@ -43,7 +43,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.tvbox.osc.R
 import com.github.tvbox.osc.ui.components.AVBoxAlertDialog
 import com.github.tvbox.osc.ui.components.AppTopBarScaffold
-import com.github.tvbox.osc.ui.components.AVBoxBottomSheet
 import com.github.tvbox.osc.ui.components.LocalSheetDismissThen
 import com.github.tvbox.osc.ui.components.SettingsCard
 import com.github.tvbox.osc.ui.components.SettingsCardPosition
@@ -54,7 +53,6 @@ import com.github.tvbox.osc.ui.activity.ConfigManageActivity
 import com.github.tvbox.osc.ui.activity.PlaySettingsActivity
 import com.github.tvbox.osc.ui.activity.PreferenceSettingsActivity
 import com.github.tvbox.osc.ui.activity.ThemeSettingsActivity
-import com.github.tvbox.osc.util.DefaultConfig
 import com.github.tvbox.osc.util.FileUtils
 import com.github.tvbox.osc.util.HistoryHelper
 import com.github.tvbox.osc.util.HistoryMerge
@@ -84,11 +82,9 @@ data class SettingsState(
     val incognito: Boolean,
     val gestureControlDisabled: Boolean,
     val navAnimationDisabled: Boolean,
-    val navLiveHidden: Boolean,
     val collectColumns: Int,
     val danmuOpen: Boolean,
     val danmuApi: String,
-    val defaultLoadLive: Boolean,
     val historyNumIndex: Int,
     val historyMerge: Boolean,
     val searchThreads: Int,
@@ -175,11 +171,9 @@ class SettingsViewModel : ViewModel() {
         incognito = KV.get(HawkConfig.INCOGNITO, false),
         gestureControlDisabled = KV.get(HawkConfig.GESTURE_CONTROL_DISABLED, false),
         navAnimationDisabled = KV.get(HawkConfig.NAV_ANIMATION_DISABLED, false),
-        navLiveHidden = KV.get(HawkConfig.NAV_LIVE_HIDDEN, false),
         collectColumns = KV.get(HawkConfig.COLLECT_COLUMNS, 3),
         danmuOpen = KV.get(HawkConfig.DANMU_OPEN, true),
         danmuApi = KV.get(HawkConfig.DANMU_API, ""),
-        defaultLoadLive = KV.get(HawkConfig.DEFAULT_LOAD_LIVE, false),
         historyNumIndex = KV.get(HawkConfig.HISTORY_NUM, 0),
         historyMerge = HistoryMerge.isEnabled(),
         searchThreads = KV.get(HawkConfig.SEARCH_THREADS, HawkConfig.SEARCH_THREADS_DEFAULT),
@@ -215,8 +209,6 @@ fun SettingsPage(
         vm.refreshCacheSizeIfStale()
     }
     val context = LocalContext.current
-    val versionName = remember { DefaultConfig.getAppVersionName(context) ?: "" }
-    var aboutSheet by remember { mutableStateOf(false) }
 
     val listState = rememberScrollState()
 
@@ -239,8 +231,6 @@ fun SettingsPage(
             verticalArrangement = Arrangement.spacedBy(28.dp),
         ) {
             Spacer(Modifier.height(topPad - 20.dp))
-
-            AppInfoHeaderCard(versionName = versionName)
 
             SettingsGroup(title = null) {
                 SettingsCard(SettingsCardPosition.FIRST) {
@@ -279,20 +269,6 @@ fun SettingsPage(
 
             SettingsGroup(title = null) {
                 SettingsCard(SettingsCardPosition.FIRST) {
-                    SettingsOptionMenuRow(
-                        title = stringResource(R.string.settings_default_page),
-                        subtitle = stringResource(R.string.settings_default_page_subtitle),
-                        iconRes = R.drawable.ic_settings_start,
-                        valueText = stringResource(if (state.defaultLoadLive) R.string.common_live else R.string.common_vod),
-                        options = listOf(
-                            stringResource(R.string.common_vod),
-                            stringResource(R.string.common_live),
-                        ),
-                        selectedIndex = if (state.defaultLoadLive) 1 else 0,
-                        onSelect = { idx -> vm.put(HawkConfig.DEFAULT_LOAD_LIVE, idx == 1) },
-                    )
-                }
-                SettingsCard(SettingsCardPosition.MIDDLE) {
                     SettingsOptionMenuRow(
                         title = stringResource(R.string.settings_history_limit),
                         subtitle = stringResource(R.string.settings_history_limit_subtitle),
@@ -360,37 +336,9 @@ fun SettingsPage(
         }
     }
 
-    if (aboutSheet) {
-        AboutSheet(versionName = versionName, onDismiss = { aboutSheet = false })
-    }
-
 }
 
-@Composable
-private fun AboutSheet(versionName: String, onDismiss: () -> Unit) {
-    AVBoxBottomSheet(onDismissRequest = onDismiss, title = stringResource(R.string.settings_about)) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 16.dp),
-        ) {
-            if (versionName.isNotEmpty()) {
-                Text(
-                    text = stringResource(R.string.settings_about_version, versionName),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Text(
-                text = stringResource(R.string.settings_about_disclaimer),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(top = 8.dp),
-            )
-        }
-    }
-}
+
 
 private const val GITHUB_REPO_URL = "https://github.com/XiaochangXu/AVBox"
 

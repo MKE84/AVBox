@@ -3,7 +3,6 @@
 package com.github.tvbox.osc.ui.page
 
 import android.app.Activity
-import android.content.Intent
 import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -67,7 +66,6 @@ import androidx.lifecycle.compose.rememberLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.tvbox.osc.R
 import com.github.tvbox.osc.server.ControlManager
-import com.github.tvbox.osc.ui.activity.LivePlayActivity
 import com.github.tvbox.osc.ui.components.AVBoxAlertDialog
 import com.github.tvbox.osc.ui.components.LocalGlassPauseRecording
 import com.github.tvbox.osc.ui.components.LocalSheetDismissThen
@@ -81,7 +79,6 @@ import com.github.tvbox.osc.ui.navbar.NavAxis
 import com.github.tvbox.osc.ui.navbar.NavMetrics
 import com.github.tvbox.osc.ui.theme.LiquidGlassState
 import com.github.tvbox.osc.util.AppManager
-import com.github.tvbox.osc.util.BootGuard
 import com.github.tvbox.osc.util.HawkConfig
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
@@ -138,24 +135,7 @@ private fun MainContent() {
     val pagerState = rememberPagerState(pageCount = { AppTab.entries.size })
     val homeViewModel: HomeViewModel = viewModel()
 
-    LaunchedEffect(Unit) {
-        if (homeViewModel.defaultLiveLaunched) return@LaunchedEffect
-        AppBootstrap.state.collect { boot ->
-            if (boot is AppBootstrap.Boot.Ready && !homeViewModel.defaultLiveLaunched) {
-                homeViewModel.defaultLiveLaunched = true
-                // 上次启动被看门狗自动停用的源(有值才提示);默认源不会自动跳到别的源,需用户去配置管理重选
-                val disabled = BootGuard.takeSafeDisabledNotice()
-                if (disabled.isNotEmpty()) {
-                    Toast.makeText(context, context.getString(R.string.toast_source_auto_disabled), Toast.LENGTH_LONG).show()
-                }
-                if (KV.get(HawkConfig.DEFAULT_LOAD_LIVE, false)) {
-                    context.startActivity(Intent(context, LivePlayActivity::class.java))
-                }
-            }
-        }
-    }
-
-    // 冷启动后第一次切页,pager 滚动 → 页面测量 → 玻璃源层重录整条链路都是首次执行(ART 现场编译);
+    // 冷启动后第一次切页, pager 滚动 → 页面测量 → 玻璃源层重录整条链路都是首次执行(ART 现场编译);
     // 先滚 1px 再滚回来走完同一套路径,位移不到 0.3dp,肉眼看不到
     LaunchedEffect(pagerState) {
         withFrameNanos { }
@@ -180,14 +160,6 @@ private fun MainContent() {
     var navAnimationEnabled by remember {
         mutableStateOf(!KV.get(HawkConfig.NAV_ANIMATION_DISABLED, false))
     }
-    var navLiveHidden by remember {
-        mutableStateOf(KV.get(HawkConfig.NAV_LIVE_HIDDEN, false))
-    }
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-        navAnimationEnabled = !KV.get(HawkConfig.NAV_ANIMATION_DISABLED, false)
-        navLiveHidden = KV.get(HawkConfig.NAV_LIVE_HIDDEN, false)
-    }
-
     val selectTab: (Int) -> Unit = { index ->
         scope.launch {
             if (navAnimationEnabled) {
@@ -248,12 +220,6 @@ private fun MainContent() {
     val glassTabs = remember(tabLabels) {
         AppTab.entries.mapIndexed { index, tab -> GlassTabItem(tab.icon, tabLabels[index]) }
     }
-    // 直播是动作不是目的地:插在导航栏正中,进独立 Activity,不占 pager 页也不参与选中态
-    val liveActionLabel = stringResource(R.string.common_live)
-    val liveActionItem = remember(liveActionLabel) { GlassTabItem(R.drawable.ic_live_fab, liveActionLabel) }
-    val openLive: () -> Unit = remember(context) {
-        { context.startActivity(Intent(context, LivePlayActivity::class.java)) }
-    }
     CompositionLocalProvider(
         LocalSheetHost provides sheetHost,
         LocalGlassPauseRecording provides pauseGlassRecording,
@@ -267,22 +233,8 @@ private fun MainContent() {
                         ShortNavigationBar(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                         ) {
-                            AppTab.entries.forEachIndexed { index, tab ->
-                                // 动作槽插在中间,外观就是普通未选中项(不占 pager 页,故恒 selected = false)
-                                if (!navLiveHidden && index == NavMetrics.actionSlotFor(AppTab.entries.size)) {
-                                    ShortNavigationBarItem(
-                                        selected = false,
-                                        onClick = openLive,
-                                        icon = {
-                                            Icon(
-                                                painterResource(liveActionItem.iconRes),
-                                                contentDescription = null,
-                                            )
-                                        },
-                                        label = null,
-                                    )
-                                }
-                                val selected = pagerState.targetPage == index
+                            AppTab.entries.forEach { tab ->
+                                val selected = pagerState.targetPage == tab.ordinal
                                 ShortNavigationBarItem(
                                     selected = selected,
                                     onClick = { selectTab(index) },
@@ -402,8 +354,6 @@ private fun MainContent() {
                         tabs = glassTabs,
                         config = liquidGlassConfig,
                         interactive = { true },
-                        actionItem = if (navLiveHidden) null else liveActionItem,
-                        onActionClick = openLive,
                     )
                 }
             }
@@ -416,27 +366,14 @@ private fun MainContent() {
                         .windowInsetsPadding(WindowInsets.systemBars),
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 ) {
-                    AppTab.entries.forEachIndexed { index, tab ->
-                        if (!navLiveHidden && index == NavMetrics.actionSlotFor(AppTab.entries.size)) {
-                            NavigationRailItem(
-                                selected = false,
-                                onClick = openLive,
-                                icon = {
-                                    Icon(
-                                        painterResource(liveActionItem.iconRes),
-                                        contentDescription = null,
-                                    )
-                                },
-                                label = { Text(liveActionItem.label) },
-                            )
-                        }
+                    AppTab.entries.forEach { tab ->
                         NavigationRailItem(
-                            selected = pagerState.currentPage == index,
-                            onClick = { selectTab(index) },
+                            selected = pagerState.currentPage == tab.ordinal,
+                            onClick = { selectTab(tab.ordinal) },
                             icon = {
                                 Icon(
                                     painterResource(tab.icon),
-                                    contentDescription = stringResource(tab.labelRes),
+                                    contentDescription = null,
                                 )
                             },
                             label = { Text(stringResource(tab.labelRes)) },

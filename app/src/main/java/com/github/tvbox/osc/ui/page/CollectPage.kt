@@ -219,13 +219,7 @@ fun CollectPage(
 
     AppTopBarScaffold(
         topBarStartInset = navStart,
-        titleContent = {
-            Text(
-                text = stringResource(R.string.common_collect),
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-        },
+        titleContent = {},
         actions = {
             AnimatedContent(
                 targetState = editMode && items.isNotEmpty(),
