@@ -1,69 +1,21 @@
 package com.github.tvbox.osc.ui.theme
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import com.github.tvbox.osc.util.HawkConfig
-import com.github.tvbox.osc.util.KV
-
+/**
+ * 悬浮导航栏外观固定值(原「应用效果」可配置项已移除)。
+ *
+ * 保留悬浮胶囊形态,但关闭模糊/扭曲/色散 —— 即"固定的底部悬浮选择卡":
+ * 实色不透明卡片 + 滑动选中动画,不再提供用户可调参数。
+ */
 object LiquidGlassState {
 
-    const val DEFAULT_BLUR_DP = 20f
-    const val DEFAULT_DISTORTION_DP = 30f
-    const val DEFAULT_TRANSLUCENCY = 0.5f
-    const val DEFAULT_DISPERSION = true
-    val BLUR_RANGE: ClosedFloatingPointRange<Float> = 0f..40f
-    val DISTORTION_RANGE: ClosedFloatingPointRange<Float> = 0f..30f
-    val TRANSLUCENCY_RANGE: ClosedFloatingPointRange<Float> = 0f..1f
-
-    private var current by mutableStateOf(load())
-
-    val config: LiquidGlassConfig get() = current
-
-    private fun load(): LiquidGlassConfig = LiquidGlassConfig(
-        navbarEnabled = KV.get(HawkConfig.LIQUID_GLASS_NAVBAR, true),
-        controlsEnabled = KV.get(HawkConfig.LIQUID_GLASS_CONTROLS, true),
-        blurDp = KV.get(HawkConfig.LIQUID_GLASS_BLUR, DEFAULT_BLUR_DP),
-        distortionDp = KV.get(HawkConfig.LIQUID_GLASS_DISTORTION, DEFAULT_DISTORTION_DP),
-        translucency = KV.get(HawkConfig.LIQUID_GLASS_TRANSLUCENCY, DEFAULT_TRANSLUCENCY),
-        dispersion = KV.get(HawkConfig.LIQUID_GLASS_DISPERSION, DEFAULT_DISPERSION),
+    private val Fixed = LiquidGlassConfig(
+        navbarEnabled = true,   // 保留悬浮胶囊形态
+        controlsEnabled = true,
+        blurDp = 0f,            // 不模糊 → 实色卡片
+        distortionDp = 0f,      // 不扭曲
+        translucency = 0f,      // 完全不通透 → 不透明底色
+        dispersion = false,     // 无色散
     )
 
-    fun setNavbarEnabled(enabled: Boolean) {
-        KV.put(HawkConfig.LIQUID_GLASS_NAVBAR, enabled)
-        current = current.copy(navbarEnabled = enabled)
-    }
-
-    fun setControlsEnabled(enabled: Boolean) {
-        KV.put(HawkConfig.LIQUID_GLASS_CONTROLS, enabled)
-        current = current.copy(controlsEnabled = enabled)
-    }
-
-    fun setBlurDp(dp: Float) {
-        KV.put(HawkConfig.LIQUID_GLASS_BLUR, dp)
-        current = current.copy(blurDp = dp)
-    }
-
-    fun setDistortionDp(dp: Float) {
-        KV.put(HawkConfig.LIQUID_GLASS_DISTORTION, dp)
-        current = current.copy(distortionDp = dp)
-    }
-
-    fun setTranslucency(value: Float) {
-        KV.put(HawkConfig.LIQUID_GLASS_TRANSLUCENCY, value)
-        current = current.copy(translucency = value)
-    }
-
-    fun setDispersion(enabled: Boolean) {
-        KV.put(HawkConfig.LIQUID_GLASS_DISPERSION, enabled)
-        current = current.copy(dispersion = enabled)
-    }
-
-    /** 只重置效果参数,不动两个启用开关 */
-    fun restoreDefaults() {
-        setBlurDp(DEFAULT_BLUR_DP)
-        setDistortionDp(DEFAULT_DISTORTION_DP)
-        setTranslucency(DEFAULT_TRANSLUCENCY)
-        setDispersion(DEFAULT_DISPERSION)
-    }
+    val config: LiquidGlassConfig get() = Fixed
 }
