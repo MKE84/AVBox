@@ -36,29 +36,33 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Upgrade cmdline-tools (old sdkmanager can't parse SDK XML v4)
+      - name: Install SDK Platform 37 + NDK 27.2 (direct zip, no sdkmanager)
         run: |
           set -euo pipefail
           SDK_ROOT="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
-          echo "SDK_ROOT=$SDK_ROOT"
-          # Determine latest cmdline-tools package
-          CLT_URL="https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip"
           TMP="$(mktemp -d)"
-          curl -fsSL "$CLT_URL" -o "$TMP/clt.zip"
-          rm -rf "$SDK_ROOT/cmdline-tools/latest"
-          mkdir -p "$SDK_ROOT/cmdline-tools/latest"
-          unzip -q "$TMP/clt.zip" -d "$TMP/extract"
-          cp -r "$TMP/extract/cmdline-tools/"* "$SDK_ROOT/cmdline-tools/latest/"
-          "$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --version
-
-      - name: Install SDK/NDK components
-        run: |
-          set -euo pipefail
-          SDK_ROOT="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
-          SDKMANAGER="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
-          yes 2>/dev/null | "$SDKMANAGER" --licenses > /dev/null 2>&1 || true
-          # platform 37 + NDK 27.2 as required by version catalog
-          "$SDKMANAGER" "platforms;android-37" "ndk;27.2.12479018"
+          
+          # Platform 37.0: zip contains platforms/android-37 directory
+          echo "--- Downloading platform-37.0 ---"
+          curl -fsSL "https://dl.google.com/android/repository/platform-37.0_r02.zip" \
+            -o "$TMP/platform.zip"
+          echo "--- Extracting platform ---"
+          unzip -q "$TMP/platform.zip" -d "$TMP/"
+          cp -r "$TMP/platforms/android-37" "$SDK_ROOT/platforms/"
+          echo "Installed: $SDK_ROOT/platforms/android-37"
+          
+          # NDK 27.2 (r27c): zip contains android-ndk-*/ directories
+          echo "--- Downloading NDK 27.2 (634MB) ---"
+          curl -fsSL "https://dl.google.com/android/repository/android-ndk-r27c-linux.zip" \
+            -o "$TMP/ndk.zip"
+          echo "--- Extracting NDK ---"
+          unzip -q "$TMP/ndk.zip" -d "$SDK_ROOT/"
+          # AVBox needs NDK at $NDK_HOME; setup the expected symlink/name
+          NDK_DEST="$SDK_ROOT/ndk/27.2.12479018"
+          if [ -d "$SDK_ROOT/android-ndk-r27c" ]; then
+            ln -sfn "$SDK_ROOT/android-ndk-r27c" "$NDK_DEST"
+            echo "NDK symlinked: $NDK_DEST -> android-ndk-r27c"
+          fi
 
       - name: chmod gradlew
         run: chmod +x gradlew
