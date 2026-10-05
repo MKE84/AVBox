@@ -21,12 +21,9 @@ import kotlinx.coroutines.launch
 data class SubscribeSource(val name: String, val url: String)
 
 /**
- * 待二次确认的切源请求。带 `vod` 是必需的:列表在 AnimatedContent 里渲染,过渡期内外两份内容
- * 同时在组合中,读外层 `isVod` 会把正在退场的那份按错的模式切源。
+ * 待二次确认的切源请求。仅点播。
  */
-data class PendingSwitch(val item: SubscribeSource, val vod: Boolean)
-
-enum class ConfigMode { Vod, Live }
+data class PendingSwitch(val item: SubscribeSource)
 
 internal fun parseSubscribe(value: String): SubscribeSource {
     val index = value.indexOf(SUBSCRIBE_SPLIT)
@@ -44,11 +41,8 @@ internal const val SUBSCRIBE_SPLIT = "\t"
 
 class ConfigManageViewModel : ViewModel() {
 
-    val vodItems = MutableStateFlow(loadSubscribes(ConfigMode.Vod))
-    val liveItems = MutableStateFlow(loadSubscribes(ConfigMode.Live))
+    val vodItems = MutableStateFlow(loadSubscribes())
     val activeUrl = MutableStateFlow(KV.get(HawkConfig.API_URL, ""))
-    val liveActiveUrl = MutableStateFlow(KV.get(HawkConfig.LIVE_API_URL, ""))
-    val liveFollow = MutableStateFlow(ApiConfig.isLiveFollowVod())
     val disabledUrls = MutableStateFlow(BootGuard.disabledSources().toSet())
     val selected = MutableStateFlow(emptySet<String>())
     val manageMode = MutableStateFlow(false)
@@ -91,19 +85,12 @@ class ConfigManageViewModel : ViewModel() {
      */
     private fun refreshActiveSnapshot() {
         activeUrl.value = KV.get(HawkConfig.API_URL, "")
-        liveActiveUrl.value = KV.get(HawkConfig.LIVE_API_URL, "")
-        liveFollow.value = ApiConfig.isLiveFollowVod()
-    }
-
-    /** 换模式清编辑态(repoSheetOpen 由 UI 自关) */
-    fun onModeChanged() {
-        manageMode.value = false
-        selected.value = emptySet()
-        editTarget.value = null
     }
 
     fun exitManageMode() {
-        onModeChanged()
+        manageMode.value = false
+        selected.value = emptySet()
+        editTarget.value = null
     }
 
     fun toggleSelected(value: String) {
@@ -127,49 +114,27 @@ class ConfigManageViewModel : ViewModel() {
      * <p>多仓生效后 `API_URL` 已被改写成仓里第一条子源的地址,订阅列表里那条仓地址匹配不上,
      * 所以还要认"它正是当前仓的来源地址"(否则切到仓之后重进页面,所有源都显示未使用)。
      */
-    private fun isInUse(url: String, vod: Boolean): Boolean =
-        if (vod) {
-            url == activeUrl.value || HistoryHelper.isApiLineSourceOf(url, activeUrl.value)
-        } else {
-            (!liveFollow.value && url == liveActiveUrl.value) ||
-                (!liveFollow.value && HistoryHelper.isLiveApiLineSourceOf(url, liveActiveUrl.value))
-        }
+    private fun isInUse(url: String): Boolean =
+        url == activeUrl.value || HistoryHelper.isApiLineSourceOf(url, activeUrl.value)
 
-    /** 该地址在点播/直播任一侧仍在生效(激活源或仓来源)—— 只用于挡副本清理,不放宽上面的删除保护 */
+    /** 该地址是否仍在生效(激活源或仓来源)—— 只用于挡副本清理,不放宽上面的删除保护 */
     private fun activeInEitherMode(url: String): Boolean {
         val vodApi = KV.get(HawkConfig.API_URL, "")
-        val liveApi = KV.get(HawkConfig.LIVE_API_URL, "")
-        return url == vodApi || url == liveApi ||
-            HistoryHelper.isApiLineSourceOf(url, vodApi) ||
-            HistoryHelper.isLiveApiLineSourceOf(url, liveApi)
+        return url == vodApi || HistoryHelper.isApiLineSourceOf(url, vodApi)
     }
 
-    /** 任一模式的订阅列表里还留着该地址(同地址允许跨模式重复添加)—— 副本同样不能删 */
+    /** 订阅列表里还留着该地址 —— 副本不能删 */
     private fun referencedBySubscribes(url: String): Boolean =
-        loadSubscribes(ConfigMode.Vod).any { parseSubscribe(it).url == url } ||
-            loadSubscribes(ConfigMode.Live).any { parseSubscribe(it).url == url }
+        loadSubscribes().any { parseSubscribe(it).url == url }
 
     /** 多仓的子源条目里还留着该地址 —— 仓的多个子源只有当前生效那个会被上面查到,其余必须在这里挡 */
     private fun referencedByRepo(url: String): Boolean =
-        (HistoryHelper.getApiLines().orEmpty() + HistoryHelper.getLiveApiLines().orEmpty())
-            .any { HistoryHelper.getApiLineUrl(it) == url }
+        HistoryHelper.getApiLines().orEmpty().any { HistoryHelper.getApiLineUrl(it) == url }
 
     private fun switchToVod(item: SubscribeSource) {
         if (activeUrl.value == item.url) return
-        val followLive = applyVodSource(item)
+        applyVodSource(item)
         activeUrl.value = item.url
-        if (followLive) {
-            liveActiveUrl.value = ""
-            liveFollow.value = true
-        }
-        toastEvent.value = str(R.string.config_switched_to, item.name)
-    }
-
-    private fun switchToLive(item: SubscribeSource) {
-        if (!liveFollow.value && liveActiveUrl.value == item.url) return
-        applyLiveSource(item)
-        liveActiveUrl.value = item.url
-        liveFollow.value = false
         toastEvent.value = str(R.string.config_switched_to, item.name)
     }
 
@@ -177,13 +142,11 @@ class ConfigManageViewModel : ViewModel() {
      * 切源统一入口:黑名单里的源**不当场切** —— 它上次就是在这个源上把应用崩掉的,
      * 直接切等于再崩一次,所以先弹二次确认(用户可能知道远端已经修好了)。
      */
-    fun requestSwitch(item: SubscribeSource, vod: Boolean) {
+    fun requestSwitch(item: SubscribeSource) {
         if (item.url in disabledUrls.value) {
-            pendingSwitch.value = PendingSwitch(item, vod)
-        } else if (vod) {
-            switchToVod(item)
+            pendingSwitch.value = PendingSwitch(item)
         } else {
-            switchToLive(item)
+            switchToVod(item)
         }
     }
 
@@ -193,127 +156,83 @@ class ConfigManageViewModel : ViewModel() {
         pendingSwitch.value = null
         BootGuard.enableSource(pending.item.url)
         disabledUrls.value = disabledUrls.value - pending.item.url
-        if (pending.vod) switchToVod(pending.item) else switchToLive(pending.item)
+        switchToVod(pending.item)
     }
 
-    fun followLiveNow() {
-        applyLiveFollowVod()
-        liveActiveUrl.value = ""
-        liveFollow.value = true
-        toastEvent.value = str(R.string.toast_live_follow_vod)
-    }
-
-    fun deleteSelected(vod: Boolean) {
-        val mode = if (vod) ConfigMode.Vod else ConfigMode.Live
-        val items = if (vod) vodItems.value else liveItems.value
-        val target = selected.value.filterNot { isInUse(parseSubscribe(it).url, vod) }
+    fun deleteSelected() {
+        val items = vodItems.value
+        val target = selected.value.filterNot { isInUse(parseSubscribe(it).url) }
         if (target.size != selected.value.size) {
             toastEvent.value = str(R.string.toast_source_in_use)
         }
         val remaining = items.filterNot { it in target }
-        KV.put(subscribeKeyOf(mode), ArrayList(remaining))
+        KV.put(HawkConfig.SUBSCRIBE_LIST, ArrayList(remaining))
         // 源都删了,就别再留着它的"崩过"记录 —— 否则名单里堆的是用户已经不要的地址
         val removedUrls = target.map { parseSubscribe(it).url }
         BootGuard.forgetSources(removedUrls)
         disabledUrls.value = disabledUrls.value - removedUrls
-        // 副本清理要跨模式判"仍在用":点播页删除时,同一地址可能正被直播侧当激活源/仓来源,或被另一模式的订阅/仓子源引用
+        // 副本清理要判"仍在用":同一地址可能正被当激活源/仓来源,或被订阅/仓子源引用
         val copyUrls = removedUrls.filterNot {
             activeInEitherMode(it) || referencedBySubscribes(it) || referencedByRepo(it)
         }
         if (copyUrls.isNotEmpty()) {
             copyCleanupScope.launch { copyUrls.forEach { removeLocalCopy(it) } }
         }
-        if (vod) {
-            vodItems.value = remaining
-            if (remaining.isEmpty()) {
-                ApiConfig.get().clearVodConfig()
-                activeUrl.value = ""
-                AppBootstrap.retry()
-            }
-        } else {
-            liveItems.value = remaining
-            if (remaining.isEmpty()) {
-                applyLiveFollowVod()
-                liveActiveUrl.value = ""
-                liveFollow.value = true
-            }
+        vodItems.value = remaining
+        if (remaining.isEmpty()) {
+            ApiConfig.get().clearVodConfig()
+            activeUrl.value = ""
+            AppBootstrap.retry()
         }
         setSelected(emptySet())
     }
 
-    fun commitAdd(vod: Boolean, name: String, url: String) {
-        val mode = if (vod) ConfigMode.Vod else ConfigMode.Live
-        val newItems = saveSubscribe(mode, name, url)
-        if (vod) vodItems.value = newItems else liveItems.value = newItems
+    fun commitAdd(name: String, url: String) {
+        val newItems = saveSubscribe(name, url)
+        vodItems.value = newItems
         if (newItems.size == 1) {
-            val item = parseSubscribe(newItems.first())
-            if (vod) switchToVod(item) else switchToLive(item)
+            switchToVod(parseSubscribe(newItems.first()))
         }
     }
 
-    fun commitEdit(vod: Boolean, target: SubscribeSource, name: String, url: String) {
+    fun commitEdit(target: SubscribeSource, name: String, url: String) {
         if (url.isEmpty()) return
-        val mode = if (vod) ConfigMode.Vod else ConfigMode.Live
         val newValue = (name.ifEmpty { url }) + SUBSCRIBE_SPLIT + url
         val oldValue = selected.value.firstOrNull { parseSubscribe(it).url == target.url }
-        val updated = updateSubscribe(mode, target, name, url)
-        if (vod) vodItems.value = updated else liveItems.value = updated
+        val updated = updateSubscribe(target, name, url)
+        vodItems.value = updated
         if (oldValue != null) selected.value = selected.value - oldValue + newValue
         editTarget.value = null
         val item = parseSubscribe(newValue)
-        if (vod) {
-            if (target.url == activeUrl.value && url != activeUrl.value) switchToVod(item)
-        } else if (!liveFollow.value && target.url == liveActiveUrl.value && url != liveActiveUrl.value) {
-            switchToLive(item)
-        }
+        if (target.url == activeUrl.value && url != activeUrl.value) switchToVod(item)
     }
 
     private fun applyVodSource(item: SubscribeSource): Boolean =
         AppBootstrap.switchVodSubscription(item.url)
 
-    private fun applyLiveSource(item: SubscribeSource) {
-        HistoryHelper.setLiveApiHistory(item.url)
-        KV.put(HawkConfig.LIVE_API_URL, item.url)
-        // 多仓(2026-09-21):换到仓列表之外的地址即退出仓模式,否则「配置切换」会继续列上一仓的子源
-        if (!HistoryHelper.isLiveApiLineHistory(item.url)) HistoryHelper.clearLiveApiLineList()
-        // 换了直播源就得让旧源的 hosts 映射立刻失效:不能等下次加载成功(加载失败则永久残留)
-        ApiConfig.get().clearLiveHosts()
-        ApiConfig.get().invalidateLiveConfig()
-    }
+    private fun loadSubscribes(): List<String> =
+        KV.get(subscribeKeyOf(), ArrayList<String>()).toList()
 
-    private fun applyLiveFollowVod() {
-        KV.put(HawkConfig.LIVE_API_URL, "")
-        HistoryHelper.clearLiveApiLineList()
-        ApiConfig.get().clearLiveHosts()
-        ApiConfig.get().invalidateLiveConfig()
-    }
+    private fun subscribeKeyOf(): String = HawkConfig.SUBSCRIBE_LIST
 
-    private fun subscribeKeyOf(mode: ConfigMode): String = when (mode) {
-        ConfigMode.Vod -> HawkConfig.SUBSCRIBE_LIST
-        ConfigMode.Live -> HawkConfig.LIVE_SUBSCRIBE_LIST
-    }
-
-    private fun loadSubscribes(mode: ConfigMode): List<String> =
-        KV.get(subscribeKeyOf(mode), ArrayList<String>()).toList()
-
-    private fun saveSubscribe(mode: ConfigMode, name: String, url: String): List<String> {
+    private fun saveSubscribe(name: String, url: String): List<String> {
         val value = (name.ifEmpty { url }) + SUBSCRIBE_SPLIT + url
-        val list = ArrayList(loadSubscribes(mode))
+        val list = ArrayList(loadSubscribes())
         val existIndex = list.indexOfFirst { parseSubscribe(it).url == url }
         if (existIndex >= 0) list[existIndex] = value else list.add(value)
-        KV.put(subscribeKeyOf(mode), list)
+        KV.put(subscribeKeyOf(), list)
         return list
     }
 
-    private fun updateSubscribe(mode: ConfigMode, original: SubscribeSource, name: String, url: String): List<String> {
+    private fun updateSubscribe(original: SubscribeSource, name: String, url: String): List<String> {
         val value = (name.ifEmpty { url }) + SUBSCRIBE_SPLIT + url
-        val list = ArrayList(loadSubscribes(mode))
+        val list = ArrayList(loadSubscribes())
         val index = list.indexOfFirst { parseSubscribe(it).url == original.url }
         if (index < 0) return list
         list[index] = value
         val dupIndex = list.indexOfFirst { it != value && parseSubscribe(it).url == url }
         if (dupIndex >= 0) list.removeAt(dupIndex)
-        KV.put(subscribeKeyOf(mode), list)
+        KV.put(subscribeKeyOf(), list)
         return list
     }
 }

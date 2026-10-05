@@ -8,8 +8,6 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -61,21 +59,17 @@ import com.github.tvbox.osc.api.ApiConfig
 import com.github.tvbox.osc.ui.activity.ConfigManageActivity
 import com.github.tvbox.osc.ui.components.AVBoxAlertDialog
 import com.github.tvbox.osc.ui.components.AVBoxBottomSheet
-import com.github.tvbox.osc.ui.components.CapsuleSegmentedButton
 import com.github.tvbox.osc.ui.components.LoadState
 import com.github.tvbox.osc.ui.components.AppTopBarScaffold
 import com.github.tvbox.osc.ui.components.LoadStateBox
 import com.github.tvbox.osc.ui.components.LocalSheetDismiss
 import com.github.tvbox.osc.ui.components.LocalSheetDismissThen
-import com.github.tvbox.osc.ui.components.SegmentOption
-import com.github.tvbox.osc.ui.components.SegmentStyle
 import com.github.tvbox.osc.ui.components.SettingsCard
 import com.github.tvbox.osc.ui.components.SettingsCardPosition
 import com.github.tvbox.osc.ui.components.SettingsGroup
 import com.github.tvbox.osc.ui.components.RowLeadingIcon
 import com.github.tvbox.osc.ui.components.SettingsOptionRow
 import com.github.tvbox.osc.ui.components.SettingsSwitch
-import com.github.tvbox.osc.ui.components.SettingsSwitchRow
 import com.github.tvbox.osc.ui.components.TopBarActionBox
 import com.github.tvbox.osc.ui.components.glassSurface
 import com.github.tvbox.osc.ui.theme.cardContainer
@@ -92,14 +86,10 @@ private fun badgeText(name: String, url: String, emptyText: String): String = wh
 fun ConfigManageScreen(onNavigateBack: () -> Unit) {
     val context = LocalContext.current
     val vm: ConfigManageViewModel = viewModel()
-    var mode by rememberSaveable { mutableStateOf(ConfigMode.Vod) }
     var addDialogOpen by remember { mutableStateOf(false) }
     var repoSheetOpen by remember { mutableStateOf(false) }
     val vodItems by vm.vodItems.collectAsState()
-    val liveItems by vm.liveItems.collectAsState()
     val activeUrl by vm.activeUrl.collectAsState()
-    val liveActiveUrl by vm.liveActiveUrl.collectAsState()
-    val liveFollow by vm.liveFollow.collectAsState()
     /** 被看门狗停用过的源地址(黑名单):只随页内增删变化 */
     val disabledUrls by vm.disabledUrls.collectAsState()
     /** 点到黑名单里的源时先挂起,由二次确认对话框决定是否放行 */
@@ -109,22 +99,13 @@ fun ConfigManageScreen(onNavigateBack: () -> Unit) {
     val editTarget by vm.editTarget.collectAsState()
     val toastEvent by vm.toastEvent.collectAsState()
 
-    val isVod = mode == ConfigMode.Vod
-    val currentItems = if (isVod) vodItems else liveItems
+    val currentItems = vodItems
 
     LaunchedEffect(toastEvent) {
         toastEvent?.let {
             Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
             vm.clearToast()
         }
-    }
-
-    LaunchedEffect(mode) {
-        vm.onModeChanged()
-        // 换仓 sheet 也关掉:它列的是"当前模式"那份仓列表,切模式后台面下的列表已经换了,
-        // 留着会出现"点的是直播的子源、实际按点播语义切"的错配(分段按钮在遮罩之下点不到,
-        // 但系统返回键/手势能先关 sheet,防的是这一类时序)
-        repoSheetOpen = false
     }
 
     BackHandler(enabled = manageMode) { vm.exitManageMode() }
@@ -134,17 +115,13 @@ fun ConfigManageScreen(onNavigateBack: () -> Unit) {
     // 故需要独立入口:右上角图标 → bottom sheet。列表取与「配置切换」同一份数据,不另建状态。
 
     /** 当前源是否来自多仓 —— 不是仓源就没有可换的子源,入口整体隐藏 */
-    val canSwitchRepo = if (isVod) {
-        HistoryHelper.isApiLineUrl(activeUrl)
-    } else {
-        ApiConfig.get().isLiveApiLineMode() && HistoryHelper.isLiveApiLineUrl(liveActiveUrl)
-    }
+    val canSwitchRepo = HistoryHelper.isApiLineUrl(activeUrl)
 
     /** 仓里的子源条目("名字\t链接") */
-    val repoEntries = if (isVod) HistoryHelper.getApiLines() else HistoryHelper.getLiveApiLines()
+    val repoEntries = HistoryHelper.getApiLines()
 
     /** 当前生效的子源地址:换仓列表据此打选中标记 */
-    val repoActiveUrl = if (isVod) activeUrl else liveActiveUrl
+    val repoActiveUrl = activeUrl
 
     val noSourceText = stringResource(R.string.config_no_source)
     val vodBadge = remember(vodItems, activeUrl, noSourceText) {
@@ -153,18 +130,6 @@ fun ConfigManageScreen(onNavigateBack: () -> Unit) {
             activeUrl,
             noSourceText,
         )
-    }
-    val followText = stringResource(R.string.live_follow_vod_source)
-    val liveBadge = remember(liveItems, liveActiveUrl, liveFollow, noSourceText, followText) {
-        if (liveFollow) {
-            followText
-        } else {
-            badgeText(
-                liveItems.firstOrNull { parseSubscribe(it).url == liveActiveUrl }?.let { parseSubscribe(it).name }.orEmpty(),
-                liveActiveUrl,
-                noSourceText,
-            )
-        }
     }
 
     AppTopBarScaffold(
@@ -208,7 +173,7 @@ fun ConfigManageScreen(onNavigateBack: () -> Unit) {
                             iconRes = R.drawable.ic_delete,
                             contentDescription = stringResource(R.string.common_delete),
                             enabled = selected.isNotEmpty(),
-                            onClick = { vm.deleteSelected(isVod) },
+                            onClick = { vm.deleteSelected() },
                         )
                     }
                 } else {
@@ -227,11 +192,7 @@ fun ConfigManageScreen(onNavigateBack: () -> Unit) {
                         }
                         TopBarActionBox(
                             iconRes = R.drawable.ic_subscribe_add,
-                            contentDescription = if (isVod) {
-                                stringResource(R.string.config_add_subscribe)
-                            } else {
-                                stringResource(R.string.config_add_live_source)
-                            },
+                            contentDescription = stringResource(R.string.config_add_subscribe),
                             onClick = { addDialogOpen = true },
                         )
                     }
@@ -240,131 +201,57 @@ fun ConfigManageScreen(onNavigateBack: () -> Unit) {
         },
     ) { topPad, _ ->
         Column(modifier = Modifier.fillMaxSize()) {
-            CapsuleSegmentedButton(
-                options = listOf(
-                    SegmentOption(label = stringResource(R.string.common_vod), value = ConfigMode.Vod, badge = vodBadge),
-                    SegmentOption(label = stringResource(R.string.common_live), value = ConfigMode.Live, badge = liveBadge),
-                ),
-                selectedValue = mode,
-                onOptionSelected = { mode = it },
-                style = SegmentStyle.Track,
-                containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, top = topPad + 8.dp),
-            )
-            AnimatedContent(
-                targetState = mode,
-                transitionSpec = {
-                    val toRight = targetState == ConfigMode.Live
-                    (
-                        slideInHorizontally(spring(stiffness = Spring.StiffnessMedium)) { full ->
-                            if (toRight) full / 4 else -full / 4
-                        } + fadeIn(spring(stiffness = Spring.StiffnessMedium))
-                        ).togetherWith(
-                        slideOutHorizontally(spring(stiffness = Spring.StiffnessMedium)) { full ->
-                            if (toRight) -full / 4 else full / 4
-                        } + fadeOut(spring(stiffness = Spring.StiffnessMedium))
-                    )
-                },
-                label = "configSegment",
-            ) { m ->
-                val mIsVod = m == ConfigMode.Vod
-                val mItems = if (mIsVod) vodItems else liveItems
-                if (mIsVod && mItems.isEmpty()) {
-                    LoadStateBox(
-                        state = LoadState.Empty,
-                        emptyText = stringResource(R.string.config_empty_subscribe),
-                        errorText = "",
-                        retryText = "",
-                        emptyIconRes = R.drawable.ic_empty_record,
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                } else {
-                    val mOrdered = remember(mItems, activeUrl, liveActiveUrl, liveFollow, mIsVod) {
-                        mItems.sortedByDescending {
-                            val url = parseSubscribe(it).url
-                            if (mIsVod) url == activeUrl else !liveFollow && url == liveActiveUrl
-                        }
-                    }
-                    LazyColumn(
-                        state = rememberLazyListState(),
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(
-                            start = 16.dp,
-                            end = 16.dp,
-                            top = 12.dp,
-                            bottom = 8.dp,
-                        ),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        if (!mIsVod) {
-                            item(key = "Live#follow") {
-                                FollowVodCard(
-                                    checked = liveFollow,
-                                    subtitle = if (activeUrl.isEmpty()) {
-                                        stringResource(R.string.config_no_vod_source)
-                                    } else {
-                                        stringResource(R.string.config_current_vod_source, vodBadge)
-                                    },
-                                    onFollow = { vm.followLiveNow() },
-                                    modifier = Modifier.animateItem(),
-                                )
-                            }
-                        }
-                        items(mOrdered, key = { "${m.name}#$it" }) { value ->
-                            val item = parseSubscribe(value)
-                            // 2026-09-21 多仓:与上面 isInUse 同一套判定 —— 之前只比地址本身,
-                            // 点了带"使用中"标记的仓卡会因为 activeUrl(仓地址)与 API_URL(仓里首条)
-                            // 不等而误判成"未使用",再点一次又白跑一遍完整换源流程
-                            val inUse = if (mIsVod) {
-                                item.url == activeUrl || HistoryHelper.isApiLineSourceOf(item.url, activeUrl)
-                            } else {
-                                !liveFollow && (
-                                    item.url == liveActiveUrl ||
-                                        HistoryHelper.isLiveApiLineSourceOf(item.url, liveActiveUrl)
-                                    )
-                            }
-                            SubscribeCard(
-                                modifier = Modifier.animateItem(),
-                                item = item,
-                                active = inUse,
-                                disabled = item.url in disabledUrls,
-                                manageMode = manageMode,
-                                selected = value in selected,
-                                onClick = {
-                                    if (manageMode) {
-                                        vm.toggleSelected(value)
-                                    } else {
-                                        vm.requestSwitch(item, mIsVod)
-                                    }
-                                },
-                                onLongClick = {
-                                    vm.longPressSelect(value)
-                                },
-                                onCheckedChange = { checked ->
-                                    if (checked) {
-                                        vm.requestSwitch(item, mIsVod)
-                                    } else if (!mIsVod) {
-                                        vm.followLiveNow()
-                                    }
-                                },
-                            )
-                        }
-                        if (!mIsVod && mItems.isEmpty()) {
-                            item(key = "Live#empty") {
-                                LoadStateBox(
-                                    state = LoadState.Empty,
-                                    emptyText = stringResource(R.string.config_empty_live_source),
-                                    errorText = "",
-                                    retryText = "",
-                                    emptyIconRes = R.drawable.ic_empty_record,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(220.dp),
-                                )
-                            }
-                        }
+            if (currentItems.isEmpty()) {
+                LoadStateBox(
+                    state = LoadState.Empty,
+                    emptyText = stringResource(R.string.config_empty_subscribe),
+                    errorText = "",
+                    retryText = "",
+                    emptyIconRes = R.drawable.ic_empty_record,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            } else {
+                val mOrdered = remember(currentItems, activeUrl) {
+                    currentItems.sortedByDescending { parseSubscribe(it).url == activeUrl }
+                }
+                LazyColumn(
+                    state = rememberLazyListState(),
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = topPad + 8.dp,
+                        bottom = 8.dp,
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    items(mOrdered, key = { it }) { value ->
+                        val item = parseSubscribe(value)
+                        // 2026-09-21 多仓:与上面 isInUse 同一套判定 —— 之前只比地址本身,
+                        // 点了带"使用中"标记的仓卡会因为 activeUrl(仓地址)与 API_URL(仓里首条)
+                        // 不等而误判成"未使用",再点一次又白跑一遍完整换源流程
+                        val inUse = item.url == activeUrl || HistoryHelper.isApiLineSourceOf(item.url, activeUrl)
+                        SubscribeCard(
+                            modifier = Modifier.animateItem(),
+                            item = item,
+                            active = inUse,
+                            disabled = item.url in disabledUrls,
+                            manageMode = manageMode,
+                            selected = value in selected,
+                            onClick = {
+                                if (manageMode) {
+                                    vm.toggleSelected(value)
+                                } else {
+                                    vm.requestSwitch(item)
+                                }
+                            },
+                            onLongClick = {
+                                vm.longPressSelect(value)
+                            },
+                            onCheckedChange = { checked ->
+                                if (checked) vm.requestSwitch(item)
+                            },
+                        )
                     }
                 }
             }
@@ -375,11 +262,11 @@ fun ConfigManageScreen(onNavigateBack: () -> Unit) {
     if (addDialogOpen || editing != null) {
         AddSubscribeDialog(
             title = if (editing != null) {
-                if (isVod) stringResource(R.string.config_edit_subscribe) else stringResource(R.string.config_edit_live_source)
+                stringResource(R.string.config_edit_subscribe)
             } else {
-                if (isVod) stringResource(R.string.config_add_subscribe) else stringResource(R.string.config_add_live_source)
+                stringResource(R.string.config_add_subscribe)
             },
-            urlSupportingText = if (isVod) "" else stringResource(R.string.config_live_source_hint),
+            urlSupportingText = "",
             initialName = editing?.name.orEmpty(),
             initialUrl = editing?.url.orEmpty(),
             onDismiss = {
@@ -387,7 +274,7 @@ fun ConfigManageScreen(onNavigateBack: () -> Unit) {
                 vm.editTarget.value = null
             },
             onSave = { name, url ->
-                if (editing != null) vm.commitEdit(isVod, editing, name, url) else vm.commitAdd(isVod, name, url)
+                if (editing != null) vm.commitEdit(editing, name, url) else vm.commitAdd(name, url)
                 addDialogOpen = false
             },
             onPickFile = { onPicked ->
@@ -429,7 +316,7 @@ fun ConfigManageScreen(onNavigateBack: () -> Unit) {
                 )
                 // 与在订阅列表里点同一条源等价 —— switchToVod 里已经处理了"是否落在仓里"的仓列表保留判定,
                 // 所以换完仓后入口仍在。统一走 requestSwitch:仓里藏着的坏子源同样要过二次确认
-                vm.requestSwitch(SubscribeSource(name, url), isVod)
+                vm.requestSwitch(SubscribeSource(name, url))
                 // 命中"源已停用"时 requestSwitch 会立刻弹确认对话框,而覆盖层槽位只有一个(面板会被顶掉)。
                 // 这里同步收掉面板状态:否则面板的可见性标志还是 true,对话框关掉后它会被重新提交而"复活"。
                 if (vm.pendingSwitch.value != null) repoSheetOpen = false
@@ -507,24 +394,6 @@ private fun RepoSwitchSheet(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun FollowVodCard(
-    checked: Boolean,
-    subtitle: String,
-    onFollow: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    SettingsCard(position = SettingsCardPosition.SINGLE, modifier = modifier) {
-        SettingsSwitchRow(
-            title = stringResource(R.string.live_follow_vod_source),
-            leadingIconRes = R.drawable.ic_subscribe_source,
-            subtitle = subtitle,
-            checked = checked,
-            onCheckedChange = { next -> if (next) onFollow() },
-        )
     }
 }
 
