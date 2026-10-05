@@ -36,15 +36,29 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Upgrade cmdline-tools (old sdkmanager can't parse SDK XML v4)
+        run: |
+          set -euo pipefail
+          SDK_ROOT="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
+          echo "SDK_ROOT=$SDK_ROOT"
+          # Determine latest cmdline-tools package
+          CLT_URL="https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip"
+          TMP="$(mktemp -d)"
+          curl -fsSL "$CLT_URL" -o "$TMP/clt.zip"
+          rm -rf "$SDK_ROOT/cmdline-tools/latest"
+          mkdir -p "$SDK_ROOT/cmdline-tools/latest"
+          unzip -q "$TMP/clt.zip" -d "$TMP/extract"
+          cp -r "$TMP/extract/cmdline-tools/"* "$SDK_ROOT/cmdline-tools/latest/"
+          "$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --version
+
       - name: Install SDK/NDK components
         run: |
           set -euo pipefail
           SDK_ROOT="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
-          SDKMANAGER="$(find "$SDK_ROOT/cmdline-tools" -name sdkmanager -type f | head -n1)"
-          sdkmanager() { "$SDKMANAGER" "$@"; }
-          yes 2>/dev/null | sdkmanager --licenses > /dev/null 2>&1 || true
+          SDKMANAGER="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          yes 2>/dev/null | "$SDKMANAGER" --licenses > /dev/null 2>&1 || true
           # platform 37 + NDK 27.2 as required by version catalog
-          sdkmanager "platforms;android-37" "ndk;27.2.12479018"
+          "$SDKMANAGER" "platforms;android-37" "ndk;27.2.12479018"
 
       - name: chmod gradlew
         run: chmod +x gradlew
