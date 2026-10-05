@@ -237,7 +237,7 @@ private fun MainContent() {
                                 val selected = pagerState.targetPage == tab.ordinal
                                 ShortNavigationBarItem(
                                     selected = selected,
-                                    onClick = { selectTab(index) },
+                                    onClick = { selectTab(tab.ordinal) },
                                     icon = {
                                         Icon(
                                             painterResource(tab.icon),

@@ -315,15 +315,6 @@ fun SettingsPage(
             }
 
             SettingsGroup(title = null) {
-                SettingsCard(SettingsCardPosition.FIRST) {
-                    SettingsRow(
-                        title = stringResource(R.string.settings_about),
-                        subtitle = stringResource(R.string.settings_about_subtitle),
-                        iconRes = R.drawable.ic_settings_about,
-                        onClick = { aboutSheet = true },
-                    )
-                }
-            
                 SettingsCard(SettingsCardPosition.LAST) {
                     SettingsRow(
                         title = stringResource(R.string.settings_github),
