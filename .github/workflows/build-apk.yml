@@ -48,7 +48,7 @@ jobs:
             -o "$TMP/platform.zip"
           echo "--- Extracting platform ---"
           unzip -q "$TMP/platform.zip" -d "$TMP/"
-          cp -r "$TMP/platforms/android-37" "$SDK_ROOT/platforms/"
+          cp -r "$TMP/android-37.0" "$SDK_ROOT/platforms/android-37"
           echo "Installed: $SDK_ROOT/platforms/android-37"
           
           # NDK 27.2 (r27c): zip contains android-ndk-*/ directories
