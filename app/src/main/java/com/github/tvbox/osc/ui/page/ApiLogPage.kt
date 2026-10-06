@@ -148,7 +148,6 @@ fun ApiLogScreen(onNavigateBack: () -> Unit) {
                         onClick = { exportLog(context) },
                     )
                 }
-            }
             } else if (lines.isEmpty()) {
                 item(key = "__empty__") {
                     Text(
