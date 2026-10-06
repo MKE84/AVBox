@@ -92,10 +92,12 @@ internal fun PictureParams(state: PictureParamsState) {
         if (state.anime4kEnabled) {
             // 链末锐化强度:改动即时生效(链每帧现读),不触发重播
             var sharpen by remember(state) { mutableStateOf(state.anime4kSharpen) }
-            PictureSlider(R.string.player_anime4k_sharpen, sharpen, 0f..1f, "%.2f") {
-                sharpen = it
-                state.onAnime4kSharpenChanged(it)
-            }
+            PictureSlider(R.string.player_anime4k_sharpen, sharpen, 0f..1f, "%.2f",
+                onValueChange = {
+                    sharpen = it
+                    state.onAnime4kSharpenChanged(it)
+                },
+            )
         }
         if (state.anime4kUnavailable) {
             Spacer(Modifier.height(playerDim(R.dimen.vs_15)))
