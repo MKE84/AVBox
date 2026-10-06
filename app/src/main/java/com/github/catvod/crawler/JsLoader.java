@@ -198,7 +198,7 @@ public class JsLoader {
             // 网络抖动/远端 502 时不要把源整死:本地已有缓存就继续用它兜底,
             // 下次再试网络刷新(过期策略仍在,只是这次不因下载失败丢源)
             if (cache.exists() && cache.length() > 0) {
-                LOG.i("JsLoader", "echo-download failed, fallback to cached jar: " + key);
+                LOG.i("echo-download failed, fallback to cached jar: " + key);
                 if (loadClassLoader(cache.getAbsolutePath(), key)) {
                     return classes.get(key);
                 }
