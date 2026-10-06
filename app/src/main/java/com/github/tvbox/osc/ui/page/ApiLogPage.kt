@@ -27,15 +27,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import java.util.LinkedHashSet
 import com.github.tvbox.osc.R
 import com.github.tvbox.osc.ui.components.AppTopBarScaffold
 import com.github.tvbox.osc.ui.components.SettingsCard
@@ -55,7 +51,6 @@ private enum class LogFilter(val label: String, val match: (String) -> Boolean) 
 
 @Composable
 fun ApiLogScreen(onNavigateBack: () -> Unit) {
-    val context = LocalContext.current
     var enabled by remember { mutableStateOf(ApiLog.enabled()) }
     var filter by remember { mutableStateOf(LogFilter.All) }
     var lines by remember { mutableStateOf(ApiLog.recent()) }
@@ -130,9 +125,7 @@ fun ApiLogScreen(onNavigateBack: () -> Unit) {
                     LogActionButton(
                         text = stringResource(R.string.settings_api_log_refresh),
                         modifier = Modifier.weight(1f),
-                        onClick = {
-                            lines = ApiLog.recent().filter { filter.match(it) }
-                        },
+                        onClick = { lines = ApiLog.recent().filter { filter.match(it) } },
                     )
                     LogActionButton(
                         text = stringResource(R.string.settings_api_log_clear),
@@ -142,13 +135,9 @@ fun ApiLogScreen(onNavigateBack: () -> Unit) {
                             lines = emptyList()
                         },
                     )
-                    LogActionButton(
-                        text = stringResource(R.string.settings_api_log_export),
-                        modifier = Modifier.weight(1f),
-                        onClick = { exportLog(context) },
-                    )
                 }
-            } else if (lines.isEmpty()) {
+            }
+            if (lines.isEmpty()) {
                 item(key = "__empty__") {
                     Text(
                         text = stringResource(
@@ -167,7 +156,6 @@ fun ApiLogScreen(onNavigateBack: () -> Unit) {
         }
     }
 }
-
 
 @Composable
 private fun LogActionButton(text: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
@@ -237,45 +225,4 @@ private fun LogLineCard(line: String) {
             )
         }
     }
-}
-
-/**
- * 导出接口日志:内存缓冲 + api_log.txt 合并去重,按时间升序,
- * 写到应用外部 Download 目录(可用文件管理器找到并发送)。
- */
-private fun exportLog(context: android.content.Context) {
-    val app = context.applicationContext
-    android.widget.Toast.makeText(app, "正在导出…", android.widget.Toast.LENGTH_SHORT).show()
-    Thread {
-        var msg: String
-        try {
-            // 合并内存 + 落盘日志,LinkedHashSet 天然去重
-            val seen = LinkedHashSet<String>()
-            for (line in ApiLog.recent()) if (line.isNotBlank()) seen.add(line)
-            val file = ApiLog.file()
-            if (file != null && file.exists()) {
-                file.readLines().forEach { l -> if (l.isNotBlank()) seen.add(l) }
-            }
-            val all = seen.toList().sorted()
-
-            val stamp = java.text.SimpleDateFormat("yyyyMMdd-HHmmss", java.util.Locale.US)
-                .format(java.util.Date())
-            val dir = app.getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS) ?: app.filesDir
-            val outFile = java.io.File(dir, "AVBox-apilog-$stamp.txt")
-            outFile.bufferedWriter().use { w ->
-                w.write("# AVBox 接口日志  共 ${all.size} 条\n")
-                w.write("# 导出时间: " + java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.US)
-                    .format(java.util.Date()) + "\n")
-                w.write("# 格式: 时间 | 类型 | OK/FAIL | 源名 | 动作 [:: 错误] | 耗时\n\n")
-                for (l in all) w.write(l + "\n")
-            }
-            msg = "已导出: " + outFile.absolutePath
-        } catch (e: Throwable) {
-            msg = "导出失败: " + (e.message ?: e.toString())
-        }
-        val finalMsg = msg
-        android.os.Handler(android.os.Looper.getMainLooper()).post {
-            android.widget.Toast.makeText(app, finalMsg, android.widget.Toast.LENGTH_LONG).show()
-        }
-    }.start()
 }
