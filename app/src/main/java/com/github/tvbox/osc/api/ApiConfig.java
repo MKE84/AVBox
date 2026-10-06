@@ -384,27 +384,12 @@ public class ApiConfig {
                 setDefaultParse(parseBeanList.get(0));
         }
 
-        // 直播源
-        String live_api_url=KV.get(HawkConfig.LIVE_API_URL,"");
+        // 直播源(已移除:无直播 UI 入口,不读 lives、不拉取直播网络,避免落后源拖慢配置加载)
+        String live_api_url = KV.get(HawkConfig.LIVE_API_URL, "");
         if(live_api_url.isEmpty() || apiUrl.equals(live_api_url)){
             LOG.i("echo-load-config_live");
             initLiveSettings();
-            if(infoJson.has("lives")){
-                JsonArray lives_groups=infoJson.get("lives").getAsJsonArray();
-                int live_group_index=getLiveGroupIndex();
-                if(live_group_index>lives_groups.size()-1)live_group_index=0;
-                KV.put(HawkConfig.LIVE_GROUP_LIST,lives_groups);
-                //加载多源配置
-                try {
-                    liveSettingGroupList.get(5).setLiveSettingItems(ConfigParser.parseLiveSettingItems(lives_groups));
-                } catch (Exception e) {
-                    // 捕获任何可能发生的异常
-                    LOG.e("ApiConfig", e);
-                }
-
-                JsonObject livesOBJ = lives_groups.get(live_group_index).getAsJsonObject();
-                loadLiveApi(livesOBJ);
-            }
+            // 不再解析 lives / 不再调用 loadLiveApi(直播功能已删,这里纯读取+拉网络无意义)
         }
 
         // 写完立即刷新:下方 rules/ads 段若抛异常,快照不会停在上一条配置的映射上
@@ -490,25 +475,8 @@ public class ApiConfig {
         JsonObject infoJson = gson.fromJson(jsonStr, JsonObject.class);
         // spider
         spiderLoader.setLiveSpider(DefaultConfig.safeJsonString(infoJson, "spider", ""));
-        // 直播源
+        // 直播源(已移除:无直播 UI 入口,不解析 lives、不拉取直播网络)
         initLiveSettings();
-        if(infoJson.has("lives")){
-            JsonArray lives_groups=infoJson.get("lives").getAsJsonArray();
-
-            int live_group_index=getLiveGroupIndex();
-            if(live_group_index>lives_groups.size()-1)live_group_index=0;
-            KV.put(HawkConfig.LIVE_GROUP_LIST,lives_groups);
-            //加载多源配置
-            try {
-                liveSettingGroupList.get(5).setLiveSettingItems(ConfigParser.parseLiveSettingItems(lives_groups));
-            } catch (Exception e) {
-                // 捕获任何可能发生的异常
-                LOG.e("ApiConfig", e);
-            }
-
-            JsonObject livesOBJ = lives_groups.get(live_group_index).getAsJsonObject();
-            loadLiveApi(livesOBJ);
-        }
 
         liveHosts = infoJson.has("hosts") ? ConfigParser.parseHosts(infoJson.getAsJsonArray("hosts")) : null;
         // DNS 只认 OkGoHelper.myHosts 快照,写完必须刷新,否则直播 hosts 实际不生效
