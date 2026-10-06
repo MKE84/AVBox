@@ -251,6 +251,8 @@ class PictureParamsState(
     val onAnime4kDeblurToggled: (Boolean) -> Unit,
     val onPresetSelected: (PicturePreset) -> Unit,
     val onTuningChanged: (PictureProfile) -> Unit,
+    /** 滑条拖动结束(松开):补一次"本集若没挂链则自动重播"判定;拖动中只即时调参不重播 */
+    val onTuningChangeFinished: () -> Unit,
     val onReset: () -> Unit,
     /** 按住对比：true = 临时按恒等参数出画（松手复原） */
     val onCompareChanged: (Boolean) -> Unit,

@@ -116,73 +116,89 @@ internal fun PictureParams(state: PictureParamsState) {
                 tuning.saturation,
                 PictureProfile.MIN_SATURATION..PictureProfile.MAX_SATURATION,
                 "%.2f",
-            ) {
-                tuning = tuning.copy(saturation = it)
-                state.onTuningChanged(tuning)
-            }
+                onValueChange = {
+                    tuning = tuning.copy(saturation = it)
+                    state.onTuningChanged(tuning)
+                },
+                onChangeFinished = { state.onTuningChangeFinished() },
+            )
             PictureSlider(
                 R.string.player_picture_contrast,
                 tuning.contrast,
                 PictureProfile.MIN_CONTRAST..PictureProfile.MAX_CONTRAST,
                 "%.2f",
-            ) {
-                tuning = tuning.copy(contrast = it)
-                state.onTuningChanged(tuning)
-            }
+                onValueChange = {
+                    tuning = tuning.copy(contrast = it)
+                    state.onTuningChanged(tuning)
+                },
+                onChangeFinished = { state.onTuningChangeFinished() },
+            )
             PictureSlider(
                 R.string.player_picture_brightness,
                 tuning.brightness,
                 PictureProfile.MIN_BRIGHTNESS..PictureProfile.MAX_BRIGHTNESS,
                 "%+.3f",
-            ) {
-                tuning = tuning.copy(brightness = it)
-                state.onTuningChanged(tuning)
-            }
+                onValueChange = {
+                    tuning = tuning.copy(brightness = it)
+                    state.onTuningChanged(tuning)
+                },
+                onChangeFinished = { state.onTuningChangeFinished() },
+            )
             PictureSlider(
                 R.string.player_picture_gamma,
                 tuning.gamma,
                 PictureProfile.MIN_GAMMA..PictureProfile.MAX_GAMMA,
                 "%.2f",
-            ) {
-                tuning = tuning.copy(gamma = it)
-                state.onTuningChanged(tuning)
-            }
+                onValueChange = {
+                    tuning = tuning.copy(gamma = it)
+                    state.onTuningChanged(tuning)
+                },
+                onChangeFinished = { state.onTuningChangeFinished() },
+            )
             PictureSlider(
                 R.string.player_picture_hue,
                 tuning.hue,
                 PictureProfile.MIN_HUE..PictureProfile.MAX_HUE,
                 "%+.0f",
-            ) {
-                tuning = tuning.copy(hue = it)
-                state.onTuningChanged(tuning)
-            }
+                onValueChange = {
+                    tuning = tuning.copy(hue = it)
+                    state.onTuningChanged(tuning)
+                },
+                onChangeFinished = { state.onTuningChangeFinished() },
+            )
             PictureSlider(
                 R.string.player_picture_temperature,
                 tuning.temperature,
                 PictureProfile.MIN_TEMPERATURE..PictureProfile.MAX_TEMPERATURE,
                 "%+.0f",
-            ) {
-                tuning = tuning.copy(temperature = it)
-                state.onTuningChanged(tuning)
-            }
+                onValueChange = {
+                    tuning = tuning.copy(temperature = it)
+                    state.onTuningChanged(tuning)
+                },
+                onChangeFinished = { state.onTuningChangeFinished() },
+            )
             PictureSlider(
                 R.string.player_picture_sharpness,
                 tuning.sharpness,
                 PictureProfile.MIN_SHARPNESS..PictureProfile.MAX_SHARPNESS,
                 "%.2f",
-            ) {
-                tuning = tuning.copy(sharpness = it)
-                state.onTuningChanged(tuning)
-            }
+                onValueChange = {
+                    tuning = tuning.copy(sharpness = it)
+                    state.onTuningChanged(tuning)
+                },
+                onChangeFinished = { state.onTuningChangeFinished() },
+            )
             PictureSlider(
                 R.string.player_picture_shadow,
                 tuning.shadowLift,
                 PictureProfile.MIN_SHADOW_LIFT..PictureProfile.MAX_SHADOW_LIFT,
                 "%.2f",
-            ) {
-                tuning = tuning.copy(shadowLift = it)
-                state.onTuningChanged(tuning)
-            }
+                onValueChange = {
+                    tuning = tuning.copy(shadowLift = it)
+                    state.onTuningChanged(tuning)
+                },
+                onChangeFinished = { state.onTuningChangeFinished() },
+            )
             ParamsGroupDivider()
         }
         Row(
@@ -207,11 +223,13 @@ private fun PictureSlider(
     range: ClosedFloatingPointRange<Float>,
     format: String,
     onValueChange: (Float) -> Unit,
+    onChangeFinished: () -> Unit = {},
 ) {
     ParamsGroupHeader(labelRes, valueText = String.format(Locale.US, format, value))
     Slider(
         value = value,
         onValueChange = onValueChange,
+        onValueChangeFinished = onChangeFinished,
         valueRange = range,
         modifier = Modifier.fillMaxWidth(),
     )

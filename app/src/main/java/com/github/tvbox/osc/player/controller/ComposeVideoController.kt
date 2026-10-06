@@ -541,9 +541,10 @@ class ComposeVideoController @JvmOverloads constructor(
                     refreshParamsSheet()
                 },
                 onTuningChanged = {
+                    // 拖动中只即时调参(链已挂时下一帧生效);不触发重播,避免拖动过程反复重播
                     PictureEffects.setCustom(it)
-                    restartForPictureIfNeeded()
                 },
+                onTuningChangeFinished = { restartForPictureIfNeeded() },
                 onReset = {
                     PictureEffects.reset()
                     restartForPictureIfNeeded()
