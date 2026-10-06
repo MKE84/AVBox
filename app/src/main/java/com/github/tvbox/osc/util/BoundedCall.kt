@@ -67,13 +67,10 @@ object BoundedCall {
         return if (parts.size >= 2) parts[parts.size - 1] else "-"
     }
 
-    /** 从源 key 反查 api 地址,判断 py/js/jar;查不到按通用接口记 */
+    /** 由 SpiderLoader 装载时登记的源类型决定 py/js/jar;未登记按通用接口记 */
     private fun kindOf(tag: String?): String {
         return try {
-            val key = sourceOf(tag)
-            if (key == "-") return ApiLog.KIND_API
-            val api = SpiderLoader.getApiByKey(key)
-            if (api.isNullOrEmpty()) ApiLog.KIND_API else ApiLog.kindOf(api)
+            ApiLog.kindOfKey(sourceOf(tag))
         } catch (e: Throwable) {
             ApiLog.KIND_API
         }

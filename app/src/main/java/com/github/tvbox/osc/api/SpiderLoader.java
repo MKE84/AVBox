@@ -37,7 +37,6 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -352,32 +351,12 @@ final class SpiderLoader {
 
     // ---------- spider 获取(点播) ----------
 
-    /**
-     * 按源 key 反查 api 地址(供接口日志判断 py/js/jar 类型)。
-     * 只在日志开启时被调用,遍历开销可忽略;查不到返回 null。
-     */
-    public static String getApiByKey(String key) {
-        if (key == null || key.isEmpty()) return null;
-        try {
-            ApiConfig config = ApiConfig.get();
-            if (config == null) return null;
-            List<SourceBean> list = config.getSourceBeanList();
-            if (list == null) return null;
-            for (SourceBean bean : list) {
-                if (bean != null && key.equals(bean.getKey())) {
-                    return bean.getApi();
-                }
-            }
-        } catch (Throwable ignored) {
-            // 日志辅助接口:任何异常都按查不到处理
-        }
-        return null;
-    }
-
     Spider getCSP(SourceBean sourceBean) {
         long startMs = System.currentTimeMillis();
         String kind = ApiLog.kindOf(sourceBean.getApi());
         String sourceName = sourceBean.getName() == null ? sourceBean.getKey() : sourceBean.getName();
+        // 登记源类型,供 BoundedCall 记录日志时归类(避免跨包反查源列表)
+        ApiLog.registerSource(sourceBean.getKey(), sourceBean.getApi());
         Spider spider;
         if (sourceBean.getApi().endsWith(".js") || sourceBean.getApi().contains(".js?")) {
             currentPyKey = "";

@@ -114,6 +114,28 @@ public final class ApiLog {
         return KIND_API;
     }
 
+    // ==================== 源类型登记(避免跨包反查) ====================
+
+    /** 源 key -> 种类(PY/JS/JAR);由 SpiderLoader 装载时登记,仅内存 */
+    private static final java.util.concurrent.ConcurrentHashMap<String, String> KEY_KIND =
+            new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** SpiderLoader 装载爬虫时登记该源的种类,供 BoundedCall 记录日志时归类 */
+    public static void registerSource(String key, String api) {
+        if (TextUtils.isEmpty(key)) return;
+        try {
+            KEY_KIND.put(key, kindOf(api));
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /** 按源 key 取已登记的种类;未登记按通用接口处理 */
+    public static String kindOfKey(String key) {
+        if (TextUtils.isEmpty(key)) return KIND_API;
+        String k = KEY_KIND.get(key);
+        return k == null ? KIND_API : k;
+    }
+
     // ==================== 读取 / 清理 ====================
 
     /** 内存中的最近日志(倒序:最新在前) */
