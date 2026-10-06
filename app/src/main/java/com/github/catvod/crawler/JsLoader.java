@@ -29,6 +29,14 @@ public class JsLoader {
     //当前的Js爬虫key
     private volatile String recentKey = "";
 
+    /** 后台刷新过期 js 缓存用;daemon 线程,不阻止进程退出 */
+    private static final java.util.concurrent.ExecutorService refreshExecutor =
+            java.util.concurrent.Executors.newSingleThreadExecutor(r -> {
+                Thread t = new Thread(r, "js-cache-refresh");
+                t.setDaemon(true);
+                return t;
+            });
+
     public static void destroy() {
         for (Spider spider : spiders.values()){
             spider.cancelByTag();
@@ -93,6 +101,43 @@ public class JsLoader {
         return success;
     }
 
+    /**
+     * 后台异步刷新过期的 js 源缓存:先落临时文件,下载成功且非空才原子替换,
+     * 避免半截文件覆盖掉可用的旧缓存;刷新期间用户已经在用旧缓存,无感知。
+     */
+    private void refreshJarAsync(String jar, File cache, String key) {
+        if (jar == null || jar.isEmpty()) return;
+        refreshExecutor.execute(() -> {
+            File tmp = new File(cache.getAbsolutePath() + ".tmp");
+            try {
+                Response response = OkGo.<File>get(jar).execute();
+                InputStream is = response.body().byteStream();
+                OutputStream os = new FileOutputStream(tmp);
+                try {
+                    byte[] buffer = new byte[2048];
+                    int length;
+                    while ((length = is.read(buffer)) > 0) os.write(buffer, 0, length);
+                    os.flush();
+                } finally {
+                    try { is.close(); } catch (Exception ignored) {}
+                    try { os.close(); } catch (Exception ignored) {}
+                }
+                if (tmp.exists() && tmp.length() > 0) {
+                    // 替换后 classes 里的旧 Class 仍可用(同一 key),下次启动自然读新文件
+                    cache.delete();
+                    if (tmp.renameTo(cache)) {
+                        Log.i("JSLoader", "echo-cache refreshed: " + key);
+                    } else {
+                        tmp.delete();
+                    }
+                }
+            } catch (Throwable e) {
+                LOG.d("JsLoader", "refresh jar failed: " + key);
+                tmp.delete();
+            }
+        });
+    }
+
     private Class<?> loadJarInternal(String jar, String md5, String key) {
         if (classes.containsKey(key)){
             Log.i("JSLoader", "echo-loadJarInternal cached");
@@ -113,9 +158,18 @@ public class JsLoader {
                 return classes.get(key);
             }
         }else {
-            if (cache.exists() && !FileUtils.isWeekAgo(cache)) {
-                if(loadClassLoader(cache.getAbsolutePath(), key)){
-                    return classes.get(key);
+            if (cache.exists()) {
+                if (!FileUtils.isWeekAgo(cache)) {
+                    // 未过期:直接用缓存,不碰网络
+                    if(loadClassLoader(cache.getAbsolutePath(), key)){
+                        return classes.get(key);
+                    }
+                } else {
+                    // 已过期:先用旧缓存立即建立(不阻塞用户),再后台异步刷新。
+                    // 旧实现是同步下载,网络差/远端抽风时这里会卡住切源首屏 —— stale-while-revalidate。
+                    boolean servedFromStale = loadClassLoader(cache.getAbsolutePath(), key);
+                    refreshJarAsync(jar, cache, key);
+                    if (servedFromStale) return classes.get(key);
                 }
             }
         }
@@ -141,6 +195,14 @@ public class JsLoader {
             return classes.get(key);
         } catch (Throwable e) {
             LOG.e("JsLoader", e);
+            // 网络抖动/远端 502 时不要把源整死:本地已有缓存就继续用它兜底,
+            // 下次再试网络刷新(过期策略仍在,只是这次不因下载失败丢源)
+            if (cache.exists() && cache.length() > 0) {
+                LOG.i("JsLoader", "echo-download failed, fallback to cached jar: " + key);
+                if (loadClassLoader(cache.getAbsolutePath(), key)) {
+                    return classes.get(key);
+                }
+            }
         }
         return null;
     }

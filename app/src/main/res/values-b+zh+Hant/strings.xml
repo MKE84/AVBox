@@ -434,6 +434,7 @@
     <string name="config_current_vod_source">目前隨選源：%1$s</string>
     <string name="config_live_source_hint">支援設定 JSON / m3u / txt 直播源</string>
     <string name="config_source_disabled_tag">已停用</string>
+    <string name="config_source_stat_total">共 %1$d 個源</string>
     <string name="config_pick_local">從本機選擇</string>
     <string name="config_field_name">名稱</string>
     <string name="config_field_url">連結</string>

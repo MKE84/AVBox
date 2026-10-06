@@ -98,6 +98,8 @@ fun ConfigManageScreen(onNavigateBack: () -> Unit) {
     val manageMode by vm.manageMode.collectAsState()
     val editTarget by vm.editTarget.collectAsState()
     val toastEvent by vm.toastEvent.collectAsState()
+    /** 配置加载完成的信号:源类型统计要等源列表就绪才算得出来 */
+    val bootState by AppBootstrap.state.collectAsState()
 
     val currentItems = vodItems
 
@@ -225,6 +227,13 @@ fun ConfigManageScreen(onNavigateBack: () -> Unit) {
                     ),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
+                    // 当前生效源的类型分布:让用户一眼看出哪些源依赖 py/js 引擎
+                    val typeStats = remember(activeUrl, bootState) { currentSourceTypeStats() }
+                    if (typeStats.spider > 0) {
+                        item(key = "__source_type_stats__") {
+                            SourceTypeSummaryRow(stats = typeStats)
+                        }
+                    }
                     items(mOrdered, key = { it }) { value ->
                         val item = parseSubscribe(value)
                         // 2026-09-21 多仓:与上面 isInUse 同一套判定 —— 之前只比地址本身,
@@ -479,6 +488,38 @@ private fun DisabledSourceTag() {
             text = stringResource(R.string.config_source_disabled_tag),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onErrorContainer,
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+        )
+    }
+}
+
+/** 当前源的类型分布条:总数 + py/js/jar 各自数量,py/js 用彩色小标签 */
+@Composable
+private fun SourceTypeSummaryRow(stats: SourceTypeStats) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.config_source_stat_total, stats.total),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        SourceTypeChip("PY", stats.py, MaterialTheme.colorScheme.tertiaryContainer, MaterialTheme.colorScheme.onTertiaryContainer)
+        SourceTypeChip("JS", stats.js, MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.onPrimaryContainer)
+        SourceTypeChip("JAR", stats.jar, MaterialTheme.colorScheme.secondaryContainer, MaterialTheme.colorScheme.onSecondaryContainer)
+    }
+}
+
+@Composable
+private fun SourceTypeChip(label: String, count: Int, bg: androidx.compose.ui.graphics.Color, fg: androidx.compose.ui.graphics.Color) {
+    if (count <= 0) return
+    Surface(shape = RoundedCornerShape(6.dp), color = bg) {
+        Text(
+            text = "$label $count",
+            style = MaterialTheme.typography.labelSmall,
+            color = fg,
             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
         )
     }

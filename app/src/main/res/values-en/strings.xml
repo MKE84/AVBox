@@ -434,6 +434,7 @@
     <string name="config_current_vod_source">Current VOD source: %1$s</string>
     <string name="config_live_source_hint">Supports JSON / m3u / txt live sources</string>
     <string name="config_source_disabled_tag">Disabled</string>
+    <string name="config_source_stat_total">%1$d sources</string>
     <string name="config_pick_local">Choose from local</string>
     <string name="config_field_name">Name</string>
     <string name="config_field_url">URL</string>

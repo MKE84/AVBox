@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.github.tvbox.osc.R
 import com.github.tvbox.osc.api.ApiConfig
 import com.github.tvbox.osc.base.App
+import com.github.tvbox.osc.bean.SourceBean
 import com.github.tvbox.osc.util.ApiLineSignal
 import com.github.tvbox.osc.util.BootGuard
 import com.github.tvbox.osc.util.HawkConfig
@@ -19,6 +20,42 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 data class SubscribeSource(val name: String, val url: String)
+
+/** 当前激活源的类型分布:用于配置页向用户展示"哪些源是 py/js" */
+data class SourceTypeStats(val total: Int, val py: Int, val js: Int, val jar: Int) {
+    val spider: Int get() = py + js + jar
+}
+
+/** 从源地址/类型推断爬虫种类:py/js 看 api 后缀,否则看 jar 是否为空 */
+private fun classifySource(api: String, jar: String): Int {
+    val lower = api.lowercase()
+    return when {
+        lower.endsWith(".py") -> 1      // py
+        lower.endsWith(".js") -> 2       // js
+        lower.contains(".py?") || lower.contains(".py#") -> 1
+        lower.contains(".js?") || lower.contains(".js#") -> 2
+        !jar.isNullOrEmpty() -> 3        // jar/spider
+        else -> 0                        // 普通接口(json/xml)
+    }
+}
+
+/** 统计当前已加载源的类型分布(py/js/jar)。读取内存中的源列表,无网络开销 */
+fun currentSourceTypeStats(): SourceTypeStats {
+    val list: List<SourceBean> = try {
+        ApiConfig.get().sourceBeanList ?: emptyList()
+    } catch (Throwable t) {
+        emptyList()
+    }
+    var py = 0; var js = 0; var jar = 0
+    for (sb in list) {
+        when (classifySource(sb?.api ?: "", sb?.jar ?: "")) {
+            1 -> py++
+            2 -> js++
+            3 -> jar++
+        }
+    }
+    return SourceTypeStats(list.size, py, js, jar)
+}
 
 /**
  * 待二次确认的切源请求。仅点播。
