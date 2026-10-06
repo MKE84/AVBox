@@ -31,11 +31,11 @@ import com.github.tvbox.osc.ui.components.SettingsCard
 import com.github.tvbox.osc.ui.components.SettingsCardPosition
 import com.github.tvbox.osc.ui.components.SettingsGroup
 import com.github.tvbox.osc.ui.components.SettingsOptionMenuRow
+import com.github.tvbox.osc.ui.components.SettingsRow
 import com.github.tvbox.osc.ui.components.SettingsSliderRow
 import com.github.tvbox.osc.ui.components.SettingsSwitchRow
 import com.github.tvbox.osc.ui.components.TopBarActionBox
 import com.github.tvbox.osc.util.HawkConfig
-import com.github.tvbox.osc.util.MusicSettings
 import com.github.tvbox.osc.util.PlayerHelper
 import kotlin.math.roundToInt
 import xyz.doikki.videoplayer.player.VideoView
@@ -50,7 +50,9 @@ fun PlaySettingsScreen(onNavigateBack: () -> Unit, vm: SettingsViewModel = viewM
     val context = LocalContext.current
     var showPrewarmWarning by remember { mutableStateOf(false) }
     var sliderPreloadDuration by remember(state.preloadDuration) { mutableStateOf(state.preloadDuration) }
-    var sliderCacheSize by remember(state.exoCacheSizeMb) { mutableStateOf(state.exoCacheSizeMb) }
+    var sliderSpeed by remember(state.longPressSpeed) { mutableStateOf(state.longPressSpeed) }
+    var sliderBuffer by remember(state.bufferTimes) { mutableStateOf(state.bufferTimes) }
+    var danmuApiDialog by remember { mutableStateOf(false) }
 
     val listState = rememberScrollState()
     AppTopBarScaffold(
@@ -187,24 +189,12 @@ fun PlaySettingsScreen(onNavigateBack: () -> Unit, vm: SettingsViewModel = viewM
                         },
                     )
                 }
-                SettingsCard(SettingsCardPosition.MIDDLE) {
+                SettingsCard(SettingsCardPosition.LAST) {
                     SettingsSwitchRow(
                         title = stringResource(R.string.settings_play_prefer_aac),
                         leadingIconRes = R.drawable.ic_play_aac,
                         checked = state.preferAac,
                         onCheckedChange = { vm.put(HawkConfig.PLAY_PREFER_AAC, it) },
-                    )
-                }
-                SettingsCard(SettingsCardPosition.LAST) {
-                    SettingsSwitchRow(
-                        title = stringResource(R.string.settings_music_page),
-                        leadingIconRes = R.drawable.ic_music_page,
-                        subtitle = stringResource(R.string.settings_music_page_subtitle),
-                        checked = state.musicPlayerPage,
-                        onCheckedChange = {
-                            MusicSettings.setAutoOpenPage(it)
-                            vm.refresh()
-                        },
                     )
                 }
             }
@@ -221,7 +211,7 @@ fun PlaySettingsScreen(onNavigateBack: () -> Unit, vm: SettingsViewModel = viewM
                         onCheckedChange = { vm.put(HawkConfig.PRELOAD_NEXT_EPISODE, it) },
                     )
                 }
-                SettingsCard(SettingsCardPosition.MIDDLE) {
+                SettingsCard(SettingsCardPosition.LAST) {
                     SettingsSliderRow(
                         title = stringResource(R.string.preload_duration),
                         leadingIconRes = R.drawable.ic_preload_duration,
@@ -237,27 +227,72 @@ fun PlaySettingsScreen(onNavigateBack: () -> Unit, vm: SettingsViewModel = viewM
                         },
                     )
                 }
+            }
+
+            Spacer(Modifier.height(28.dp))
+
+            SettingsGroup(title = stringResource(R.string.settings_group_play_search)) {
+                SettingsCard(SettingsCardPosition.FIRST) {
+                    SettingsSwitchRow(
+                        title = stringResource(R.string.settings_auto_switch_line),
+                        leadingIconRes = R.drawable.ic_pref_auto_switch_line,
+                        checked = state.autoSwitchLine,
+                        onCheckedChange = { vm.put(HawkConfig.AUTO_SWITCH_LINE, it) },
+                    )
+                }
                 SettingsCard(SettingsCardPosition.MIDDLE) {
                     SettingsSwitchRow(
-                        title = stringResource(R.string.preload_play_cache),
-                        leadingIconRes = R.drawable.ic_play_cache,
-                        subtitle = stringResource(R.string.preload_play_cache_subtitle),
-                        checked = state.playCache,
-                        onCheckedChange = { vm.put(HawkConfig.PLAY_CACHE, it) },
+                        title = stringResource(R.string.settings_m3u8_purify),
+                        leadingIconRes = R.drawable.ic_pref_m3u8_purify,
+                        checked = state.m3u8Purify,
+                        onCheckedChange = { vm.put(HawkConfig.M3U8_PURIFY, it) },
+                    )
+                }
+                SettingsCard(SettingsCardPosition.MIDDLE) {
+                    SettingsSwitchRow(
+                        title = stringResource(R.string.settings_danmu_switch),
+                        leadingIconRes = R.drawable.ic_pref_danmu,
+                        checked = state.danmuOpen,
+                        onCheckedChange = { vm.put(HawkConfig.DANMU_OPEN, it) },
+                    )
+                }
+                SettingsCard(SettingsCardPosition.MIDDLE) {
+                    SettingsRow(
+                        title = stringResource(R.string.settings_danmu_api),
+                        leadingIconRes = R.drawable.ic_pref_danmu_api,
+                        // 不显示接口链接本身:填过什么只有编辑弹窗里可见
+                        valueText = stringResource(if (state.danmuApi.isEmpty()) R.string.common_not_set else R.string.common_set),
+                        onClick = { danmuApiDialog = true },
+                    )
+                }
+                SettingsCard(SettingsCardPosition.MIDDLE) {
+                    SettingsSliderRow(
+                        title = stringResource(R.string.settings_long_press_speed),
+                        leadingIconRes = R.drawable.ic_pref_long_press_speed,
+                        value = sliderSpeed.toFloat(),
+                        valueText = "${sliderSpeed}x",
+                        valueRange = 2f..10f,
+                        steps = 7,
+                        onValueChange = { sliderSpeed = (it - 2).roundToInt() + 2 },
+                        onValueChangeFinished = {
+                            if (sliderSpeed != state.longPressSpeed) {
+                                vm.put(HawkConfig.LONG_PRESS_SPEED, sliderSpeed)
+                            }
+                        },
                     )
                 }
                 SettingsCard(SettingsCardPosition.LAST) {
                     SettingsSliderRow(
-                        title = stringResource(R.string.preload_cache_size),
-                        leadingIconRes = R.drawable.ic_cache_size,
-                        value = sliderCacheSize.toFloat(),
-                        valueText = if (sliderCacheSize >= 1024) "%.1fGB".format(sliderCacheSize / 1024f) else "${sliderCacheSize}MB",
-                        valueRange = 128f..4096f,
-                        steps = 30,
-                        onValueChange = { sliderCacheSize = ((it - 128) / 128).roundToInt() * 128 + 128 },
+                        title = stringResource(R.string.settings_buffer_time),
+                        leadingIconRes = R.drawable.ic_pref_buffer_time,
+                        value = sliderBuffer.toFloat(),
+                        valueText = "${sliderBuffer}x",
+                        valueRange = 1f..10f,
+                        steps = 8,
+                        onValueChange = { sliderBuffer = (it - 1).roundToInt() + 1 },
                         onValueChangeFinished = {
-                            if (sliderCacheSize != state.exoCacheSizeMb) {
-                                vm.put(HawkConfig.EXO_CACHE_SIZE_MB, sliderCacheSize)
+                            if (sliderBuffer != state.bufferTimes) {
+                                vm.put(HawkConfig.BUFFER_TIMES, sliderBuffer)
                             }
                         },
                     )
@@ -290,6 +325,18 @@ fun PlaySettingsScreen(onNavigateBack: () -> Unit, vm: SettingsViewModel = viewM
                 }) {
                     Text(stringResource(R.string.dialog_kernel_prewarm_confirm))
                 }
+            },
+        )
+    }
+
+    if (danmuApiDialog) {
+        TextEditDialog(
+            title = stringResource(R.string.settings_danmu_api),
+            initialText = state.danmuApi,
+            onDismiss = { danmuApiDialog = false },
+            onConfirm = { text ->
+                vm.put(HawkConfig.DANMU_API, text)
+                danmuApiDialog = false
             },
         )
     }

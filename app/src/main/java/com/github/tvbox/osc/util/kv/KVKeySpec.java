@@ -99,14 +99,12 @@ public final class KVKeySpec implements KVDecoder.TypeRegistry {
         register(HawkConfig.LONG_PRESS_SPEED, 0);
         register(HawkConfig.BUFFER_TIMES, 0);
         register(HawkConfig.PRELOAD_DURATION, 0);
-        register(HawkConfig.EXO_CACHE_SIZE_MB, 0);
         register(HawkConfig.DANMU_MAX_LINE, 0);
         register(HawkConfig.THEME_SOURCE, 0);
         register(HawkConfig.THEME_MODE, 0);
         register(HawkConfig.THEME_SEED, 0);
         register(HawkConfig.LIQUID_GLASS_BLUR, 0);
         register(HawkConfig.LIQUID_GLASS_DISTORTION, 0);
-        register(HawkConfig.COLLECT_COLUMNS, 0);
 
         // ---- boolean ----
         register(HawkConfig.PLAYER_IS_LIVE, false);
@@ -127,7 +125,6 @@ public final class KVKeySpec implements KVDecoder.TypeRegistry {
         register(HawkConfig.KERNEL_PREWARM, false);
         register(HawkConfig.EXO_VIDEO_DYNAMIC_SCHEDULING, false);
         register(HawkConfig.PRELOAD_NEXT_EPISODE, false);
-        register(HawkConfig.PLAY_CACHE, false);
         register(HawkConfig.DANMU_OPEN, false);
         register(HawkConfig.DANMU_RANDOM_COLOR, false);
         register(HawkConfig.DANMU_API_USE_DEFAULT, false);

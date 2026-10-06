@@ -82,8 +82,6 @@ public class ExoPlayer extends ExoMediaPlayer {
     private int lastOutputHeight;
     /** 重绘已排队:同一帧内的连发合并成一次 */
     private boolean redrawScheduled;
-    /** 点播磁盘缓存标记(第二期「边播边缓存」,由 MyVideoView 注入;直播页恒 false) */
-    private boolean useDiskCache;
 
     /** 本片记忆键(见 TrackMemory);内核重建即新实例,故由 MyVideoView 在起播前推入 */
     private String contentKey = "";
@@ -357,30 +355,21 @@ public class ExoPlayer extends ExoMediaPlayer {
         }
         super.setDataSource(path, headers);
         boolean preloadTarget = PreloadManagerHolder.isPreloadTargetUrl(path, headers);
-        boolean playCache = useDiskCache && KV.get(HawkConfig.PLAY_CACHE, false);
-        
+
         if (PlayerHelper.isLocalProxyUrl(path) || isRtmp) {
-            if (preloadTarget || playCache) {
-                LOG.i((isRtmp ? "echo-play-cache-skip-rtmp: " : "echo-play-cache-skip-local-proxy: ") + path);
+            if (preloadTarget) {
+                LOG.i((isRtmp ? "echo-preload-skip-rtmp: " : "echo-preload-skip-local-proxy: ") + path);
             }
             preloadTarget = false;
-            playCache = false;
         }
-        if (preloadTarget || playCache) {
-            // 预载目标必须用与预缓存写盘一致的 key(media3 默认 key=uri);常规链路仍用 headers 后缀 key 防串缓存
-            MediaSource cached = preloadTarget
-                    ? mMediaSourceHelper.getPreloadTargetMediaSource(path, headers)
-                    : mMediaSourceHelper.getMediaSource(path, headers, true);
+        if (preloadTarget) {
+            // 预载目标必须用与预缓存写盘一致的 key(media3 默认 key=uri)
+            MediaSource cached = mMediaSourceHelper.getPreloadTargetMediaSource(path, headers);
             if (cached != null) {
                 mMediaSource = cached;
-                LOG.i((preloadTarget ? "echo-preload-disk-source: " : "echo-play-cache-source: ") + path);
+                LOG.i("echo-preload-disk-source: " + path);
             }
         }
-    }
-
-    /** 点播磁盘缓存标记(第二期「边播边缓存」;由 MyVideoView 注入,直播页恒 false) */
-    public void setUseDiskCache(boolean enabled) {
-        useDiskCache = enabled;
     }
 
     /** 挂/换显示面。裸 Surface(本项目直接 setVideoSurface)不走自动路径,**必须自己补发** MSG_SET_VIDEO_OUTPUT_RESOLUTION,否则效果管线每帧被丢弃(黑屏) */

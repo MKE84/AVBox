@@ -6,7 +6,7 @@ import androidx.annotation.NonNull;
 
 /**
  * 播放页面的最小契约(引擎挂载入口):渲染容器槽位 + 视图桥 + 服务停止通知。
- * 点播页({@code PlayContainer})与音乐播放页({@code MusicPlayerActivity})各提供一份实现。
+ * 点播页({@code PlayContainer})提供一份实现。
  */
 public interface PlaybackPage {
 

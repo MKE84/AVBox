@@ -35,8 +35,10 @@ object VodImages {
         .cache(picCacheDir?.let { Cache(it, PIC_HTTP_CACHE_MB * 1024L * 1024L) })
         .addInterceptor(picHeaderInterceptor)
         .addNetworkInterceptor(picForceCacheInterceptor)
-        .connectTimeout(15, TimeUnit.SECONDS)
-        .readTimeout(15, TimeUnit.SECONDS)
+        // 图片是弱网/失效源重灾区:缩短超时快速失败,失败不重试,避免每张坏图拖 15s+
+        .connectTimeout(5, TimeUnit.SECONDS)
+        .readTimeout(8, TimeUnit.SECONDS)
+        .retryOnConnectionFailure(false)
         .build()
 
     private val picForceCacheInterceptor = Interceptor { chain ->

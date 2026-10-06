@@ -268,7 +268,7 @@ fun SheetHost(state: SheetHostState) {
  *
  * **独立 Activity 的页面必须套这一层** —— 弹层的契约是"有槽位就投到窗口根,否则就地渲染":
  * 就地渲染时 `Box(fillMaxSize)` 会被调用点的容器吃掉,弹层会被塞进列表项里(实测事故:
- * `PreferenceSettingsActivity` 的"切换语言"对话框被渲染在设置列表内部的卡片里、还没有遮罩)。
+ * 设置列表内部的卡片里、还没有遮罩)。
  * 挂在 `MainScreen` pager 里的页面不需要它(`MainContent` 已经提供了槽位)。
  */
 @Composable

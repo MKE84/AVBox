@@ -81,7 +81,6 @@ public class HawkConfig {
     public static final String M3U8_PURIFY = "m3u8_purify";
     public static final String AUTO_SWITCH_LINE = "auto_switch_line";
     /** 收藏页栅格列数(2/3;设置页"收藏页布局"写入,默认 3) */
-    public static final String COLLECT_COLUMNS = "collect_columns";
     /** 全局接口日志开关(py/js/jar/接口调用记录);默认关,设置页可开 */
     public static final String API_LOG_ENABLED = "api_log_enabled";
     public static final String LIVE_WEB_HEADER = "live_web_header";
@@ -108,7 +107,8 @@ public class HawkConfig {
     public static final String NAV_LIVE_HIDDEN = "nav_live_hidden";
     // 搜索线程数(2026-09-12,设置页滑块 16/32/48/64 四档):全站搜索源并发信号量许可数
     public static final String SEARCH_THREADS = "search_threads";
-    public static final int SEARCH_THREADS_DEFAULT = 32;
+    /** 搜索并发线程数:固定 16(设置项已隐藏,不再调整) */
+    public static final int SEARCH_THREADS_DEFAULT = 16;
     // 长按倍速(2026-09-12,设置页滑块 2x~10x 步长 1):长按画面临时提速的倍率
     public static final String LONG_PRESS_SPEED = "long_press_speed";
     public static final int LONG_PRESS_SPEED_DEFAULT = 3;
@@ -125,13 +125,6 @@ public class HawkConfig {
      * (直播页不启用,见 MyVideoView 点播标记)。改关原因:CacheDataSource 与 App 内本地代理
      * (spider 自建/网盘)的区间读取语义不兼容,实测导致 EXO 起播失败(设置页已加提示副标题)。
      */
-    public static final String PLAY_CACHE = "play_cache";
-    /**
-     * Exo 共享缓存容量 MB(128~4096 步长 128,默认 512):
-     * 预载写盘与边播边缓存共用同一 SimpleCache(LRU);容量在缓存创建时固定,改动需重启 App 生效
-     */
-    public static final String EXO_CACHE_SIZE_MB = "exo_cache_size_mb";
-    public static final int EXO_CACHE_SIZE_MB_DEFAULT = 512;
     public static final String DANMU_OPEN = "danmu_open";
     public static final String DANMU_MAX_LINE = "danmu_max_line";
     public static final String DANMU_SPEED = "danmu_speed";

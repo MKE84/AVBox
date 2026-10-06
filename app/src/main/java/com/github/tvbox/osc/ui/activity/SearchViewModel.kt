@@ -53,7 +53,7 @@ class SearchViewModel : ViewModel() {
 
     private var token = 0
     private var arriveSeq = 0
-    private var semaphorePermits = KV.get(HawkConfig.SEARCH_THREADS, HawkConfig.SEARCH_THREADS_DEFAULT)
+    private var semaphorePermits = HawkConfig.SEARCH_THREADS_DEFAULT
     private var semaphore = Semaphore(semaphorePermits)
     private val pendingSources = java.util.concurrent.ConcurrentHashMap<String, kotlinx.coroutines.CompletableDeferred<Unit>>()
     private val scope = viewModelScope
@@ -209,11 +209,6 @@ class SearchViewModel : ViewModel() {
     fun search(title: String) {
         val t = title.trim()
         if (t.isEmpty()) return
-        val configured = KV.get(HawkConfig.SEARCH_THREADS, HawkConfig.SEARCH_THREADS_DEFAULT)
-        if (configured != semaphorePermits) {
-            semaphorePermits = configured
-            semaphore = Semaphore(configured)
-        }
         token = SEARCH_SEQ.incrementAndGet()
         val myToken = token
         val tokenStr = myToken.toString()

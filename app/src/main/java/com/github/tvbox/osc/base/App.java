@@ -68,9 +68,8 @@ public class App extends Application {
                 .setSupportDP(false)
                 .setSupportSP(false)
                 .setSupportSubunits(Subunits.MM);
-        // 共享缓存容量(第二期扩展):设置项 → player 模块(须在首次 getSharedCache 前注入,改动重启 App 生效)
-        ExoMediaSourceHelper.setSharedCacheSizeBytes(
-                Math.max(128, KV.get(HawkConfig.EXO_CACHE_SIZE_MB, HawkConfig.EXO_CACHE_SIZE_MB_DEFAULT)) * 1024L * 1024L);
+        // 共享缓存容量(预载专用):固定 512MB,不再暴露设置项
+        ExoMediaSourceHelper.setSharedCacheSizeBytes(512L * 1024L * 1024L);
         QuickJSLoader.init();
         // Coil 单例:海报地址约定的请求头注入(Compose UI 图片管线)
         com.github.tvbox.osc.ui.components.VodImages.INSTANCE.init(this);

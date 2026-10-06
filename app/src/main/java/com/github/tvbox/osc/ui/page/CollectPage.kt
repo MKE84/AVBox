@@ -86,8 +86,8 @@ class CollectViewModel : ViewModel() {
     val loading = MutableStateFlow(true)
     val items = MutableStateFlow<List<VodCollect>>(emptyList())
 
-    /** 收藏页栅格列数(设置页「收藏页布局」;默认 3) */
-    val columns = MutableStateFlow(KV.get(HawkConfig.COLLECT_COLUMNS, 3))
+    /** 收藏页栅格列数(固定 3 列) */
+    val columns = MutableStateFlow(3)
 
     /** 站点不在当前订阅的收藏源 key(收藏不落站名,可用性只能按当前订阅现判,切订阅后要重算) */
     val unavailableKeys = MutableStateFlow<Set<String>>(emptySet())
@@ -150,8 +150,6 @@ class CollectViewModel : ViewModel() {
             refresh(scrollToTop = true)
         } else if (event.type == RefreshEvent.TYPE_API_URL_CHANGE) {
             viewModelScope.launch(Dispatchers.IO) { recomputeUnavailableNow() }
-        } else if (event.type == RefreshEvent.TYPE_COLLECT_LAYOUT_CHANGE) {
-            columns.value = KV.get(HawkConfig.COLLECT_COLUMNS, 3)
         }
     }
 

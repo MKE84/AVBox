@@ -144,7 +144,7 @@ final class MusicSessionDelegate {
             if (playState == VideoView.STATE_PLAYBACK_COMPLETED) {
                 // ⚠️ **不能在此直接 updateMusicSession()**。
                 // 引擎的状态监听器注册在页面之前(见 PlaybackEngine.createPlayerView 与
-                // MusicPlayerActivity.initView),所以 COMPLETED 到达时**本方法总是先跑**,
+                // 所以 COMPLETED 到达时**本方法总是先跑**,
                 // 而"要续播下一集"的登记(beginSwitchPlayback)在页面监听器里(onSongCompleted
                 // → playAt/replayCurrent),此刻尚未执行 ⇒ switchingPlayback 读到的必然是 false,
                 // 于是按"播完"撤了会话。后果不是"少一条通知"这么轻:

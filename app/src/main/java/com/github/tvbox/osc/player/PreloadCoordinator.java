@@ -35,9 +35,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * 且不依赖任何页面类型 —— 放在 ui 包会让 {@code player} 反向依赖 UI。
  */
 public final class PreloadCoordinator {
-    private static final long EVALUATE_DELAY_MS = 2000L;
+    private static final long EVALUATE_DELAY_MS = 1500L;
     /** 持续缓冲多久才让路(取消预载+清数据):短暂缓冲(拖动/瞬断)不停预载,否则每次拖动都从头重下 */
-    private static final long BUFFERING_YIELD_MS = 4000L;
+    private static final long BUFFERING_YIELD_MS = 3000L;
     private static final long BUFFERING_COOLDOWN_MS = 5_000L;
     private static final String PRELOAD_KEY_SUFFIX = "-preload";
 

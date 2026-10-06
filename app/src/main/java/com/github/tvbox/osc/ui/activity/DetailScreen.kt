@@ -43,7 +43,6 @@ import com.github.tvbox.osc.ui.components.LoadState
 import com.github.tvbox.osc.ui.components.LoadStateBox
 import com.github.tvbox.osc.ui.components.VodCardMenu
 import com.github.tvbox.osc.ui.components.rememberVodCardMenuState
-import kotlinx.coroutines.delay
 import com.github.tvbox.osc.ui.page.jumpToSearch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -85,25 +84,6 @@ fun DetailScreen(activity: DetailActivity, vm: DetailViewModel) {
     LaunchedEffect(container, playSignal) {
         if (playSignal > 0) activity.playCurrent()
     }
-
-    var musicWatch by remember { mutableStateOf(false) }
-    var musicArmed by remember { mutableStateOf(false) }
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { musicWatch = true }
-    LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) { musicWatch = false }
-    LaunchedEffect(playSignal) {
-        if (playSignal > 0) musicArmed = true
-    }
-    LaunchedEffect(musicWatch, musicArmed) {
-        if (!musicWatch || !musicArmed) return@LaunchedEffect
-        while (true) {
-            delay(300)
-            if (!activity.musicPlaybackDetected()) continue
-            if (!activity.handOffToMusicPlayer()) continue
-            musicArmed = false
-            return@LaunchedEffect
-        }
-    }
-
     LaunchedEffect(full) {
         activity.applyFullscreen(full)
     }

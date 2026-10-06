@@ -19,8 +19,6 @@ public class RefreshEvent {
     public static final int TYPE_COLLECT_REFRESH = 21;
     /** 播放头真的推进过(即"看过"),由 PlaybackProgress 每集发一次,观看历史据此落库 */
     public static final int TYPE_PLAYBACK_STARTED = 22;
-    /** 收藏页栅格列数变更(设置页"收藏页布局"落 KV 后广播,收藏页据此立即换列数) */
-    public static final int TYPE_COLLECT_LAYOUT_CHANGE = 23;
     public int type;
     public Object obj;
 

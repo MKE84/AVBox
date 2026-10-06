@@ -3,11 +3,10 @@
 
     <!-- Settings: language (language names stay endonym, same as the platform language picker) -->
     <string name="settings_language">Language</string>
+    <string name="settings_preference_title">Preferences</string>
+    <string name="settings_preference_subtitle">Modify app usage preferences</string>
     <string name="settings_group_language_layout">Language &amp; Layout</string>
     <string name="settings_language_subtitle">Change the app interface language</string>
-    <string name="settings_collect_columns">Collect page layout</string>
-    <string name="settings_collect_columns_three">Three columns</string>
-    <string name="settings_collect_columns_two">Two columns</string>
     <string name="settings_language_system">Follow system</string>
     <string name="settings_language_zh_hans">简体中文</string>
     <string name="settings_language_en">English</string>
@@ -210,8 +209,6 @@
     <string name="player_picture_unavailable_decoder">The current decoder doesn\'t support picture adjustment</string>
 
     <!-- Music player page -->
-    <string name="music_queue">Queue</string>
-    <string name="music_song_index">Track %1$d</string>
     <string name="tab_home">Home</string>
     <string name="common_collect">Favorites</string>
     <string name="config_load_failed">Failed to load config</string>
@@ -230,9 +227,6 @@
     <string name="preload_next_episode">Preload next episode</string>
     <string name="preload_next_episode_subtitle">Only supported by the Media3 player and some sources</string>
     <string name="preload_duration">Preload duration</string>
-    <string name="preload_play_cache">Cache while playing</string>
-    <string name="preload_play_cache_subtitle">May make the Media3 player unusable when enabled</string>
-    <string name="preload_cache_size">Cache size</string>
 
     <!-- Search page -->
     <string name="search_field_hint">Search titles and actors</string>
@@ -255,9 +249,6 @@
     <string name="theme_brightness_value">Brightness %1$d%%</string>
     <string name="theme_initial_color">Initial color</string>
     <string name="theme_current_color">Current color</string>
-    <string name="music_episodes">Playlist</string>
-    <string name="music_previous">Previous</string>
-    <string name="music_next">Next</string>
 
     <!-- Search settings sheet -->
     <string name="search_home_poster">Home posters</string>
@@ -316,7 +307,6 @@
     <!-- Detail page -->
     <string name="detail_fullscreen_play">Play fullscreen</string>
     <string name="detail_empty_source">No sources. Try switching source or searching</string>
-    <string name="detail_music_player">Open Music Player</string>
     <string name="detail_uncollect">Remove favorite</string>
     <string name="detail_collect">Add to favorites</string>
     <string name="detail_source">Source: %1$s</string>
@@ -395,8 +385,6 @@
     <string name="settings_play_kernel_prewarm">Player Engine Prewarm</string>
     <string name="settings_play_kernel_prewarm_subtitle">Pre-create the player engine and keep it resident for faster start-up</string>
     <string name="settings_play_prefer_aac">Prefer AAC</string>
-    <string name="settings_music_page">Music Player Page</string>
-    <string name="settings_music_page_subtitle">Open automatically for audio-only content</string>
 
     <!-- Tips: source loading -->
     <string name="toast_config_parse_failed">Failed to parse config</string>
@@ -446,6 +434,7 @@
     <string name="settings_api_log_empty">No logs yet</string>
     <string name="settings_api_log_off">Logging is off. Turn on the switch above to start recording</string>
     <string name="settings_api_log_share">Export log</string>
+    <string name="settings_api_log_export">Export</string>
     <string name="config_pick_local">Choose from local</string>
     <string name="config_field_name">Name</string>
     <string name="config_field_url">URL</string>
@@ -459,7 +448,6 @@
     <string name="settings_theme_subtitle">Change the app colors and effects</string>
     <string name="settings_play">Playback Settings</string>
     <string name="settings_play_subtitle">Playback engine and decoding mode</string>
-    <string name="settings_preference_subtitle">Change the app preferences</string>
     <string name="settings_default_page">Default Start Page</string>
     <string name="settings_default_page_subtitle">Where the app opens on launch</string>
     <string name="settings_history_limit">History Limit</string>
@@ -471,20 +459,11 @@
     <string name="settings_about">About</string>
     <string name="settings_about_subtitle">View details</string>
     <string name="settings_about_version">Version v%1$s</string>
-    <string name="settings_about_disclaimer">This app only aggregates and displays content from the internet. It does not host, create, upload, store, or download any content, and accepts no donations, tips, or payments. It is provided for open-source learning purposes only; please uninstall it within 24 hours of installation.\n\nKeep the credits when redistributing\nhttps://github.com/CatVodTVOfficial/TVBoxOSC\nhttps://github.com/q215613905/TVBoxOS</string>
-    <string name="settings_github">Visit GitHub Repository</string>
-    <string name="settings_github_subtitle">Open the project source repository</string>
-    <string name="settings_app_tagline">TVBox for Phone</string>
+    <string name="settings_about_disclaimer">This app only aggregates and displays content from the internet. It does not host, create, upload, store, or download any content, and accepts no donations, tips, or payments. It is provided for open-source learning purposes only; please uninstall it within 24 hours of installation.</string>
+            <string name="settings_app_tagline">TVBox for Phone</string>
     <string name="settings_app_version">App version</string>
 
     <!-- Settings: preferences -->
-    <string name="settings_preference_title">Preferences</string>
-    <string name="settings_history_merge">Merge History</string>
-    <string name="settings_incognito">Incognito Mode</string>
-    <string name="settings_gesture_disable">Disable Gesture Control</string>
-    <string name="settings_gesture_disable_subtitle">Disables brightness and volume gestures</string>
-    <string name="settings_nav_animation_disable">Disable Navigation Animation</string>
-    <string name="settings_nav_animation_disable_subtitle">Disables the bottom navigation slide animation</string>
     <string name="settings_nav_live_hidden">Hide Live in Navigation Bar</string>
     <string name="settings_nav_live_hidden_subtitle">Hides the Live entry in the navigation bar</string>
     <string name="settings_auto_switch_line">Auto Switch Line</string>
@@ -493,12 +472,10 @@
     <string name="settings_danmu_api">Danmaku API</string>
     <string name="settings_long_press_speed">Long-press Speed</string>
     <string name="settings_buffer_time">Buffer Time</string>
-    <string name="settings_search_threads">Search Threads</string>
 
     <!-- Settings: secondary page group labels -->
     <string name="settings_group_play_picture">Engine &amp; Picture</string>
     <string name="settings_group_play_behavior">Playback Behavior</string>
-    <string name="settings_group_privacy">Privacy &amp; Interaction</string>
     <string name="settings_group_play_search">Playback &amp; Search</string>
     <string name="settings_group_preload_cache">Preload &amp; Cache</string>
 
@@ -539,10 +516,6 @@
     <string name="detail_no_playable_content">Nothing playable yet</string>
     <string name="filter_title">Filter · %1$s</string>
     <string name="filter_clear">Clear</string>
-    <string name="music_default_name">Music</string>
-    <string name="music_mode_single">Repeat one</string>
-    <string name="music_mode_list">Repeat all</string>
-    <string name="music_mode_order">In order</string>
     <string name="live_source_auto_disabled">This source was auto-disabled. You can re-enable it in Config Management</string>
     <string name="toast_file_picker_unavailable">Cannot open the file picker</string>
     <string name="toast_permission_required">Permission required</string>
@@ -608,5 +581,4 @@
     <string name="osd_frame_rate_match">Frame rate match</string>
     <string name="osd_tunnel">Tunnel</string>
     <string name="osd_preload">Preload</string>
-    <string name="osd_cache">Cache</string>
 </resources>

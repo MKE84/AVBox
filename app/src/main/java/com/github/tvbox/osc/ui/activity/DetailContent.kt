@@ -112,14 +112,6 @@ internal fun DetailContent(
                                 overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier.weight(1f),
                             )
-                            IconButton(onClick = { activity.openMusicPlayer() }) {
-                                Icon(
-                                    painter = painterResource(R.drawable.ic_detail_music_player),
-                                    contentDescription = stringResource(R.string.detail_music_player),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(24.dp),
-                                )
-                            }
                             IconButton(onClick = { activity.playContainer?.showCast() }) {
                                 Icon(
                                     painter = painterResource(R.drawable.ic_detail_cast),

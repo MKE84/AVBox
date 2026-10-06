@@ -139,7 +139,6 @@ public final class PlaybackEngine implements PlaybackHostApi {
     private MyVideoView createPlayerView() {
         Context ctx = new ContextThemeWrapper(appContext, R.style.AppTheme_NoActionBar);
         MyVideoView view = new MyVideoView(ctx);
-        view.setExoDiskCacheEnabled(true);
         view.setProgressManager(progressManager);
         view.addOnStateChangeListener(new VideoView.SimpleOnStateChangeListener() {
             @Override
@@ -229,7 +228,6 @@ public final class PlaybackEngine implements PlaybackHostApi {
         session = null;
         controller.clearStartedContent();
         videoView.setProgressManager(null);
-        videoView.setExoDiskCacheEnabled(false);
         // 停死内核(在摘下点播进度管理器**之后**:release 内部会 saveProgress,若进度管理器还挂着,
         // 会把 mCurrentPosition —— 可能已是点播/直播的错位值 —— 写进残留的 mProgressKey;
         // 点播进度已由 detach 里的 saveCurrentProgress 落过盘,这里无需也无法再落)。
@@ -261,7 +259,6 @@ public final class PlaybackEngine implements PlaybackHostApi {
         releasePlayer();
         videoView.setProgressManager(null);
         // 边播边缓存是点播特性(直播流是 m3u8 直播片,缓存数据源无意义甚至影响起播):直播期间关掉
-        videoView.setExoDiskCacheEnabled(false);
         videoView.clearArtwork();
         videoView.showVideoFrame();
         // 撤点播会话:先清控制器侧标记(含正常路径的 stop),再兜底强制收尾 ——
@@ -355,7 +352,6 @@ public final class PlaybackEngine implements PlaybackHostApi {
         setLiveFlag(false);
         LOG.i(TAG + " exit live mode");
         videoView.setProgressManager(progressManager);
-        videoView.setExoDiskCacheEnabled(true);
     }
 
     public boolean isLiveMode() {

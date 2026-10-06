@@ -29,20 +29,8 @@ public class MyVideoView extends VideoView implements DrawHandler.Callback {
     private coil3.request.Disposable artworkDisposable;
     private View frameCover;
 
-    /** 点播磁盘缓存标记(第二期扩展「边播边缓存」):默认 false(直播页不设置),点播容器 PlayContainer 启用 */
-    private boolean mExoDiskCacheEnabled;
     /** "本次起播必须重建内核"标记(EXO 解码方式变更,见 PlayerHelper.updateCfg) */
     private boolean mKernelRebuildRequired;
-
-    /**
-     * 点播磁盘缓存标记:true 时 Exo 播放器对普通集也使用 cache 数据源(边播边缓存)。
-     * 标志存于 VideoView(而非播放器实例),内核切换/自动重试重建播放器后仍自动生效(见 initPlayer 覆写)。
-     */
-    public void setExoDiskCacheEnabled(boolean enabled) {
-        mExoDiskCacheEnabled = enabled;
-        applyExoDiskCacheFlag();
-    }
-
     /** 本片记忆键(见 TrackMemory);存于 VideoView 是因为内核重建后要把键推给新实例 */
     private String mTrackMemoryKey = "";
 
@@ -54,19 +42,12 @@ public class MyVideoView extends VideoView implements DrawHandler.Callback {
     @Override
     protected void initPlayer() {
         super.initPlayer();
-        applyExoDiskCacheFlag();
         applyTrackMemoryKey();
     }
 
     private void applyTrackMemoryKey() {
         if (mMediaPlayer instanceof ExoPlayer) {
             ((ExoPlayer) mMediaPlayer).setContentKey(mTrackMemoryKey);
-        }
-    }
-
-    private void applyExoDiskCacheFlag() {
-        if (mMediaPlayer instanceof ExoPlayer) {
-            ((ExoPlayer) mMediaPlayer).setUseDiskCache(mExoDiskCacheEnabled);
         }
     }
 

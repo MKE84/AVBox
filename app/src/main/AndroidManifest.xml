@@ -87,9 +87,6 @@
             android:launchMode="singleTop"
             android:configChanges="orientation|screenSize" />
         <activity
-            android:name=".ui.activity.MusicPlayerActivity"
-            android:configChanges="orientation|screenSize" />
-        <activity
             android:name=".ui.activity.SearchActivity"
             android:windowSoftInputMode="stateHidden|adjustResize" />
         <activity
@@ -102,8 +99,6 @@
             android:name=".ui.activity.ConfigManageActivity" />
         <activity
             android:name=".ui.activity.PlaySettingsActivity" />
-        <activity
-            android:name=".ui.activity.PreferenceSettingsActivity" />
 
         <service
             android:name=".dlna.DLNACastService"

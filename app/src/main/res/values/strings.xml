@@ -3,11 +3,10 @@
 
     <!-- 设置:语言 -->
     <string name="settings_language">语言</string>
+    <string name="settings_preference_title">偏好设置</string>
+    <string name="settings_preference_subtitle">修改应用的使用偏好</string>
     <string name="settings_group_language_layout">语言与布局</string>
     <string name="settings_language_subtitle">切换应用的界面语言</string>
-    <string name="settings_collect_columns">收藏页布局</string>
-    <string name="settings_collect_columns_three">三列布局</string>
-    <string name="settings_collect_columns_two">双列布局</string>
     <string name="settings_language_system">跟随系统</string>
     <string name="settings_language_zh_hans">简体中文</string>
     <string name="settings_language_en">English</string>
@@ -210,8 +209,6 @@
     <string name="player_picture_unavailable_decoder">当前解码方式不支持画面参数</string>
 
     <!-- 音乐播放页 -->
-    <string name="music_queue">播放队列</string>
-    <string name="music_song_index">第 %1$d 首</string>
     <string name="tab_home">首页</string>
     <string name="common_collect">收藏</string>
     <string name="config_load_failed">配置加载失败</string>
@@ -230,9 +227,6 @@
     <string name="preload_next_episode">下一集预载</string>
     <string name="preload_next_episode_subtitle">仅Media3播放器和部分源支持</string>
     <string name="preload_duration">预载时长</string>
-    <string name="preload_play_cache">边播边缓存</string>
-    <string name="preload_play_cache_subtitle">开启后可能导致Media3播放器无法使用</string>
-    <string name="preload_cache_size">缓存容量</string>
 
     <!-- 搜索页 -->
     <string name="search_field_hint">搜索片名、演员</string>
@@ -255,9 +249,6 @@
     <string name="theme_brightness_value">亮度 %1$d%%</string>
     <string name="theme_initial_color">初始颜色</string>
     <string name="theme_current_color">当前颜色</string>
-    <string name="music_episodes">音乐选集</string>
-    <string name="music_previous">上一首</string>
-    <string name="music_next">下一首</string>
 
     <!-- 搜索设置面板 -->
     <string name="search_home_poster">首页海报</string>
@@ -316,7 +307,6 @@
     <!-- 详情页 -->
     <string name="detail_fullscreen_play">全屏播放</string>
     <string name="detail_empty_source">暂无片源,可尝试换源或搜索</string>
-    <string name="detail_music_player">进入音乐播放器</string>
     <string name="detail_uncollect">取消收藏</string>
     <string name="detail_collect">加入收藏</string>
     <string name="detail_source">来源：%1$s</string>
@@ -395,8 +385,6 @@
     <string name="settings_play_kernel_prewarm">内核预热</string>
     <string name="settings_play_kernel_prewarm_subtitle">启动后提前创建并常驻，加快起播</string>
     <string name="settings_play_prefer_aac">AAC 优先</string>
-    <string name="settings_music_page">音乐播放页</string>
-    <string name="settings_music_page_subtitle">识别为纯音频时自动打开</string>
 
     <!-- 提示:源加载 -->
     <string name="toast_config_parse_failed">配置解析失败</string>
@@ -446,6 +434,7 @@
     <string name="settings_api_log_empty">暂无日志</string>
     <string name="settings_api_log_off">日志未开启，打开上方开关后开始记录</string>
     <string name="settings_api_log_share">导出日志</string>
+    <string name="settings_api_log_export">导出</string>
     <string name="config_pick_local">从本地选择</string>
     <string name="config_field_name">名字</string>
     <string name="config_field_url">链接</string>
@@ -459,7 +448,6 @@
     <string name="settings_theme_subtitle">修改应用的配色和效果</string>
     <string name="settings_play">播放设置</string>
     <string name="settings_play_subtitle">播放核心和解码方式</string>
-    <string name="settings_preference_subtitle">修改应用的使用偏好</string>
     <string name="settings_default_page">默认启动页</string>
     <string name="settings_default_page_subtitle">首次打开应用的所在位置</string>
     <string name="settings_history_limit">历史记录上限</string>
@@ -471,20 +459,11 @@
     <string name="settings_about">关于</string>
     <string name="settings_about_subtitle">查看详细信息</string>
     <string name="settings_about_version">版本 v%1$s</string>
-    <string name="settings_about_disclaimer">本软件只提供聚合展示功能，所有资源均来自互联网，软件不参与任何内置、制作、上传、储存、下载等内容，也不接受任何捐赠、打赏、付费等谋利行为，软件仅供开源学习参考, 请于安装后24小时内删除。\n\n打包分发请保留出处\nhttps://github.com/CatVodTVOfficial/TVBoxOSC\nhttps://github.com/q215613905/TVBoxOS</string>
-    <string name="settings_github">访问 GitHub 仓库</string>
-    <string name="settings_github_subtitle">访问项目源代码仓库</string>
-    <string name="settings_app_tagline">TVBox手机版</string>
+    <string name="settings_about_disclaimer">本软件只提供聚合展示功能，所有资源均来自互联网，软件不参与任何内置、制作、上传、储存、下载等内容，也不接受任何捐赠、打赏、付费等谋利行为，软件仅供开源学习参考, 请于安装后24小时内删除。</string>
+            <string name="settings_app_tagline">TVBox手机版</string>
     <string name="settings_app_version">应用版本</string>
 
     <!-- 设置:偏好设置 -->
-    <string name="settings_preference_title">偏好设置</string>
-    <string name="settings_history_merge">历史合并</string>
-    <string name="settings_incognito">无痕模式</string>
-    <string name="settings_gesture_disable">禁用手势控制</string>
-    <string name="settings_gesture_disable_subtitle">开启后将禁用手势控制亮度和音量</string>
-    <string name="settings_nav_animation_disable">禁用导航动画</string>
-    <string name="settings_nav_animation_disable_subtitle">开启后将禁用底部导航的侧滑动画</string>
     <string name="settings_nav_live_hidden">导航栏隐藏直播</string>
     <string name="settings_nav_live_hidden_subtitle">开启后导航栏不再显示直播入口</string>
     <string name="settings_auto_switch_line">自动换线</string>
@@ -493,12 +472,10 @@
     <string name="settings_danmu_api">弹幕 API</string>
     <string name="settings_long_press_speed">长按倍速</string>
     <string name="settings_buffer_time">缓冲时间</string>
-    <string name="settings_search_threads">搜索线程</string>
 
     <!-- 设置:二级页分组小标题 -->
     <string name="settings_group_play_picture">内核与画面</string>
     <string name="settings_group_play_behavior">播放行为</string>
-    <string name="settings_group_privacy">隐私与交互</string>
     <string name="settings_group_play_search">播放与搜索</string>
     <string name="settings_group_preload_cache">预载与缓存</string>
 
@@ -539,10 +516,6 @@
     <string name="detail_no_playable_content">暂无可播放的内容</string>
     <string name="filter_title">筛选 · %1$s</string>
     <string name="filter_clear">清除</string>
-    <string name="music_default_name">音乐</string>
-    <string name="music_mode_single">单曲循环</string>
-    <string name="music_mode_list">列表循环</string>
-    <string name="music_mode_order">顺序播放</string>
     <string name="live_source_auto_disabled">该源已被自动停用，可在配置管理中重新启用</string>
     <string name="toast_file_picker_unavailable">无法打开文件选择器</string>
     <string name="toast_permission_required">请授予权限</string>
@@ -608,5 +581,4 @@
     <string name="osd_frame_rate_match">帧率匹配</string>
     <string name="osd_tunnel">隧道</string>
     <string name="osd_preload">预载</string>
-    <string name="osd_cache">缓存</string>
 </resources>

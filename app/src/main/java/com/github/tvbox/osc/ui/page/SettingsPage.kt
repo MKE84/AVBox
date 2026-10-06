@@ -3,8 +3,6 @@
 package com.github.tvbox.osc.ui.page
 
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import android.os.SystemClock
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
@@ -52,14 +50,11 @@ import com.github.tvbox.osc.ui.components.SettingsRow
 import com.github.tvbox.osc.ui.activity.ApiLogActivity
 import com.github.tvbox.osc.ui.activity.ConfigManageActivity
 import com.github.tvbox.osc.ui.activity.PlaySettingsActivity
-import com.github.tvbox.osc.ui.activity.PreferenceSettingsActivity
 import com.github.tvbox.osc.ui.activity.ThemeSettingsActivity
 import com.github.tvbox.osc.util.FileUtils
 import com.github.tvbox.osc.util.HistoryHelper
-import com.github.tvbox.osc.util.HistoryMerge
 import com.github.tvbox.osc.player.effect.anime4k.Anime4kTier
 import com.github.tvbox.osc.util.HawkConfig
-import com.github.tvbox.osc.util.MusicSettings
 import com.github.tvbox.osc.util.OkGoHelper
 import com.github.tvbox.osc.util.KV
 import kotlinx.coroutines.Dispatchers
@@ -77,24 +72,15 @@ data class SettingsState(
     val kernelPrewarm: Boolean,
     val playTunnel: Boolean,
     val preferAac: Boolean,
-    val musicPlayerPage: Boolean,
     val autoSwitchLine: Boolean,
     val m3u8Purify: Boolean,
-    val incognito: Boolean,
-    val gestureControlDisabled: Boolean,
-    val navAnimationDisabled: Boolean,
-    val collectColumns: Int,
     val danmuOpen: Boolean,
     val danmuApi: String,
     val historyNumIndex: Int,
-    val historyMerge: Boolean,
-    val searchThreads: Int,
     val longPressSpeed: Int,
     val bufferTimes: Int,
     val preloadNextEpisode: Boolean,
     val preloadDuration: Int,
-    val playCache: Boolean,
-    val exoCacheSizeMb: Int,
     val dohIndex: Int,
     val cacheSizeText: String = "",
 )
@@ -166,24 +152,15 @@ class SettingsViewModel : ViewModel() {
         kernelPrewarm = KV.get(HawkConfig.KERNEL_PREWARM, false),
         playTunnel = KV.get(HawkConfig.PLAY_TUNNEL, false),
         preferAac = KV.get(HawkConfig.PLAY_PREFER_AAC, false),
-        musicPlayerPage = MusicSettings.autoOpenPage(),
         autoSwitchLine = KV.get(HawkConfig.AUTO_SWITCH_LINE, false),
         m3u8Purify = KV.get(HawkConfig.M3U8_PURIFY, false),
-        incognito = KV.get(HawkConfig.INCOGNITO, false),
-        gestureControlDisabled = KV.get(HawkConfig.GESTURE_CONTROL_DISABLED, false),
-        navAnimationDisabled = KV.get(HawkConfig.NAV_ANIMATION_DISABLED, false),
-        collectColumns = KV.get(HawkConfig.COLLECT_COLUMNS, 3),
-        danmuOpen = KV.get(HawkConfig.DANMU_OPEN, true),
+        danmuOpen = KV.get(HawkConfig.DANMU_OPEN, false),
         danmuApi = KV.get(HawkConfig.DANMU_API, ""),
         historyNumIndex = KV.get(HawkConfig.HISTORY_NUM, 0),
-        historyMerge = HistoryMerge.isEnabled(),
-        searchThreads = KV.get(HawkConfig.SEARCH_THREADS, HawkConfig.SEARCH_THREADS_DEFAULT),
         longPressSpeed = KV.get(HawkConfig.LONG_PRESS_SPEED, HawkConfig.LONG_PRESS_SPEED_DEFAULT),
         bufferTimes = KV.get(HawkConfig.BUFFER_TIMES, HawkConfig.BUFFER_TIMES_DEFAULT),
         preloadNextEpisode = KV.get(HawkConfig.PRELOAD_NEXT_EPISODE, false),
         preloadDuration = KV.get(HawkConfig.PRELOAD_DURATION, HawkConfig.PRELOAD_DURATION_DEFAULT),
-        playCache = KV.get(HawkConfig.PLAY_CACHE, false),
-        exoCacheSizeMb = KV.get(HawkConfig.EXO_CACHE_SIZE_MB, HawkConfig.EXO_CACHE_SIZE_MB_DEFAULT),
         dohIndex = KV.get(HawkConfig.DOH_URL, 0),
         cacheSizeText = cacheSizeText,
     )
@@ -266,14 +243,6 @@ fun SettingsPage(
                         onClick = { ApiLogActivity.start(context) },
                     )
                 }
-                SettingsCard(SettingsCardPosition.LAST) {
-                    SettingsRow(
-                        title = stringResource(R.string.settings_preference_title),
-                        subtitle = stringResource(R.string.settings_preference_subtitle),
-                        iconRes = R.drawable.ic_settings_preference,
-                        onClick = { PreferenceSettingsActivity.start(context) },
-                    )
-                }
             }
 
             SettingsGroup(title = null) {
@@ -322,33 +291,12 @@ fun SettingsPage(
                     )
                 }
             }
-
-            SettingsGroup(title = null) {
-                SettingsCard(SettingsCardPosition.LAST) {
-                    SettingsRow(
-                        title = stringResource(R.string.settings_github),
-                        subtitle = stringResource(R.string.settings_github_subtitle),
-                        iconRes = R.drawable.ic_settings_github,
-                        onClick = { openExternalUrl(context, GITHUB_REPO_URL) },
-                    )
-                }
-            }
         }
     }
 
 }
 
 
-
-private const val GITHUB_REPO_URL = "https://github.com/XiaochangXu/AVBox"
-
-private fun openExternalUrl(context: Context, url: String) {
-    try {
-        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-    } catch (e: Exception) {
-        Toast.makeText(context, context.getString(R.string.toast_no_app_for_link), Toast.LENGTH_SHORT).show()
-    }
-}
 
 @Composable
 fun TextEditDialog(

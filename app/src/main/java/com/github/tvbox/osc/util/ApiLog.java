@@ -47,24 +47,42 @@ public final class ApiLog {
     private static final SimpleDateFormat TIME_FMT =
             new SimpleDateFormat("MM-dd HH:mm:ss.SSS", Locale.US);
 
+    /**
+     * 开关的内存缓存:热路径(每次爬虫调用)BoundedCall 会查它,
+     * 若每次都走 KV 编解码查询会成为可观的固定开销,故只在首次与写入时读盘。
+     * volatile 保证设置页切换后其他线程立即可见。
+     */
+    private static volatile boolean enabledCache = false;
+    private static volatile boolean enabledLoaded = false;
+
     private ApiLog() {
     }
 
-    /** 开关是否打开(读 KV;任何异常按关闭处理) */
+    /** 开关是否打开(内存缓存;首次调用时读一次 KV,任何异常按关闭处理) */
     public static boolean enabled() {
-        try {
-            return KV.get(HawkConfig.API_LOG_ENABLED, false);
-        } catch (Throwable t) {
-            return false;
+        if (enabledLoaded) return enabledCache;
+        synchronized (ApiLog.class) {
+            if (enabledLoaded) return enabledCache;
+            try {
+                enabledCache = KV.get(HawkConfig.API_LOG_ENABLED, false);
+            } catch (Throwable t) {
+                enabledCache = false;
+            }
+            enabledLoaded = true;
+            return enabledCache;
         }
     }
 
     public static void setEnabled(boolean on) {
+        // 先更新缓存:设置页切换后热路径应立即按新值走
+        enabledCache = on;
+        enabledLoaded = true;
         try {
             KV.put(HawkConfig.API_LOG_ENABLED, on);
-            record(KIND_API, OK, "logger", on ? "接口日志已开启" : "接口日志已关闭", 0);
         } catch (Throwable ignored) {
         }
+        // 落一条"开关变更"记录便于对照时间线(在开关已更新后写,开启时才会真正落盘)
+        record(KIND_API, OK, "logger", on ? "接口日志已开启" : "接口日志已关闭", 0);
     }
 
     // ==================== 记录入口 ====================

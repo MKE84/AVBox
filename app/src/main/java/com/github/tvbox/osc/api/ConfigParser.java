@@ -13,6 +13,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -319,5 +320,108 @@ final class ConfigParser {
             this.url = url;
             this.key = key;
         }
+    }
+
+    /**
+     * 源列表格式归一化:把"裸源数组"订阅包装成标准配置对象。
+     *
+     * <p>现象:第三方源列表(如 uzVideo 的 video_sources_default.json)直接给
+     * {@code [{"name":"…","api":"…"},…]},而标准配置需要顶层 {@code {"sites":[…]}} 且每个源
+     * 必须有 {@code key}/{@code type}。这种裸数组让 {@code parseJson} 的
+     * {@code gson.fromJson(jsonStr, JsonObject.class)} 直接抛异常。
+     *
+     * <p>仅当正文能被解析为 JSON 数组、且元素都是对象并含 {@code api} 时才算源列表;
+     * 否则原样返回(null 或任何异常也返回原串)。
+     *
+     * <p>源补齐:{@code key} 用 api 的 host(去协议/路径,剩余非法字符换下划线),重复时在 key 后追加序号;
+     * {@code type} 默认 1(苹果CMS JSON)——若 api 以 {@code .xml} 结尾或含 {@code at/xml} 则 0。
+     */
+    static String normalizeSourceListConfig(String content) {
+        if (content == null) {
+            return null;
+        }
+        String trimmed = content.trim();
+        if (!trimmed.startsWith("[")) {
+            return content;
+        }
+        try {
+            JsonArray raw;
+            try {
+                raw = JsonParser.parseString(trimmed).getAsJsonArray();
+            } catch (Exception e) {
+                raw = JsonParser.parseString(ConfigParser.trimJsonObject(trimmed)).getAsJsonArray();
+            }
+            JsonObject wrapper = new JsonObject();
+            JsonArray sites = new JsonArray();
+            java.util.HashSet<String> usedKeys = new java.util.HashSet<>();
+            for (JsonElement element : raw) {
+                if (!element.isJsonObject()) {
+                    continue;
+                }
+                JsonObject item = element.getAsJsonObject();
+                if (!item.has("api")) {
+                    continue;
+                }
+                String api = item.get("api").getAsString().trim();
+                if (api.isEmpty()) {
+                    continue;
+                }
+                String name = item.has("name") && !item.get("name").isJsonNull()
+                        ? item.get("name").getAsString().trim() : api;
+                String key = name.isEmpty()
+                        ? hostOf(api) : api.equals(name) ? hostOf(api) : keyOfName(name, api);
+                // key 去重(同名 host 多源):追加 -2/-3/… 序号,不能让后源覆盖前源
+                if (!usedKeys.add(key)) {
+                    int n = 2;
+                    while (!usedKeys.add(key + "_" + n)) {
+                        n++;
+                    }
+                    key = key + "_" + n;
+                }
+
+                JsonObject site = new JsonObject();
+                site.addProperty("key", key);
+                site.addProperty("name", name.isEmpty() ? key : name);
+                site.addProperty("api", api);
+                site.addProperty("type", api.endsWith(".xml") || api.contains("/at/xml") ? 0 : 1);
+                if (item.has("ext") && item.get("ext").isJsonObject()) {
+                    site.add("ext", item.get("ext"));
+                }
+                if (item.has("jar")) {
+                    site.addProperty("jar", item.get("jar").getAsString());
+                }
+                sites.add(site);
+            }
+            if (sites.size() == 0) {
+                return content;
+            }
+            wrapper.add("sites", sites);
+            return wrapper.toString();
+        } catch (Throwable th) {
+            return content;
+        }
+    }
+
+    /** api 的主机名(去 scheme/端口/路径),非法字符统一换下划线 */
+    private static String hostOf(String api) {
+        String s = api.replaceFirst("^[a-zA-Z][a-zA-Z0-9+.-]*://", "");
+        int slash = s.indexOf('/');
+        if (slash >= 0) {
+            s = s.substring(0, slash);
+        }
+        int colon = s.indexOf(':');
+        if (colon >= 0) {
+            s = s.substring(0, colon);
+        }
+        return s.replaceAll("[^A-Za-z0-9]", "_");
+    }
+
+    /** 源 key:站点名重名用 api 主机兜底;都不可靠则退回全小写下划线名 */
+    private static String keyOfName(String name, String api) {
+        String host = hostOf(api);
+        if (host != null && !host.isEmpty()) {
+            return host;
+        }
+        return name.replaceAll("[^A-Za-z0-9]", "_").toLowerCase();
     }
 }

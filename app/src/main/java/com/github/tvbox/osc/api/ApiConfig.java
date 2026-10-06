@@ -334,6 +334,8 @@ public class ApiConfig {
     }
 
     void parseJson(String apiUrl, String jsonStr) {
+        // 源列表格式归一化:裸源数组(uzVideo 风格)自动包装成标准 sites 对象
+        jsonStr = ConfigParser.normalizeSourceListConfig(jsonStr);
         resetConfigData();
         // 规则表等新配置到手再清:换源失败时旧规则要留给仍在播的旧源,清早了会让广告回归/click 失效
         VideoParseRuler.clearRule();
