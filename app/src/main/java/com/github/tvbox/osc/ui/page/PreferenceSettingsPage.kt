@@ -24,10 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.tvbox.osc.R
 import com.github.tvbox.osc.event.RefreshEvent
-import com.github.tvbox.osc.ui.components.AVBoxAlertDialog
 import com.github.tvbox.osc.ui.components.AppTopBarScaffold
-import com.github.tvbox.osc.ui.components.LocalSheetDismiss
-import com.github.tvbox.osc.ui.components.LocalSheetDismissThen
 import com.github.tvbox.osc.ui.components.SettingsCard
 import com.github.tvbox.osc.ui.components.SettingsCardPosition
 import com.github.tvbox.osc.ui.components.SettingsGroup
@@ -36,11 +33,8 @@ import com.github.tvbox.osc.ui.components.SettingsRow
 import com.github.tvbox.osc.ui.components.SettingsSliderRow
 import com.github.tvbox.osc.ui.components.SettingsSwitchRow
 import com.github.tvbox.osc.ui.components.TopBarActionBox
-import com.github.tvbox.osc.util.AppLanguage
 import com.github.tvbox.osc.util.HawkConfig
 import com.github.tvbox.osc.util.HistoryMerge
-import com.github.tvbox.osc.util.LanguageManager
-import com.github.tvbox.osc.util.restartApp
 import kotlin.math.roundToInt
 import org.greenrobot.eventbus.EventBus
 
@@ -74,11 +68,8 @@ fun PreferenceSettingsScreen(onNavigateBack: () -> Unit, vm: SettingsViewModel =
         ) {
             Spacer(Modifier.height(topPad + 8.dp))
 
-            SettingsGroup(title = stringResource(R.string.settings_group_language_layout)) {
-                SettingsCard(SettingsCardPosition.FIRST) {
-                    LanguageRow()
-                }
-                SettingsCard(SettingsCardPosition.LAST) {
+            SettingsGroup(title = null) {
+                SettingsCard(SettingsCardPosition.SINGLE) {
                     CollectColumnsRow(
                         columns = state.collectColumns,
                         onSelect = { columns ->
@@ -256,69 +247,4 @@ private fun CollectColumnsRow(columns: Int, onSelect: (Int) -> Unit) {
     )
 }
 
-/** 语言入口:选中即写 KV(给落盘留出弹窗交互的时间),确认后立即自重启;取消回滚 */
-@Composable
-private fun LanguageRow() {
-    val available = LanguageManager.available()
-    val current = LanguageManager.current()
-    val context = LocalContext.current
-    var pending by remember { mutableStateOf<AppLanguage?>(null) }
-    var rollback by remember { mutableStateOf(AppLanguage.System) }
-    var restarting by remember { mutableStateOf(false) }
-    SettingsOptionMenuRow(
-        title = stringResource(R.string.settings_language),
-        leadingIconRes = R.drawable.ic_pref_language,
-        subtitle = stringResource(R.string.settings_language_subtitle),
-        valueText = stringResource(languageLabelRes(current)),
-        options = available.map { stringResource(languageLabelRes(it)) },
-        selectedIndex = available.indexOf(current),
-        onSelect = { idx ->
-            val target = available.getOrNull(idx)
-            if (target != null && target != current) {
-                rollback = current
-                LanguageManager.set(target)
-                pending = target
-            }
-        },
-    )
-    val cancel = {
-        LanguageManager.set(rollback)
-        pending = null
-    }
-    pending?.let {
-        AVBoxAlertDialog(
-            onDismissRequest = cancel,
-            text = { Text(stringResource(R.string.settings_language_restart_message)) },
-            dismissButton = {
-                val dismissAnimated = LocalSheetDismiss.current
-                TextButton(onClick = { dismissAnimated() }) { Text(stringResource(R.string.common_cancel)) }
-            },
-            confirmButton = {
-                // 确认走"先播退场动画再执行动作":动作(pending 清空 + 置重启中)与取消(回滚语言)收尾不同,
-                // 所以这里不能复用 onDismissRequest
-                val dismissThen = LocalSheetDismissThen.current
-                TextButton(onClick = {
-                    dismissThen {
-                        pending = null
-                        restarting = true
-                    }
-                }) { Text(stringResource(R.string.common_confirm)) }
-            },
-        )
-    }
-    if (restarting) {
-        LaunchedEffect(Unit) {
-            withFrameNanos { }
-            withFrameNanos { }
-            restartApp(context.applicationContext)
-        }
-    }
-}
 
-private fun languageLabelRes(lang: AppLanguage): Int = when (lang) {
-    AppLanguage.System -> R.string.settings_language_system
-    AppLanguage.SimplifiedChinese -> R.string.settings_language_zh_hans
-    AppLanguage.English -> R.string.settings_language_en
-    AppLanguage.TraditionalTW -> R.string.settings_language_zh_hant_tw
-    AppLanguage.TraditionalHK -> R.string.settings_language_zh_hant_hk
-}
