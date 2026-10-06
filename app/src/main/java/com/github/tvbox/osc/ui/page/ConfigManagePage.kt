@@ -216,6 +216,8 @@ fun ConfigManageScreen(onNavigateBack: () -> Unit) {
                 val mOrdered = remember(currentItems, activeUrl) {
                     currentItems.sortedByDescending { parseSubscribe(it).url == activeUrl }
                 }
+                // 当前源的类型分布(py/js/jar):在 composable 作用域算好,不能在 LazyListScope 里调 remember
+                val typeStats = remember(activeUrl, bootState) { currentSourceTypeStats() }
                 LazyColumn(
                     state = rememberLazyListState(),
                     modifier = Modifier.fillMaxSize(),
@@ -227,8 +229,6 @@ fun ConfigManageScreen(onNavigateBack: () -> Unit) {
                     ),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    // 当前生效源的类型分布:让用户一眼看出哪些源依赖 py/js 引擎
-                    val typeStats = remember(activeUrl, bootState) { currentSourceTypeStats() }
                     if (typeStats.spider > 0) {
                         item(key = "__source_type_stats__") {
                             SourceTypeSummaryRow(stats = typeStats)
