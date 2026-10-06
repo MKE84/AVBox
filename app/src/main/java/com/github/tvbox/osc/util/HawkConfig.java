@@ -82,6 +82,8 @@ public class HawkConfig {
     public static final String AUTO_SWITCH_LINE = "auto_switch_line";
     /** 收藏页栅格列数(2/3;设置页"收藏页布局"写入,默认 3) */
     public static final String COLLECT_COLUMNS = "collect_columns";
+    /** 全局接口日志开关(py/js/jar/接口调用记录);默认关,设置页可开 */
+    public static final String API_LOG_ENABLED = "api_log_enabled";
     public static final String LIVE_WEB_HEADER = "live_web_header";
     public static final String DEFAULT_LOAD_LIVE = "DEFAULT_LOAD_LIVE";
     public static final String SEARCH_HISTORY = "search_history";

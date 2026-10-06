@@ -49,6 +49,7 @@ import com.github.tvbox.osc.ui.components.SettingsCardPosition
 import com.github.tvbox.osc.ui.components.SettingsGroup
 import com.github.tvbox.osc.ui.components.SettingsOptionMenuRow
 import com.github.tvbox.osc.ui.components.SettingsRow
+import com.github.tvbox.osc.ui.activity.ApiLogActivity
 import com.github.tvbox.osc.ui.activity.ConfigManageActivity
 import com.github.tvbox.osc.ui.activity.PlaySettingsActivity
 import com.github.tvbox.osc.ui.activity.PreferenceSettingsActivity
@@ -255,6 +256,14 @@ fun SettingsPage(
                         subtitle = stringResource(R.string.settings_play_subtitle),
                         iconRes = R.drawable.ic_settings_play,
                         onClick = { PlaySettingsActivity.start(context) },
+                    )
+                }
+                SettingsCard(SettingsCardPosition.MIDDLE) {
+                    SettingsRow(
+                        title = stringResource(R.string.settings_api_log),
+                        subtitle = stringResource(R.string.settings_api_log_desc),
+                        iconRes = R.drawable.ic_settings_api,
+                        onClick = { ApiLogActivity.start(context) },
                     )
                 }
                 SettingsCard(SettingsCardPosition.LAST) {

@@ -435,6 +435,17 @@
     <string name="config_live_source_hint">支援設定 JSON / m3u / txt 直播源</string>
     <string name="config_source_disabled_tag">已停用</string>
     <string name="config_source_stat_total">共 %1$d 個源</string>
+
+    <!-- 全域介面日誌 -->
+    <string name="settings_api_log">介面日誌</string>
+    <string name="settings_api_log_desc">記錄 py / js / jar 介面的呼叫與錯誤</string>
+    <string name="settings_api_log_enable">啟用介面日誌</string>
+    <string name="settings_api_log_enable_subtitle">預設關閉。開啟後記錄每次介面呼叫的成功與失敗，便於排查源問題</string>
+    <string name="settings_api_log_refresh">重新整理</string>
+    <string name="settings_api_log_clear">清除</string>
+    <string name="settings_api_log_empty">尚無日誌</string>
+    <string name="settings_api_log_off">日誌未開啟，打開上方開關後開始記錄</string>
+    <string name="settings_api_log_share">匯出日誌</string>
     <string name="config_pick_local">從本機選擇</string>
     <string name="config_field_name">名稱</string>
     <string name="config_field_url">連結</string>

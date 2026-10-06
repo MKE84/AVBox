@@ -435,6 +435,17 @@
     <string name="config_live_source_hint">Supports JSON / m3u / txt live sources</string>
     <string name="config_source_disabled_tag">Disabled</string>
     <string name="config_source_stat_total">%1$d sources</string>
+
+    <!-- API log -->
+    <string name="settings_api_log">API Log</string>
+    <string name="settings_api_log_desc">Records py / js / jar API calls and errors</string>
+    <string name="settings_api_log_enable">Enable API log</string>
+    <string name="settings_api_log_enable_subtitle">Off by default. When on, every API call is logged with success or failure for easier source troubleshooting</string>
+    <string name="settings_api_log_refresh">Refresh</string>
+    <string name="settings_api_log_clear">Clear</string>
+    <string name="settings_api_log_empty">No logs yet</string>
+    <string name="settings_api_log_off">Logging is off. Turn on the switch above to start recording</string>
+    <string name="settings_api_log_share">Export log</string>
     <string name="config_pick_local">Choose from local</string>
     <string name="config_field_name">Name</string>
     <string name="config_field_url">URL</string>
