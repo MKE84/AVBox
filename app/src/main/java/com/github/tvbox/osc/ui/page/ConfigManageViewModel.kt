@@ -43,16 +43,15 @@ private fun classifySource(api: String, jar: String): Int {
 fun currentSourceTypeStats(): SourceTypeStats {
     val list: List<SourceBean> = try {
         ApiConfig.get().sourceBeanList ?: emptyList()
-    } catch (Throwable t) {
+    } catch (e: Throwable) {
         emptyList()
     }
-    var py = 0; var js = 0; var jar = 0
+    var py = 0
+    var js = 0
+    var jar = 0
     for (sb in list) {
-        when (classifySource(sb?.api ?: "", sb?.jar ?: "")) {
-            1 -> py++
-            2 -> js++
-            3 -> jar++
-        }
+        val kind = classifySource(sb.api ?: "", sb.jar ?: "")
+        if (kind == 1) py++ else if (kind == 2) js++ else if (kind == 3) jar++
     }
     return SourceTypeStats(list.size, py, js, jar)
 }
