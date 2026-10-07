@@ -128,17 +128,14 @@ object AppBootstrap {
         }
     }
 
-    /** 快照有效期:过期即走网络刷新并把新快照写回,避免"一次缓存永久冻结源更新" */
-    private const val CONFIG_CACHE_TTL_MS = 12 * 60 * 60 * 1000L
-
-    /** 只有远程源吃快照:本地/局域网配置的改动必须立即生效,不能被快照挡住 */
+    /** 快照有效期:只要有本地快照即立即使用(秒开),不再因 TTL 过期阻塞启动重新拉取。
+     *  远程源更新在下次冷启动或主动刷新时才同步,换取"打开软件不用重新加载"的体验。 */
     private fun useCachedConfig(): Boolean {
         val apiUrl = KV.get(HawkConfig.API_URL, "")
         if (!apiUrl.startsWith("http://") && !apiUrl.startsWith("https://")) return false
         val app = App.getInstance() ?: return false
         val cache = File(app.filesDir, MD5.encode(apiUrl))
-        return cache.exists() &&
-            System.currentTimeMillis() - cache.lastModified() < CONFIG_CACHE_TTL_MS
+        return cache.exists()
     }
 
     private suspend fun awaitLoadConfig(forceFresh: Boolean): String? = suspendCancellableCoroutine { cont ->
