@@ -561,6 +561,8 @@ public class ExoPlayer extends ExoMediaPlayer {
                     bean.bitmapSubtitle = type == C.TRACK_TYPE_TEXT && isBitmapSubtitle(fmt);
                     bean.type = type;
                     bean.formatKey = formatKey(fmt, type);
+                    bean.width = fmt.width;
+                    bean.height = fmt.height;
 
                     if (type == C.TRACK_TYPE_AUDIO) {
                         data.addAudio(bean);
@@ -572,6 +574,9 @@ public class ExoPlayer extends ExoMediaPlayer {
                 }
             }
         }
+        // 画质列表从高到低:视频轨按分辨率(宽×高)降序,4K/1080P/720P… 依次排列。
+        // 排序只影响展示顺序,选轨仍靠 bean 内 renderId/groupIndex/trackId 定位,不影响正确性。
+        data.getVideo().sort((a, b) -> Long.compare((long) b.width * b.height, (long) a.width * a.height));
         return data;
     }
 

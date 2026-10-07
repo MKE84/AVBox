@@ -14,4 +14,7 @@ public class TrackInfoBean {
     public int type;
     /** 轨道指纹(见 TrackMemory):跨集定位只认它 */
     public String formatKey;
+    /** 视频轨分辨率(仅视频轨有效,用于画质列表从高到低排序) */
+    public int width;
+    public int height;
 }
