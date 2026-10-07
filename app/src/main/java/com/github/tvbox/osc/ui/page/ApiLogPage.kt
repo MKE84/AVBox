@@ -41,18 +41,16 @@ import com.github.tvbox.osc.ui.components.SettingsSwitchRow
 import com.github.tvbox.osc.ui.components.TopBarActionBox
 import com.github.tvbox.osc.util.ApiLog
 
-/** 日志类型筛选:全部 / PY / JS / 其他 */
+/** 日志类型筛选:全部 / 仅错误(FAIL)。正常=全部里的 OK 行,错误=FAIL 行。 */
 private enum class LogFilter(val label: String, val match: (String) -> Boolean) {
-    All("全部", { true }),
-    Py("PY", { it.contains("| PY |") }),
-    Js("JS", { it.contains("| JS |") }),
-    Other("其他", { !it.contains("| PY |") && !it.contains("| JS |") }),
+    Normal("正常", { true }),
+    Error("错误", { it.contains("| FAIL |") }),
 }
 
 @Composable
 fun ApiLogScreen(onNavigateBack: () -> Unit) {
     var enabled by remember { mutableStateOf(ApiLog.enabled()) }
-    var filter by remember { mutableStateOf(LogFilter.All) }
+    var filter by remember { mutableStateOf(LogFilter.Normal) }
     var lines by remember { mutableStateOf(ApiLog.recent()) }
 
     // 打开页面时刷新一次(日志在后台线程写,不主动推送)
@@ -99,7 +97,7 @@ fun ApiLogScreen(onNavigateBack: () -> Unit) {
                     }
                 }
             }
-            item(key = "__actions__") {
+            item(key = "__filter__") {
                 Row(
                     Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp),

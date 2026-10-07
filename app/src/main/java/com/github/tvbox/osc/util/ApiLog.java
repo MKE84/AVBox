@@ -211,13 +211,8 @@ public final class ApiLog {
     private static void writeLine(String line) {
         RandomAccessFile raf = null;
         try {
-            File f = file();
+            File f = nextLogFile();
             if (f == null) return;
-            if (f.exists() && f.length() > FILE_MAX_BYTES) {
-                // 简单滚动:超过上限就清空重来(避免无限增长;接口日志用于近端排查)
-                //noinspection ResultOfMethodCallIgnored
-                f.delete();
-            }
             raf = new RandomAccessFile(f, "rw");
             raf.seek(raf.length());
             raf.write((line + "\n").getBytes("UTF-8"));
@@ -230,6 +225,29 @@ public final class ApiLog {
                 } catch (Throwable ignored) {
                 }
             }
+        }
+    }
+
+    /**
+     * 不覆盖旧日志:按大小滚动到新文件。
+     * api_log_0.txt → api_log_1.txt → ... 逐级递增,保证历史日志全保留。
+     */
+    private static File nextLogFile() {
+        try {
+            File dir = AppContextHolder.context().getFilesDir();
+            File current = new File(dir, FILE_NAME);
+            if (!current.exists()) return current;
+            if (current.length() <= FILE_MAX_BYTES) return current;
+            // 当前文件超限:滚动到带序号的下一档
+            int idx = 0;
+            File candidate;
+            do {
+                candidate = new File(dir, FILE_NAME.replace(".txt", "_" + idx + ".txt"));
+                idx++;
+            } while (candidate.exists() && candidate.length() > FILE_MAX_BYTES);
+            return candidate;
+        } catch (Throwable t) {
+            return null;
         }
     }
 }
