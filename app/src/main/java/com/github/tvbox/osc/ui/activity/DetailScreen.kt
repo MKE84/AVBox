@@ -37,6 +37,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import com.github.tvbox.osc.R
+import com.github.tvbox.osc.api.ApiConfig
 import com.github.tvbox.osc.bean.Movie
 import com.github.tvbox.osc.player.ui.playerDim
 import com.github.tvbox.osc.ui.components.LoadState
@@ -184,5 +185,11 @@ fun DetailScreen(activity: DetailActivity, vm: DetailViewModel) {
     // 侧滑只在"横屏全屏"这一种形态:大屏设备点全屏时系统可能不旋转(忽略应用的方向限制),
     // 那时窗口仍是竖屏,面板必须保持贴底
     EpisodeSheet(vm, revision, slideFromEnd = fullBox && isLandscapeNow)
+    SourceSheet(
+        vm,
+        revision,
+        slideFromEnd = fullBox && isLandscapeNow,
+        currentSourceName = ApiConfig.get().getSource(vm.firstsourceKey)?.name ?: vm.firstsourceKey,
+    )
     VodCardMenu(vodMenu) { menuContext.jumpToSearch(it) }
 }

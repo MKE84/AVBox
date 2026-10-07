@@ -71,6 +71,7 @@ class DetailViewModel : ViewModel() {
     val sourcesSearching = MutableStateFlow(false)
     val relatedVideos = MutableStateFlow<List<Movie.Video>>(emptyList())
     val episodeSheet = MutableStateFlow(false)
+    val sourceSheet = MutableStateFlow(false)
     val toastEvent = MutableStateFlow<String?>(null)
     val finishEvent = MutableStateFlow(false)
 
@@ -269,6 +270,14 @@ class DetailViewModel : ViewModel() {
     fun dismissEpisodeSheet() {
         episodeSheet.value = false
         sendCommand(PlaybackCommand.SetEpisodeSheetOpen(false))
+    }
+
+    fun showSourceSheet() {
+        sourceSheet.value = true
+    }
+
+    fun dismissSourceSheet() {
+        sourceSheet.value = false
     }
 
     fun clearToast() {

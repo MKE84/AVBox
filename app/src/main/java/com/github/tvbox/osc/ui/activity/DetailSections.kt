@@ -7,13 +7,21 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.grid.itemsIndexed as gridItemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -27,11 +35,16 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.github.tvbox.osc.R
 import com.github.tvbox.osc.bean.Movie
+import com.github.tvbox.osc.ui.components.LocalSheetDismiss
 import com.github.tvbox.osc.ui.components.VodCard
+import com.github.tvbox.osc.ui.components.AVBoxBottomSheet
+import com.github.tvbox.osc.ui.theme.filterChipColors
 import com.github.tvbox.osc.ui.page.openVodCardOrDetail
 
 /** 分区标题前的裸图标(22dp、onSurface 着色):画稿图标与内置图标共用 */
@@ -61,16 +74,18 @@ internal fun SourceSection(vm: DetailViewModel, currentSourceName: String?, revi
     val sourceChips by vm.sourceChips.collectAsState()
     val sourcesSearching by vm.sourcesSearching.collectAsState()
     if (!sourcesSearching && sourceChips.isEmpty()) return
+    // 入口卡片:点击弹出换源半面板(网格小卡片)
     Column(
         modifier = Modifier
             .padding(start = 6.dp, end = 6.dp, top = 12.dp)
             .background(MaterialTheme.colorScheme.surfaceBright, RoundedCornerShape(16.dp))
-            .padding(vertical = 12.dp)
+            .clickable { vm.showSourceSheet() }
+            .padding(vertical = 12.dp),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
+                .padding(start = 16.dp, end = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             SectionTitleIcon(painterResource(R.drawable.ic_detail_switch_source))
@@ -82,98 +97,146 @@ internal fun SourceSection(vm: DetailViewModel, currentSourceName: String?, revi
                     .weight(1f)
                     .padding(start = 8.dp),
             )
-            // 已匹配到 N 个源 —— 替换原来的"寻找片源中…"动态计数
-            Text(
-                text = if (sourcesSearching) {
-                    stringResource(R.string.detail_matched_sources_searching, sourceChips.size)
-                } else {
-                    stringResource(R.string.detail_matched_sources, sourceChips.size)
-                },
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        if (currentSourceName != null) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 2.dp),
-                verticalAlignment = Alignment.CenterVertically,
+            // 当前源名(若有) + 计数
+            Column(
+                modifier = Modifier.weight(1f),
+                horizontalAlignment = Alignment.End,
             ) {
-                SourceLine(
-                    name = currentSourceName,
-                    type = "",
-                    latency = -1, // 当前源特殊标记:不显示耗时行,仅作为"当前片源"提示
-                    isCurrent = true,
-                )
+                if (currentSourceName != null) {
+                    Text(
+                        text = currentSourceName,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
                 Text(
-                    text = stringResource(R.string.detail_current_source),
+                    text = if (sourcesSearching) {
+                        stringResource(R.string.detail_matched_sources_searching, sourceChips.size)
+                    } else {
+                        stringResource(R.string.detail_matched_sources, sourceChips.size)
+                    },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 8.dp),
-                )
-            }
-        }
-        sourceChips.forEach { chip ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { vm.candidateForKey(chip.key)?.let { vm.switchSource(it) } }
-                    .padding(horizontal = 16.dp, vertical = 2.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                SourceLine(
-                    name = chip.name,
-                    type = chip.type,
-                    latency = chip.latency,
-                    isCurrent = false,
                 )
             }
         }
     }
 }
 
-/** 换源半面板的一行:左=源名+类型小字, 中=耗时(秒,最快标绿), 右=延迟(ms,绿/黄/红三级) */
+/** 换源半面板:点入口卡片弹出,网格小卡片,每源一格,点卡片切换 */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun RowScope.SourceLine(
-    name: String,
-    type: String,
-    latency: Long,
-    isCurrent: Boolean,
-) {
-    val accent = if (isCurrent) {
-        MaterialTheme.colorScheme.primary
-    } else {
-        // 延迟颜色分级:<300ms 绿, 800ms 内 黄, 更慢红
-        when {
-            latency < 0 -> MaterialTheme.colorScheme.onSurfaceVariant
-            latency < 300 -> MaterialTheme.colorScheme.tertiary
-            latency < 800 -> Color(0xFFB5A642)
-            else -> MaterialTheme.colorScheme.error
+internal fun SourceSheet(vm: DetailViewModel, revision: Int, slideFromEnd: Boolean, currentSourceName: String?) {
+    @Suppress("UNUSED_EXPRESSION") revision
+    val show by vm.sourceSheet.collectAsState()
+    if (!show) return
+    val sourceChips by vm.sourceChips.collectAsState()
+
+    val gridState = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
+    val dismissAnimated = LocalSheetDismiss.current
+
+    AVBoxBottomSheet(
+        onDismissRequest = { vm.dismissSourceSheet() },
+        title = stringResource(R.string.detail_switch_source),
+        isScrollable = false,
+        slideFromEnd = slideFromEnd,
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            // 当前片源固定一行(备用源列表不含当前源,名字由参数传入)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(R.string.detail_current_source),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                if (!currentSourceName.isNullOrEmpty()) {
+                    Text(
+                        text = currentSourceName,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+            val gridColumnCount = 3
+            val bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 16.dp
+            androidx.compose.foundation.lazy.grid.LazyVerticalGrid(
+                state = gridState,
+                columns = androidx.compose.foundation.lazy.grid.GridCells.Fixed(gridColumnCount),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentPadding = PaddingValues(
+                    start = 16.dp,
+                    end = 16.dp,
+                    bottom = bottomInset,
+                ),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                gridItemsIndexed(sourceChips, key = { _, c -> c.key }) { _, chip ->
+                    val accent = sourceChipAccent(chip.latency)
+                    FilterChip(
+                        selected = false,
+                        onClick = {
+                            vm.candidateForKey(chip.key)?.let { vm.switchSource(it) }
+                            dismissAnimated()
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        label = {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Text(
+                                    text = chip.name,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    textAlign = TextAlign.Center,
+                                    fontSize = 13.sp,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                Text(
+                                    text = when {
+                                        chip.latency >= 0 && chip.latency < 86400000L ->
+                                            "%.2f秒".format(chip.latency / 1000.0)
+                                        else -> "-"
+                                    },
+                                    maxLines = 1,
+                                    fontSize = 11.sp,
+                                    color = accent,
+                                )
+                            }
+                        },
+                        contentPadding = PaddingValues(horizontal = 6.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = MaterialTheme.colorScheme.filterChipColors(),
+                    )
+                }
+            }
         }
     }
-    var sourceLabel = name
-    if (type.isNotEmpty()) sourceLabel = "$name.$type"
-    Text(
-        text = sourceLabel,
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurface,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-        modifier = Modifier.weight(1f),
-    )
-    if (!isCurrent && latency >= 0) {
-        Text(
-            text = "%.2f秒".format(latency / 1000.0),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(end = 16.dp),
-        )
-        Text(
-            text = stringResource(R.string.detail_latency_format, latency),
-            style = MaterialTheme.typography.bodySmall,
-            color = accent,
-        )
+}
+
+/** 按延迟给源的耗时小字配色 */
+@Composable
+private fun sourceChipAccent(latency: Long): Color {
+    return when {
+        latency < 0 -> MaterialTheme.colorScheme.onSurfaceVariant
+        latency < 300 -> MaterialTheme.colorScheme.tertiary
+        latency < 800 -> Color(0xFFB5A642)
+        else -> MaterialTheme.colorScheme.error
     }
 }
 
