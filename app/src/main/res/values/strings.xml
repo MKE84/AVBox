@@ -429,10 +429,6 @@
     <string name="config_source_stat_total">共 %1$d 个源</string>
 
     <!-- 全局接口日志 -->
-    <string name="settings_api_log">接口日志</string>
-    <string name="settings_api_log_desc">记录 py / js / jar 接口的调用与错误</string>
-    <string name="settings_search_block">关键词屏蔽</string>
-    <string name="settings_search_block_desc">按名称+关键词设多条规则，命中的源不搜索、结果不显示不播放</string>
     <string name="block_add">添加</string>
     <string name="block_empty">还没有屏蔽规则</string>
     <string name="block_empty_hint">点左上角 + 添加，长按卡片可删除</string>
@@ -442,14 +438,6 @@
     <string name="block_keywords_placeholder">多个词用竖线分隔，如 音乐|乐播|听书</string>
     <string name="block_delete_title">删除规则</string>
     <string name="block_delete_confirm">确定删除「%1$s」？删除后该规则下关键词不再屏蔽</string>
-    <string name="settings_api_log_enable">启用接口日志</string>
-    <string name="settings_api_log_enable_subtitle">默认关闭。开启后记录每次接口调用的成功与失败，便于排查源问题</string>
-    <string name="settings_api_log_refresh">刷新</string>
-    <string name="settings_api_log_clear">清空</string>
-    <string name="settings_api_log_empty">暂无日志</string>
-    <string name="settings_api_log_off">日志未开启，打开上方开关后开始记录</string>
-    <string name="settings_api_log_share">导出日志</string>
-    <string name="settings_api_log_export">导出</string>
     <string name="config_pick_local">从本地选择</string>
     <string name="config_field_name">名字</string>
     <string name="config_field_url">链接</string>

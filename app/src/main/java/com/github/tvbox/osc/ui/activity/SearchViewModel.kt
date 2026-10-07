@@ -6,7 +6,6 @@ import com.github.catvod.crawler.JsLoader
 import com.github.tvbox.osc.api.ApiConfig
 import com.github.tvbox.osc.bean.AbsXml
 import com.github.tvbox.osc.bean.Movie
-import com.github.tvbox.osc.util.BlockRule
 import com.github.tvbox.osc.util.HawkConfig
 import com.github.tvbox.osc.util.HistoryHelper
 import com.github.tvbox.osc.util.KV
@@ -238,7 +237,6 @@ class SearchViewModel : ViewModel() {
         val checked = checkedSources
         val sources = ApiConfig.get().getSourceBeanList()
             .filter { it.isSearchable() && (checked == null || checked.containsKey(it.key)) }
-            .filter { !BlockRule.isBlocked(it.name) }
             .sortedBy { it.key != home.key }
         arriveSeq = 0
         // 首帧不放任何 Pending 占位:结果边搜边出,出结果的源逐个出现,没结果的源不显示不转圈
@@ -291,7 +289,6 @@ class SearchViewModel : ViewModel() {
         // 否则没结果的源会等满 SEARCH_TIMEOUT_MS 才结束(用户看到"一直加载")。
         pendingSources.remove(sourceKey)?.complete(Unit)
         val videos = data.movie?.videoList.orEmpty()
-            .filter { !BlockRule.isBlocked(it.name) }
             .filter { !exactMatch.value || SearchSettings.isExactMatch(it.name, searchedTitle.value) }
             .sortedByDescending { it.name?.trim() == searchedTitle.value }
         val sourceName = ApiConfig.get().getSourceBeanList().find { it.key == sourceKey }?.name.orEmpty()

@@ -94,10 +94,6 @@
         <activity
             android:name=".ui.activity.ThemeSettingsActivity" />
         <activity
-            android:name=".ui.activity.ApiLogActivity" />
-        <activity
-            android:name=".ui.activity.BlockListActivity" />
-        <activity
             android:name=".ui.activity.ConfigManageActivity" />
         <activity
             android:name=".ui.activity.PlaySettingsActivity" />

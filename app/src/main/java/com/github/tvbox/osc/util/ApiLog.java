@@ -64,7 +64,7 @@ public final class ApiLog {
         synchronized (ApiLog.class) {
             if (enabledLoaded) return enabledCache;
             try {
-                enabledCache = KV.get(HawkConfig.API_LOG_ENABLED, true);
+                enabledCache = KV.get(HawkConfig.API_LOG_ENABLED, false);
             } catch (Throwable t) {
                 enabledCache = false;
             }

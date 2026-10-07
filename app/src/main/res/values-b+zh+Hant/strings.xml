@@ -429,10 +429,6 @@
     <string name="config_source_stat_total">共 %1$d 個源</string>
 
     <!-- 全域介面日誌 -->
-    <string name="settings_api_log">介面日誌</string>
-    <string name="settings_api_log_desc">記錄 py / js / jar 介面的呼叫與錯誤</string>
-    <string name="settings_search_block">關鍵詞封鎖</string>
-    <string name="settings_search_block_desc">按名稱+關鍵詞設多條規則，命中的源不搜尋、結果不顯示不播放</string>
     <string name="block_add">新增</string>
     <string name="block_empty">還沒有封鎖規則</string>
     <string name="block_empty_hint">點左上角 + 新增，長按卡片可刪除</string>
@@ -442,14 +438,6 @@
     <string name="block_keywords_placeholder">多個詞用豎線分隔，如 音樂|樂播|聽書</string>
     <string name="block_delete_title">刪除規則</string>
     <string name="block_delete_confirm">確定刪除「%1$s」？刪除後該規則下關鍵詞不再封鎖</string>
-    <string name="settings_api_log_enable">啟用介面日誌</string>
-    <string name="settings_api_log_enable_subtitle">預設關閉。開啟後記錄每次介面呼叫的成功與失敗，便於排查源問題</string>
-    <string name="settings_api_log_refresh">重新整理</string>
-    <string name="settings_api_log_clear">清除</string>
-    <string name="settings_api_log_empty">尚無日誌</string>
-    <string name="settings_api_log_off">日誌未開啟，打開上方開關後開始記錄</string>
-    <string name="settings_api_log_share">匯出日誌</string>
-    <string name="settings_api_log_export">匯出</string>
     <string name="config_pick_local">從本機選擇</string>
     <string name="config_field_name">名稱</string>
     <string name="config_field_url">連結</string>
