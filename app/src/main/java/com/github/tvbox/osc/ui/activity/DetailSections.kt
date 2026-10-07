@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -181,7 +182,7 @@ internal fun SourceSheet(vm: DetailViewModel, revision: Int, slideFromEnd: Boole
                     bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 16.dp,
                 ),
             ) {
-                androidx.compose.foundation.lazy.items(sourceChips, key = { it.key }) { chip ->
+                items(sourceChips, key = { it.key }) { chip ->
                     val accent = sourceChipAccent(chip.latency)
                     val timeText = if (chip.latency >= 0 && chip.latency < 86400000L) {
                         "%.2f秒".format(chip.latency / 1000.0)
