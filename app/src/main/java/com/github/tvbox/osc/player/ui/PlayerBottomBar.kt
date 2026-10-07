@@ -136,7 +136,8 @@ fun PlayerBottomBar(
         }
 
         // —— 解析行（旧 parse_root + mGridParseView）；预览态不显示，与菜单行同规则 ——
-        if (state.showParseRow && !state.previewMode) {
+        // 隐藏解析器列表(用户要求):解析器自动切换,不手动选择,故不显示解析行
+        if (false && state.showParseRow && !state.previewMode) {
             val parseList = remember(state.parseListVersion) { ApiConfig.get().parseBeanList.toList() }
             Row(
                 Modifier.padding(top = 6.dp),

@@ -99,7 +99,8 @@ final class PlayUrlResolver {
             if (msg.what == MSG_PARSE_TIMEOUT) {
                 stopParse();
                 ApiLog.fail(ApiLog.KIND_API, "-", "嗅探/解析", "超时(" + PARSE_TIMEOUT_MS + "ms)");
-                if (host.view() != null) host.view().showErrorWithRetry(str(R.string.player_error_sniff), false);
+                // 嗅探超时也自动切换下一个解析器(不提示),全部试完才弹错误
+                errorWithRetry(str(R.string.player_error_sniff), false);
                 return true;
             }
             return false;
@@ -410,8 +411,54 @@ final class PlayUrlResolver {
         }
     }
 
+    /** 当前自动切换索引(跨实例共用计数,0=默认第一个) */
+    private static int autoParseIndex = 0;
+
+    /** 解析失败自动尝试下一个解析器(不提示),全部试完仍失败才弹错误 */
     private void errorWithRetry(String err, boolean finish) {
-        if (host.view() != null) host.view().showErrorWithRetry(err, finish);
+        if (finish) {
+            if (host.view() != null) host.view().showErrorWithRetry(err, true);
+            return;
+        }
+        try {
+            java.util.List<ParseBean> list = ApiConfig.get().getParseBeanList();
+            if (list == null || list.isEmpty()) {
+                if (host.view() != null) host.view().showErrorWithRetry(err, false);
+                return;
+            }
+            // 服务端聚合(type 3/4)已内部并行试完所有线路,失败即真失败,不在此级联
+            if (list.size() <= 1) {
+                if (host.view() != null) host.view().showErrorWithRetry(err, false);
+                return;
+            }
+            int nextIdx = (autoParseIndex + 1) % list.size();
+            int start = autoParseIndex;
+            ParseBean next = null;
+            int guard = 0;
+            while (guard++ < list.size()) {
+                if (nextIdx == start) break; // 绕回起点,所有都试过
+                ParseBean pb = list.get(nextIdx);
+                int t = pb.getType();
+                String u = pb.getUrl() == null ? "" : pb.getUrl();
+                // 跳过聚合(type 3/4)重复兜底,只留单路解析自动切换
+                boolean single = !(t == 3 || t == 4);
+                boolean alreadyTried = nextIdx == autoParseIndex || (nextIdx == 0 && autoParseIndex == list.size() - 1);
+                if (single && pb != null) {
+                    next = pb;
+                    autoParseIndex = nextIdx;
+                    break;
+                }
+                nextIdx = (nextIdx + 1) % list.size();
+            }
+            if (next == null) {
+                if (host.view() != null) host.view().showErrorWithRetry(err, false);
+                return;
+            }
+            ApiLog.ok(ApiLog.KIND_API, next.getName(), "自动切换解析", 0);
+            doParse(next);
+        } catch (Throwable th) {
+            if (host.view() != null) host.view().showErrorWithRetry(err, false);
+        }
     }
 
     /** 聚合解析(type 3/4):超级解析 = 嗅探与 json 并发;普通聚合 = jsonExtMix */
