@@ -369,7 +369,18 @@ public class ApiConfig {
         parseBeanList.clear();
         List<ParseBean> parsedParses = ConfigApplier.parseParseBeans(infoJson);
         if (!parsedParses.isEmpty()) {
-            parseBeanList.addAll(parsedParses);
+            // 白名单精简:只保留 盘古(playm3u8.cn) / 解析4(ckplayer.vip) / 所有 type=3(聚合/超级解析),
+            // 其余 URL 解析一律丢弃(用户指定)。按 url 匹配更准,避免同名不同源。
+            List<ParseBean> filtered = new java.util.ArrayList<>();
+            for (ParseBean pb : parsedParses) {
+                int t = pb.getType();
+                String u = pb.getUrl() == null ? "" : pb.getUrl();
+                boolean keep = t == 3
+                        || u.contains("playm3u8.cn")
+                        || u.contains("ckplayer.vip");
+                if (keep) filtered.add(pb);
+            }
+            parseBeanList.addAll(filtered);
             addSuperParse();
         }
         // 获取默认解析
