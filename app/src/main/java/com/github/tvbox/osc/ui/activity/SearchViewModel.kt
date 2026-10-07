@@ -62,7 +62,10 @@ class SearchViewModel : ViewModel() {
     companion object {
         private val SEARCH_SEQ = java.util.concurrent.atomic.AtomicInteger(0)
 
-        private const val SEARCH_TIMEOUT_MS = 8_000L
+        private const val SEARCH_TIMEOUT_MS = 5_000L
+
+        /** 全局搜索 UI 兜底:到点即停"加载中"(源可能仍在后台出结果,但不再让用户干等) */
+        private const val SEARCH_GLOBAL_UI_TIMEOUT_MS = 12_000L
 
         private const val DOUBAN_HOT_URL =
             "https://movie.douban.com/j/new_search_subjects?sort=U&range=0,10&tags=&playable=1&start=0&year_range="
@@ -246,6 +249,11 @@ class SearchViewModel : ViewModel() {
             return
         }
         running.value = true
+        // 全局 UI 兜底:最多 12s 后停止"加载中",不再让用户干等(源可能仍在后台陆续出结果)
+        scope.launch {
+            kotlinx.coroutines.delay(SEARCH_GLOBAL_UI_TIMEOUT_MS)
+            if (myToken == token) running.value = false
+        }
         scope.launch {
             coroutineScope {
                 sources.map { bean ->

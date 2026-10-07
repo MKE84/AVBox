@@ -124,15 +124,6 @@ fun SearchScreen(vm: SearchViewModel = viewModel()) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 4.dp),
-                trailing = {
-                    LayoutSwitchAction(
-                        selected = resultLayout,
-                        onSelect = {
-                            resultLayout = it
-                            SearchSettings.setResultLayout(it)
-                        },
-                    )
-                },
             )
         },
         navigationIcon = {

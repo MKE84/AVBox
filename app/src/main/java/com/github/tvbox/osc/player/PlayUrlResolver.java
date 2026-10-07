@@ -439,11 +439,10 @@ final class PlayUrlResolver {
                 if (nextIdx == start) break; // 绕回起点,所有都试过
                 ParseBean pb = list.get(nextIdx);
                 int t = pb.getType();
-                String u = pb.getUrl() == null ? "" : pb.getUrl();
-                // 跳过聚合(type 3/4)重复兜底,只留单路解析自动切换
-                boolean single = !(t == 3 || t == 4);
-                boolean alreadyTried = nextIdx == autoParseIndex || (nextIdx == 0 && autoParseIndex == list.size() - 1);
-                if (single && pb != null) {
+                // 按列表顺序换下一个解析器:包括其它聚合(type 3)。
+                // 仅跳过"与当前同一实现"的聚合(type 4,超级解析只有一个,跳过即可),
+                // 避免用户看到的"超级解析失败直接跳到 py、没换新解析"。
+                if (t != 4) {
                     next = pb;
                     autoParseIndex = nextIdx;
                     break;
