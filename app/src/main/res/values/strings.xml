@@ -427,10 +427,17 @@
     <!-- 全局接口日志 -->
     <string name="settings_api_log">接口日志</string>
     <string name="settings_api_log_desc">记录 py / js / jar 接口的调用与错误</string>
-    <string name="settings_search_block">搜索屏蔽词</string>
-    <string name="settings_search_block_desc">含这些词的源不参与搜索，标题含这些词的结果不显示、不播放</string>
-    <string name="settings_search_block_placeholder">多个词用逗号分隔，如：音乐,听书,DJ</string>
-    <string name="settings_search_block_hint">未设置</string>
+    <string name="settings_search_block">关键词屏蔽</string>
+    <string name="settings_search_block_desc">按名称+关键词设多条规则，命中的源不搜索、结果不显示不播放</string>
+    <string name="block_add">添加</string>
+    <string name="block_empty">还没有屏蔽规则</string>
+    <string name="block_empty_hint">点左上角 + 添加，长按卡片可删除</string>
+    <string name="block_long_hint">长按删除</string>
+    <string name="block_name_label">名称</string>
+    <string name="block_keywords_label">关键词</string>
+    <string name="block_keywords_placeholder">多个词用竖线分隔，如 音乐|乐播|听书</string>
+    <string name="block_delete_title">删除规则</string>
+    <string name="block_delete_confirm">确定删除「%1$s」？删除后该规则下关键词不再屏蔽</string>
     <string name="settings_api_log_enable">启用接口日志</string>
     <string name="settings_api_log_enable_subtitle">默认关闭。开启后记录每次接口调用的成功与失败，便于排查源问题</string>
     <string name="settings_api_log_refresh">刷新</string>
