@@ -103,15 +103,34 @@ internal fun DetailContent(
                             .weight(1f)
                             .padding(start = 12.dp),
                     ) {
+                        val metaParts = listOfNotNull(
+                            if (info.year > 0) info.year.toString() else null,
+                            info.area?.takeIf { it.isNotBlank() },
+                            info.type?.takeIf { it.isNotBlank() },
+                        )
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = info.name ?: "TVBox",
-                                style = MaterialTheme.typography.titleLarge,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis,
+                            Row(
+                                verticalAlignment = Alignment.Bottom,
                                 modifier = Modifier.weight(1f),
-                            )
+                            ) {
+                                Text(
+                                    text = info.name ?: "TVBox",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                if (metaParts.isNotEmpty()) {
+                                    Text(
+                                        text = metaParts.joinToString(" · "),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.padding(start = 8.dp),
+                                    )
+                                }
+                            }
                             IconButton(onClick = { activity.playContainer?.showCast() }) {
                                 Icon(
                                     painter = painterResource(R.drawable.ic_detail_cast),
@@ -140,11 +159,6 @@ internal fun DetailContent(
                                 }
                             }
                         }
-                        val metaParts = listOfNotNull(
-                            if (info.year > 0) info.year.toString() else null,
-                            info.area?.takeIf { it.isNotBlank() },
-                            info.type?.takeIf { it.isNotBlank() },
-                        )
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.padding(top = 4.dp),
@@ -161,18 +175,6 @@ internal fun DetailContent(
                                     color = MaterialTheme.colorScheme.onSurface,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
-                                )
-                            }
-                            if (metaParts.isNotEmpty()) {
-                                Text(
-                                    text = metaParts.joinToString(" · "),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .padding(start = 8.dp),
                                 )
                             }
                         }
