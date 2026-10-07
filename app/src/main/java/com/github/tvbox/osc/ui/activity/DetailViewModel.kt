@@ -1,6 +1,7 @@
 package com.github.tvbox.osc.ui.activity
 
 import android.content.Intent
+import android.os.SystemClock
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.tvbox.osc.api.ApiConfig
@@ -56,7 +57,7 @@ class DetailViewModel : ViewModel() {
         data object Ready : PageState
     }
 
-    data class SourceChip(val key: String, val name: String)
+    data class SourceChip(val key: String, val name: String, val type: String, val latency: Long)
 
     val pageState = MutableStateFlow<PageState>(PageState.Loading)
     val revision = MutableStateFlow(0)
@@ -134,6 +135,9 @@ class DetailViewModel : ViewModel() {
 
     private var searchToken = 0
     private var searchTitle = ""
+    // 换源半面板:记录"本次换源搜索发起时间"与"各源返回耗时(ms)",用于按最快排序+延迟标色
+    private var searchStartMs = 0L
+    private val sourceLatencyMs = HashMap<String, Long>()
 
     init {
         EventBus.getDefault().register(this)
@@ -442,6 +446,8 @@ class DetailViewModel : ViewModel() {
         if (sourcesSearching.value && searchTitle == title) return
         searchTitle = title
         searchToken = SEARCH_SEQ.incrementAndGet()
+        searchStartMs = SystemClock.elapsedRealtime()
+        sourceLatencyMs.clear()
         val myToken = searchToken
         val tokenStr = "detail_$myToken"
         val checked = SearchHelper.getSourcesForSearch()
@@ -486,6 +492,9 @@ class DetailViewModel : ViewModel() {
             val data = event.obj as? AbsXml ?: return
             if (data.searchToken != currentTokenStr()) return
             pendingSearchDone.remove(data.sourceKey)?.complete(Unit)
+            if (searchStartMs > 0) {
+                sourceLatencyMs[data.sourceKey] = SystemClock.elapsedRealtime() - searchStartMs
+            }
             val videos = data.movie?.videoList.orEmpty()
             val fresh = videos.filter {
                 !it.id.isNullOrEmpty() && it.name?.trim() == searchTitle
@@ -519,9 +528,29 @@ class DetailViewModel : ViewModel() {
             .filter { !usedSourceKeys.contains(it.sourceKey) && it.sourceKey != sourceKey }
             .map { video ->
                 val key = video.sourceKey.orEmpty()
-                SourceChip(key, ApiConfig.get().getSource(key)?.name ?: key)
+                SourceChip(
+                    key = key,
+                    name = ApiConfig.get().getSource(key)?.name ?: key,
+                    type = sourceTypeLabel(key),
+                    // 该源未返回过的给个大延迟(排末尾);返回过则用实测值
+                    latency = sourceLatencyMs[key] ?: Long.MAX_VALUE,
+                )
             }
             .distinctBy { it.key }
+            .sortedBy { it.latency }
+    }
+
+    /** 源类型小字后缀:py/js/jar/普通空串 */
+    private fun sourceTypeLabel(key: String): String {
+        val sb = ApiConfig.get().getSource(key) ?: return ""
+        val api = sb.api.orEmpty()
+        val lower = api.lowercase()
+        return when {
+            lower.endsWith(".py") || lower.contains(".py?") || lower.contains(".py#") -> "py"
+            lower.endsWith(".js") || lower.contains(".js?") || lower.contains(".js#") -> "js"
+            !sb.jar.isNullOrEmpty() -> "jar"
+            else -> ""
+        }
     }
 
     fun candidateForKey(key: String): Movie.Video? =

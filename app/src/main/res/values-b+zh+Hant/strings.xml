@@ -320,6 +320,10 @@
     <string name="detail_order_desc">倒序</string>
     <string name="detail_switch_source">換源</string>
     <string name="detail_finding_source">尋找片源中…</string>
+    <string name="detail_matched_sources">已匹配到%1$d個源</string>
+    <string name="detail_matched_sources_searching">匹配中…已找到%1$d個</string>
+    <string name="detail_current_source">當前片源</string>
+    <string name="detail_latency_format">延遲:%1$d</string>
     <string name="detail_recommend">相關推薦</string>
 
     <!-- 歷史 -->

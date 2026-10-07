@@ -320,6 +320,10 @@
     <string name="detail_order_desc">Descending</string>
     <string name="detail_switch_source">Switch source</string>
     <string name="detail_finding_source">Finding sources…</string>
+    <string name="detail_matched_sources">%1$d sources matched</string>
+    <string name="detail_matched_sources_searching">Matching… %1$d found</string>
+    <string name="detail_current_source">Current source</string>
+    <string name="detail_latency_format">Latency %1$d</string>
     <string name="detail_recommend">Related</string>
 
     <!-- History -->

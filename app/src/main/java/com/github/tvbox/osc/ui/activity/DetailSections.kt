@@ -1,38 +1,38 @@
 package com.github.tvbox.osc.ui.activity
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.github.tvbox.osc.R
 import com.github.tvbox.osc.bean.Movie
 import com.github.tvbox.osc.ui.components.VodCard
 import com.github.tvbox.osc.ui.page.openVodCardOrDetail
-import com.github.tvbox.osc.ui.theme.filterChipColors
 
 /** 分区标题前的裸图标(22dp、onSurface 着色):画稿图标与内置图标共用 */
 @Composable
@@ -61,10 +61,6 @@ internal fun SourceSection(vm: DetailViewModel, currentSourceName: String?, revi
     val sourceChips by vm.sourceChips.collectAsState()
     val sourcesSearching by vm.sourcesSearching.collectAsState()
     if (!sourcesSearching && sourceChips.isEmpty()) return
-    val listState = rememberLazyListState()
-    LaunchedEffect(currentSourceName) {
-        if (currentSourceName != null) listState.scrollToItem(0)
-    }
     Column(
         modifier = Modifier
             .padding(start = 6.dp, end = 6.dp, top = 12.dp)
@@ -86,42 +82,98 @@ internal fun SourceSection(vm: DetailViewModel, currentSourceName: String?, revi
                     .weight(1f)
                     .padding(start = 8.dp),
             )
-            if (sourcesSearching) {
+            // 已匹配到 N 个源 —— 替换原来的"寻找片源中…"动态计数
+            Text(
+                text = if (sourcesSearching) {
+                    stringResource(R.string.detail_matched_sources_searching, sourceChips.size)
+                } else {
+                    stringResource(R.string.detail_matched_sources, sourceChips.size)
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        if (currentSourceName != null) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                SourceLine(
+                    name = currentSourceName,
+                    type = "",
+                    latency = -1, // 当前源特殊标记:不显示耗时行,仅作为"当前片源"提示
+                    isCurrent = true,
+                )
                 Text(
-                    text = stringResource(R.string.detail_finding_source),
+                    text = stringResource(R.string.detail_current_source),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 8.dp),
                 )
             }
         }
-        LazyRow(
-            state = listState,
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            if (currentSourceName != null) {
-                item(key = "current") {
-                    FilterChip(
-                        selected = true,
-                        onClick = {},
-                        label = { Text(currentSourceName) },
-                        shape = RoundedCornerShape(20.dp),
-                        colors = MaterialTheme.colorScheme.filterChipColors(),
-                    )
-                }
-            }
-            itemsIndexed(sourceChips, key = { _, c -> c.key }) { _, chip ->
-                FilterChip(
-                    selected = false,
-                    onClick = { vm.candidateForKey(chip.key)?.let { vm.switchSource(it) } },
-                    label = { Text(chip.name) },
-                    shape = RoundedCornerShape(20.dp),
-                    colors = MaterialTheme.colorScheme.filterChipColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                    ),
+        sourceChips.forEach { chip ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { vm.candidateForKey(chip.key)?.let { vm.switchSource(it) } }
+                    .padding(horizontal = 16.dp, vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                SourceLine(
+                    name = chip.name,
+                    type = chip.type,
+                    latency = chip.latency,
+                    isCurrent = false,
                 )
             }
         }
+    }
+}
+
+/** 换源半面板的一行:左=源名+类型小字, 中=耗时(秒,最快标绿), 右=延迟(ms,绿/黄/红三级) */
+@Composable
+private fun RowScope.SourceLine(
+    name: String,
+    type: String,
+    latency: Long,
+    isCurrent: Boolean,
+) {
+    val accent = if (isCurrent) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        // 延迟颜色分级:<300ms 绿, 800ms 内 黄, 更慢红
+        when {
+            latency < 0 -> MaterialTheme.colorScheme.onSurfaceVariant
+            latency < 300 -> MaterialTheme.colorScheme.tertiary
+            latency < 800 -> Color(0xFFB5A642)
+            else -> MaterialTheme.colorScheme.error
+        }
+    }
+    var sourceLabel = name
+    if (type.isNotEmpty()) sourceLabel = "$name.$type"
+    Text(
+        text = sourceLabel,
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurface,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier = Modifier.weight(1f),
+    )
+    if (!isCurrent && latency >= 0) {
+        Text(
+            text = "%.2f秒".format(latency / 1000.0),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(end = 16.dp),
+        )
+        Text(
+            text = stringResource(R.string.detail_latency_format, latency),
+            style = MaterialTheme.typography.bodySmall,
+            color = accent,
+        )
     }
 }
 
