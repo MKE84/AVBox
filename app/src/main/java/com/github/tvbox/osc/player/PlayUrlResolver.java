@@ -31,6 +31,7 @@ import com.github.tvbox.osc.base.App;
 import com.github.tvbox.osc.bean.ParseBean;
 import com.github.tvbox.osc.bean.SourceBean;
 import com.github.tvbox.osc.util.AdBlocker;
+import com.github.tvbox.osc.util.ApiLog;
 import com.github.tvbox.osc.util.DefaultConfig;
 import com.github.tvbox.osc.util.HeaderGuard;
 import com.github.tvbox.osc.util.LOG;
@@ -97,6 +98,7 @@ final class PlayUrlResolver {
         public boolean handleMessage(@NonNull Message msg) {
             if (msg.what == MSG_PARSE_TIMEOUT) {
                 stopParse();
+                ApiLog.fail(ApiLog.KIND_API, "-", "嗅探/解析", "超时(" + PARSE_TIMEOUT_MS + "ms)");
                 if (host.view() != null) host.view().showErrorWithRetry(str(R.string.player_error_sniff), false);
                 return true;
             }
@@ -258,6 +260,7 @@ final class PlayUrlResolver {
         String videoUrl = loadFoundVideoUrls.poll();
         if (videoUrl == null) return;
         HashMap<String, String> header = loadFoundVideoUrlsHeader.get(videoUrl);
+        ApiLog.ok(ApiLog.KIND_API, "-", "嗅探命中", 0);
         if (host.view() != null) host.playUrl(videoUrl, header);
     }
 
@@ -362,6 +365,7 @@ final class PlayUrlResolver {
                         @Override
                         public void onError(Response<String> response) {
                             super.onError(response);
+                            ApiLog.fail(ApiLog.KIND_API, "-", "解析(json:" + pb.getName() + ")", "网络错误");
                             errorWithRetry(str(R.string.player_parse_error), false);
                         }
                     });
