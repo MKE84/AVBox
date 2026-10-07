@@ -109,6 +109,11 @@ public class HawkConfig {
     public static final String SEARCH_THREADS = "search_threads";
     /** 搜索并发线程数:固定 16(设置项已隐藏,不再调整) */
     public static final int SEARCH_THREADS_DEFAULT = 16;
+    // 搜索屏蔽词(2026-10-07):逗号/换行分隔;源名含任一关键词则该源不参与搜索(音乐/听书等),
+    // 结果标题含任一关键词则被过滤,既不展示也不播放。
+    public static final String SEARCH_BLOCK_KEYWORDS = "search_block_keywords";
+    /** 屏蔽词默认值:常见非影视类(音乐/听书/有声书等),用户可在设置页清空或改写 */
+    public static final String SEARCH_BLOCK_KEYWORDS_DEFAULT = "音乐,听书,有声,DJ,相声,评书,广播,电台";
     // 长按倍速(2026-09-12,设置页滑块 2x~10x 步长 1):长按画面临时提速的倍率
     public static final String LONG_PRESS_SPEED = "long_press_speed";
     public static final int LONG_PRESS_SPEED_DEFAULT = 3;

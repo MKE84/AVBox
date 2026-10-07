@@ -109,6 +109,26 @@ class SearchViewModel : ViewModel() {
             if (checkedSourcesApiUrl != KV.get(HawkConfig.API_URL, "")) return true
             return SearchHelper.isSelectionStale(checkedSources)
         }
+
+        /** 搜索屏蔽词:逗号/换行/空格分隔,去空,token 化。空串表示不屏蔽。 */
+        @JvmStatic
+        fun blockKeywords(): List<String> {
+            val raw = KV.get(HawkConfig.SEARCH_BLOCK_KEYWORDS, HawkConfig.SEARCH_BLOCK_KEYWORDS_DEFAULT)
+            if (raw.isNullOrBlank()) return emptyList()
+            return raw.split(',', '，', '\n', ' ', '、', ';', '；')
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+        }
+
+        /** 文本是否命中任一屏蔽词(源名/标题共用) */
+        @JvmStatic
+        fun isBlocked(text: String?): Boolean {
+            if (text.isNullOrEmpty()) return false
+            val keywords = blockKeywords()
+            if (keywords.isEmpty()) return false
+            val lower = text.lowercase()
+            return keywords.any { lower.contains(it.lowercase()) }
+        }
     }
 
     init {
@@ -234,6 +254,7 @@ class SearchViewModel : ViewModel() {
         val checked = checkedSources
         val sources = ApiConfig.get().getSourceBeanList()
             .filter { it.isSearchable() && (checked == null || checked.containsKey(it.key)) }
+            .filter { !isBlocked(it.name) }
             .sortedBy { it.key != home.key }
         arriveSeq = 0
         results.value = sources.map { SourceResult(it.key, it.name.orEmpty(), ResultState.Pending, emptyList()) }
@@ -279,6 +300,7 @@ class SearchViewModel : ViewModel() {
         if (results.value.none { it.sourceKey == sourceKey }) return
         pendingSources.remove(sourceKey)?.complete(Unit)
         val videos = data.movie?.videoList.orEmpty()
+            .filter { !isBlocked(it.name) }
             .filter { !exactMatch.value || SearchSettings.isExactMatch(it.name, searchedTitle.value) }
             .sortedByDescending { it.name?.trim() == searchedTitle.value }
         updateResult(sourceKey, videos)

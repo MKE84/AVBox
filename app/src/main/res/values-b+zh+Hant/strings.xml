@@ -427,6 +427,10 @@
     <!-- 全域介面日誌 -->
     <string name="settings_api_log">介面日誌</string>
     <string name="settings_api_log_desc">記錄 py / js / jar 介面的呼叫與錯誤</string>
+    <string name="settings_search_block">搜尋封鎖詞</string>
+    <string name="settings_search_block_desc">含這些詞的源不參與搜尋，標題含這些詞的結果不顯示、不播放</string>
+    <string name="settings_search_block_placeholder">多個詞用逗號分隔，如：音樂,聽書,DJ</string>
+    <string name="settings_search_block_hint">未設定</string>
     <string name="settings_api_log_enable">啟用介面日誌</string>
     <string name="settings_api_log_enable_subtitle">預設關閉。開啟後記錄每次介面呼叫的成功與失敗，便於排查源問題</string>
     <string name="settings_api_log_refresh">重新整理</string>

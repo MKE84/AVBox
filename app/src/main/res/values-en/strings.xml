@@ -427,6 +427,10 @@
     <!-- API log -->
     <string name="settings_api_log">API Log</string>
     <string name="settings_api_log_desc">Records py / js / jar API calls and errors</string>
+    <string name="settings_search_block">Search block keywords</string>
+    <string name="settings_search_block_desc">Sources whose name contains a keyword are skipped; results whose title contains a keyword are hidden and not played</string>
+    <string name="settings_search_block_placeholder">Separate keywords with commas, e.g. music, audiobook, DJ</string>
+    <string name="settings_search_block_hint">Not set</string>
     <string name="settings_api_log_enable">Enable API log</string>
     <string name="settings_api_log_enable_subtitle">Off by default. When on, every API call is logged with success or failure for easier source troubleshooting</string>
     <string name="settings_api_log_refresh">Refresh</string>

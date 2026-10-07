@@ -83,6 +83,7 @@ data class SettingsState(
     val preloadDuration: Int,
     val dohIndex: Int,
     val cacheSizeText: String = "",
+    val searchBlockKeywords: String = HawkConfig.SEARCH_BLOCK_KEYWORDS_DEFAULT,
 )
 
 class SettingsViewModel : ViewModel() {
@@ -163,6 +164,10 @@ class SettingsViewModel : ViewModel() {
         preloadDuration = KV.get(HawkConfig.PRELOAD_DURATION, HawkConfig.PRELOAD_DURATION_DEFAULT),
         dohIndex = KV.get(HawkConfig.DOH_URL, 0),
         cacheSizeText = cacheSizeText,
+        searchBlockKeywords = KV.get(
+            HawkConfig.SEARCH_BLOCK_KEYWORDS,
+            HawkConfig.SEARCH_BLOCK_KEYWORDS_DEFAULT,
+        ),
     )
 
     fun <T> put(key: String, value: T) {
@@ -243,6 +248,32 @@ fun SettingsPage(
                         onClick = { ApiLogActivity.start(context) },
                     )
                 }
+                SettingsCard(SettingsCardPosition.MIDDLE) {
+                    var showBlockDialog by remember { mutableStateOf(false) }
+                    val blockKeywords = state.searchBlockKeywords.ifBlank {
+                        context.getString(R.string.settings_search_block_hint)
+                    }
+                    SettingsRow(
+                        title = stringResource(R.string.settings_search_block),
+                        subtitle = stringResource(R.string.settings_search_block_desc),
+                        iconRes = R.drawable.ic_filter,
+                        valueText = blockKeywords,
+                        onClick = { showBlockDialog = true },
+                    )
+                    if (showBlockDialog) {
+                        TextEditDialog(
+                            title = stringResource(R.string.settings_search_block),
+                            initialText = state.searchBlockKeywords,
+                            placeholder = stringResource(R.string.settings_search_block_placeholder),
+                            onDismiss = { showBlockDialog = false },
+                            onConfirm = { text ->
+                                vm.put(HawkConfig.SEARCH_BLOCK_KEYWORDS, text)
+                                vm.refreshState()
+                                showBlockDialog = false
+                            },
+                        )
+                    }
+                }
             }
 
             SettingsGroup(title = null) {
@@ -304,6 +335,7 @@ fun TextEditDialog(
     initialText: String,
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit,
+    placeholder: String = stringResource(R.string.dialog_api_url_hint),
 ) {
     var text by rememberSaveable { mutableStateOf(initialText) }
     AVBoxAlertDialog(
@@ -315,7 +347,7 @@ fun TextEditDialog(
                 onValueChange = { text = it },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                placeholder = { Text(stringResource(R.string.dialog_api_url_hint)) },
+                placeholder = { Text(placeholder) },
             )
         },
         confirmButton = {
