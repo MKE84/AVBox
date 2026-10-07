@@ -52,6 +52,23 @@ import com.github.tvbox.osc.ui.components.LocalSheetDismiss
 import com.github.tvbox.osc.ui.theme.filterChipColors
 import kotlinx.coroutines.launch
 
+/**
+ * 选集名裁剪:去掉"片名+集数"(如"剑来第一集" → "第一集")里的片名前缀。
+ * 源返回的集名格式不一:有的是纯"第1集",有的带片名前缀。仅当集名确实以片名开头
+ * 才截掉前缀并清理干净残留分隔符;否则原样返回(避免破坏"预告/花絮"等纯文字集名)。
+ */
+private fun episodeLabel(raw: String?, vodName: String?, fallback: Int): String {
+    val name = raw?.trim().orEmpty()
+    if (name.isEmpty()) return fallback.toString()
+    if (!vodName.isNullOrEmpty() && name.startsWith(vodName)) {
+        var rest = name.substring(vodName.length).trimStart()
+        // 清理片名与集数之间可能的分隔符(空格/冒号/句点/下划线/横杠/全角冒号等)
+        rest = rest.replaceFirst("^[\\s:：.·_\\-\\|>》>]+".toRegex(), "")
+        if (rest.isNotEmpty()) return rest
+    }
+    return name
+}
+
 @Composable
 internal fun EpisodeRow(
     vm: DetailViewModel,
@@ -121,7 +138,7 @@ internal fun EpisodeRow(
                     onClick = { vm.onEpisodeClick(index) },
                     label = {
                         Text(
-                            text = ep.name ?: (index + 1).toString(),
+                            text = episodeLabel(ep.name, info.name, index + 1),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
@@ -298,7 +315,7 @@ internal fun EpisodeSheet(vm: DetailViewModel, revision: Int, slideFromEnd: Bool
                             .height(40.dp),
                         label = {
                             Text(
-                                text = ep.name ?: (index + 1).toString(),
+                                text = episodeLabel(ep.name, info.name, index + 1),
                                 maxLines = 1,
                                 softWrap = false,
                                 textAlign = TextAlign.Center,
