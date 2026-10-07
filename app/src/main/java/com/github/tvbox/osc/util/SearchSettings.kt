@@ -27,7 +27,8 @@ object SearchSettings {
 
     private val NOISE_PATTERN = Regex("[\\s\\p{Z}\\p{P}\\p{S}]")
 
-    fun isExactMatchEnabled(): Boolean = KV.get(KEY_EXACT_MATCH, false)
+    // 精准搜索默认开启:设置页开关已删,搜索直接按精准匹配(归一化标题一致)出结果
+    fun isExactMatchEnabled(): Boolean = KV.get(KEY_EXACT_MATCH, true)
 
     fun setExactMatchEnabled(enabled: Boolean) {
         KV.put(KEY_EXACT_MATCH, enabled)

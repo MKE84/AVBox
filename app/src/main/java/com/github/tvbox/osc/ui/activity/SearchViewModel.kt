@@ -238,7 +238,8 @@ class SearchViewModel : ViewModel() {
             .filter { !BlockRule.isBlocked(it.name) }
             .sortedBy { it.key != home.key }
         arriveSeq = 0
-        results.value = sources.map { SourceResult(it.key, it.name.orEmpty(), ResultState.Pending, emptyList()) }
+        // 首帧不放任何 Pending 占位:结果边搜边出,出结果的源逐个出现,没结果的源不显示不转圈
+        results.value = emptyList()
         sitesEmpty.value = sources.isEmpty()
         if (sources.isEmpty()) {
             running.value = false
@@ -281,20 +282,31 @@ class SearchViewModel : ViewModel() {
         // 不论结果列表是否已有该源,只要事件到达就解除 done.await() 的等待,
         // 否则没结果的源会等满 SEARCH_TIMEOUT_MS 才结束(用户看到"一直加载")。
         pendingSources.remove(sourceKey)?.complete(Unit)
-        if (results.value.none { it.sourceKey == sourceKey }) return
         val videos = data.movie?.videoList.orEmpty()
             .filter { !BlockRule.isBlocked(it.name) }
             .filter { !exactMatch.value || SearchSettings.isExactMatch(it.name, searchedTitle.value) }
             .sortedByDescending { it.name?.trim() == searchedTitle.value }
-        updateResult(sourceKey, videos)
+        val sourceName = ApiConfig.get().getSourceBeanList().find { it.key == sourceKey }?.name.orEmpty()
+        updateResult(sourceKey, sourceName, videos)
     }
 
-    private fun updateResult(sourceKey: String, videos: List<Movie.Video>) {
-        results.value = results.value.map {
-            if (it.sourceKey == sourceKey) {
-                SourceResult(sourceKey, it.sourceName, ResultState.Done, videos, ++arriveSeq)
-            } else {
-                it
+    private fun updateResult(sourceKey: String, sourceName: String, videos: List<Movie.Video>) {
+        if (videos.isEmpty()) {
+            // 无结果的源直接移除,不显示"空/加载中"占位;源从未出现过则什么都不做
+            results.value = results.value.filter { it.sourceKey != sourceKey }
+            return
+        }
+        val existing = results.value.find { it.sourceKey == sourceKey }
+        if (existing == null) {
+            // 首帧为空列表:有结果的源第一次到达时追加(边搜边出,搜到一个出一个)
+            results.value = results.value + SourceResult(sourceKey, sourceName, ResultState.Done, videos, ++arriveSeq)
+        } else {
+            results.value = results.value.map {
+                if (it.sourceKey == sourceKey) {
+                    SourceResult(sourceKey, it.sourceName, ResultState.Done, videos, ++arriveSeq)
+                } else {
+                    it
+                }
             }
         }
     }

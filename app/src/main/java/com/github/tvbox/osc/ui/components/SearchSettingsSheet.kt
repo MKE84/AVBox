@@ -80,51 +80,9 @@ fun SearchSettingsSheet(onDismiss: () -> Unit, onSelectionChanged: () -> Unit) {
         onDismissRequest = onDismiss,
         title = stringResource(R.string.search_settings),
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
-        headerContent = {
-            Text(
-                text = stringResource(R.string.search_home_poster),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp),
-            )
-            CapsuleSegmentedButton(
-                options = listOf(
-                    SegmentOption(
-                        label = stringResource(R.string.search_layout_horizontal),
-                        value = HomeSettings.HomeLayout.Horizontal,
-                        iconPainter = painterResource(R.drawable.ic_layout_horizontal),
-                    ),
-                    SegmentOption(
-                        label = stringResource(R.string.search_layout_vertical),
-                        value = HomeSettings.HomeLayout.Vertical,
-                        iconPainter = painterResource(R.drawable.ic_layout_vertical),
-                    ),
-                ),
-                selectedValue = homeLayout,
-                onOptionSelected = { HomeSettings.setLayout(it) },
-                style = SegmentStyle.Separated,
-                containerColor = MaterialTheme.colorScheme.surfaceBright,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 4.dp),
-            )
-        },
     ) {
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
             SettingsGroup(title = null) {
-                SettingsCard(
-                    position = SettingsCardPosition.SINGLE,
-                    color = MaterialTheme.colorScheme.surfaceBright,
-                ) {
-                    SettingsSwitchRow(
-                        title = stringResource(R.string.search_exact),
-                        checked = exactMatch,
-                        onCheckedChange = {
-                            exactMatch = it
-                            SearchSettings.setExactMatchEnabled(it)
-                        },
-                    )
-                }
             }
             Row(
                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
