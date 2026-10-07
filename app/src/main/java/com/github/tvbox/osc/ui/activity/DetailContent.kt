@@ -163,20 +163,13 @@ internal fun DetailContent(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.padding(top = 4.dp),
                         ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .background(MaterialTheme.colorScheme.surfaceContainer, RoundedCornerShape(50))
-                                    .padding(horizontal = 12.dp, vertical = 6.dp),
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.detail_source, displaySourceName),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                            }
+                            Text(
+                                text = stringResource(R.string.detail_source, displaySourceName),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
                         }
                     }
                 }
@@ -192,7 +185,7 @@ internal fun DetailContent(
                             text = desc,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = if (descExpanded) Int.MAX_VALUE else 3,
+                            maxLines = if (descExpanded) Int.MAX_VALUE else 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier
                                 .clip(RoundedCornerShape(8.dp))
