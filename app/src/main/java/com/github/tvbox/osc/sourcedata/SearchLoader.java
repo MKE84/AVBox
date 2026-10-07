@@ -8,6 +8,8 @@ import com.github.catvod.crawler.Spider;
 import com.github.tvbox.osc.api.ApiConfig;
 import com.github.tvbox.osc.bean.AbsXml;
 import com.github.tvbox.osc.bean.SourceBean;
+import com.github.tvbox.osc.util.ApiLog;
+import com.github.tvbox.osc.util.BoundedCall;
 import com.github.tvbox.osc.util.LOG;
 import com.google.gson.Gson;
 import com.lzy.okgo.callback.AbsCallback;
@@ -68,18 +70,27 @@ final class SearchLoader {
 
     /** type 3:爬虫 searchContent;空结果也回一条空 AbsXml,保持与其它分支同形状 */
     private void searchFromSpider(final SourceBean sourceBean, final String wd, final MutableLiveData<AbsXml> result, final String searchToken) {
-        
+        final String key = sourceBean.getKey();
+        long timeoutMs = sourceBean.getPlayTimeoutSeconds() * 1000L;
+        String tag = "echo--getSearch--" + key;
         try {
-            Spider sp = ApiConfig.get().getCSP(sourceBean);
-            String search = sp.searchContent(wd, false);
-            if(!TextUtils.isEmpty(search)){
-                resultParser.json(result, search, sourceBean.getKey(), searchToken);
+            String search = BoundedCall.call(new java.util.concurrent.Callable<String>() {
+                @Override
+                public String call() throws Exception {
+                    Spider sp = ApiConfig.get().getCSP(sourceBean);
+                    return sp.searchContent(wd, false);
+                }
+            }, timeoutMs, tag);
+            if (!TextUtils.isEmpty(search)) {
+                resultParser.json(result, search, key, searchToken);
             } else {
-                resultParser.json(result, "", sourceBean.getKey(), searchToken);
+                ApiLog.fail(ApiLog.kindOfKey(key), key, "搜索", "返回空");
+                resultParser.json(result, "", key, searchToken);
             }
         } catch (Throwable th) {
+            ApiLog.fail(ApiLog.kindOfKey(key), key, "搜索", th.getMessage());
             LOG.e("SourceViewModel", th);
-            resultParser.json(result, "", sourceBean.getKey(), searchToken);
+            resultParser.json(result, "", key, searchToken);
         }
     
     }
