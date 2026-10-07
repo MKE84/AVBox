@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
@@ -18,7 +19,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.grid.itemsIndexed as gridItemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -134,11 +134,13 @@ internal fun SourceSheet(vm: DetailViewModel, revision: Int, slideFromEnd: Boole
     if (!show) return
     val sourceChips by vm.sourceChips.collectAsState()
 
-    val gridState = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
+    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
     val dismissAnimated = LocalSheetDismiss.current
 
     AVBoxBottomSheet(
         onDismissRequest = { vm.dismissSourceSheet() },
+        // 半面板:只占屏幕一半高(vs 原来的全屏面板)
+        modifier = Modifier.fillMaxHeight(0.5f),
         title = stringResource(R.string.detail_switch_source),
         isScrollable = false,
         slideFromEnd = slideFromEnd,
@@ -167,62 +169,63 @@ internal fun SourceSheet(vm: DetailViewModel, revision: Int, slideFromEnd: Boole
                     )
                 }
             }
-            val gridColumnCount = 3
-            val bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 16.dp
-            androidx.compose.foundation.lazy.grid.LazyVerticalGrid(
-                state = gridState,
-                columns = androidx.compose.foundation.lazy.grid.GridCells.Fixed(gridColumnCount),
+            // 一排一个源:竖向列表,每行 = 源名 + 耗时/延迟(色),可滚动
+            androidx.compose.foundation.lazy.LazyColumn(
+                state = listState,
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
                 contentPadding = PaddingValues(
                     start = 16.dp,
                     end = 16.dp,
-                    bottom = bottomInset,
+                    bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 16.dp,
                 ),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                gridItemsIndexed(sourceChips, key = { _, c -> c.key }) { _, chip ->
+                androidx.compose.foundation.lazy.items(sourceChips, key = { it.key }) { chip ->
                     val accent = sourceChipAccent(chip.latency)
-                    FilterChip(
-                        selected = false,
-                        onClick = {
-                            vm.candidateForKey(chip.key)?.let { vm.switchSource(it) }
-                            dismissAnimated()
-                        },
+                    val timeText = if (chip.latency >= 0 && chip.latency < 86400000L) {
+                        "%.2f秒".format(chip.latency / 1000.0)
+                    } else {
+                        "-"
+                    }
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp),
-                        label = {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.fillMaxWidth(),
-                            ) {
-                                Text(
-                                    text = chip.name,
-                                    maxLines = 1,
-                                    softWrap = false,
-                                    textAlign = TextAlign.Center,
-                                    fontSize = 13.sp,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                                Text(
-                                    text = when {
-                                        chip.latency >= 0 && chip.latency < 86400000L ->
-                                            "%.2f秒".format(chip.latency / 1000.0)
-                                        else -> "-"
-                                    },
-                                    maxLines = 1,
-                                    fontSize = 11.sp,
-                                    color = accent,
-                                )
+                            .clickable {
+                                vm.candidateForKey(chip.key)?.let { vm.switchSource(it) }
+                                dismissAnimated()
                             }
-                        },
-                        contentPadding = PaddingValues(horizontal = 6.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = MaterialTheme.colorScheme.filterChipColors(),
-                    )
+                            .padding(horizontal = 4.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = chip.name,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f),
+                        )
+                        if (timeText != "-") {
+                            Text(
+                                text = timeText,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(end = 8.dp),
+                            )
+                            Text(
+                                text = stringResource(R.string.detail_latency_format, chip.latency),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = accent,
+                            )
+                        } else {
+                            Text(
+                                text = "-",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = accent,
+                            )
+                        }
+                    }
                 }
             }
         }
