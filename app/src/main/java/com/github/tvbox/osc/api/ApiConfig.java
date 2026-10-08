@@ -28,6 +28,7 @@ import com.github.tvbox.osc.util.HistoryHelper;
 import com.github.tvbox.osc.util.LOG;
 import com.github.tvbox.osc.util.LanguageManager;
 import com.github.tvbox.osc.util.OkGoHelper;
+import com.github.tvbox.osc.util.SourceManager;
 import com.github.tvbox.osc.util.VideoParseRuler;
 import com.github.tvbox.osc.util.live.TxtSubscribe;
 import com.google.gson.Gson;
@@ -349,10 +350,20 @@ public class ApiConfig {
         danmaku = DefaultConfig.safeJsonString(infoJson, "danmaku", "");
         // 远端站点源
         List<SourceBean> sites = ConfigParser.parseSites(infoJson);
+        // 过滤用户手动隐藏(删除)的源,避免订阅刷新后"失效源复活"
+        java.util.List<SourceBean> visible = new java.util.ArrayList<>();
+        SourceManager sm = SourceManager.get();
         for (SourceBean sb : sites) {
+            if (sm.isHidden(sb.getKey())) {
+                LOG.i("echo-skip hidden source: " + sb.getName() + " (" + sb.getKey() + ")");
+                continue;
+            }
+            visible.add(sb);
+        }
+        for (SourceBean sb : visible) {
             sourceBeanList.put(sb.getKey(), sb);
         }
-        SourceBean firstSite = firstVisibleSite(sites);
+        SourceBean firstSite = firstVisibleSite(visible);
         if (sourceBeanList != null && sourceBeanList.size() > 0) {
             String home = KV.get(HawkConfig.HOME_API, "");
             SourceBean sh = getSource(home);

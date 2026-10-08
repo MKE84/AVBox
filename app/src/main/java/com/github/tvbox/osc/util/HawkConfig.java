@@ -41,6 +41,10 @@ public class HawkConfig {
      */
     public static final String BOOT_DISABLED_SOURCES = "boot_disabled_sources";
     public static final String LIVE_API_HISTORY = "live_api_history";
+    /** 用户手动删除/隐藏的源 key 集合(ArrayList<String>);订阅刷新时按它过滤,防"失效源复活"。 */
+    public static final String HIDDEN_SOURCES = "hidden_sources";
+    /** "最近删除"记录(ArrayList<String>,每项 "名字\tkey");仅用于最近删除面板展示/恢复。 */
+    public static final String RECENT_DELETED_SOURCES = "recent_deleted_sources";
     public static final String HOME_API = "home_api";
     public static final String DEFAULT_PARSE = "parse_default";
     // EXO 解码方式:走 media3 的 MediaCodecSelector(软解 = 系统软件解码器 c2.android.* 优先,仅视频渲染器)
