@@ -76,7 +76,26 @@ fun SourceManageScreen(onNavigateBack: () -> Unit) {
         ) {
             // ===== 最近删除区 =====
             if (recent.isNotEmpty()) {
-                item { SectionTitle("最近删除") }
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "最近删除",
+                            modifier = Modifier.padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(Modifier.weight(1f))
+                        TextButton(onClick = {
+                            mgr.clearRecentAll()
+                            refreshKey++
+                            Toast.makeText(ctx, "已清空最近删除", Toast.LENGTH_SHORT).show()
+                        }) { Text("全部清空", color = MaterialTheme.colorScheme.error) }
+                    }
+                }
                 items(recent.size, key = { it }) { i ->
                     val parts = recent[i].split("\t")
                     val rName = parts.getOrElse(0) { recent[i] }

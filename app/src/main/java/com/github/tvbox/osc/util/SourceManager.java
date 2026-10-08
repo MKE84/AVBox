@@ -102,6 +102,14 @@ public final class SourceManager {
         }
     }
 
+    /** 清空「最近删除」列表(仅清记录，不影响隐藏黑名单；隐藏源不会因此复活) */
+    public synchronized void clearRecentAll() {
+        try {
+            KV.put(HawkConfig.RECENT_DELETED_SOURCES, new ArrayList<String>());
+        } catch (Throwable ignored) {
+        }
+    }
+
     /** 清空全部隐藏与最近删除记录(整仓重置时使用) */
     public synchronized void clearAll() {
         try {
