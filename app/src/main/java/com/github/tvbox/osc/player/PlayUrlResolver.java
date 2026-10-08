@@ -154,6 +154,9 @@ final class PlayUrlResolver {
     private volatile Map<String, HashMap<String, String>> loadFoundVideoUrlsHeader = new ConcurrentHashMap<>();
     private final AtomicInteger loadFoundCount = new AtomicInteger(0);
     private final AtomicInteger sniffMissLogged = new AtomicInteger(0);
+    /** 可见诊断:最近嗅探到的候选地址 + 判定结果(实时显示在提示条,便于用户截图定位) */
+    private final java.util.concurrent.ConcurrentLinkedDeque<String> sniffDiag = new java.util.concurrent.ConcurrentLinkedDeque<>();
+    private static final int SNIFF_DIAG_MAX = 8;
     private ExecutorService parseThreadPool;
     private static final int MSG_PARSE_TIMEOUT = 100;
     private static final long PARSE_TIMEOUT_MS = 20 * 1000;
@@ -281,6 +284,7 @@ final class PlayUrlResolver {
         stopParse();
         initParseLoadFound();
         sniffMissLogged.set(0);
+        sniffDiag.clear();
         if (pb.getType() == 4) {
             parseMix(pb, true, gen);
         } else if (pb.getType() == 0) {
@@ -675,6 +679,33 @@ final class PlayUrlResolver {
         });
     }
 
+    /** 可见诊断:收集最近嗅探到的候选地址及其判定结果,实时显示在提示条上。
+     *  用户看到"一直卡在正在嗅探"时,直接截图即可知道嗅探到底拦截到了什么、为何没起播。 */
+    private void showSniffDiag(String url, boolean hit) {
+        try {
+            if (host.view() == null) return;
+            String tail = url;
+            try {
+                int q = url.indexOf('?');
+                String noQ = q > 0 ? url.substring(0, q) : url;
+                int slash = noQ.lastIndexOf('/');
+                tail = slash >= 0 ? noQ.substring(slash + 1) : noQ;
+                if (tail.isEmpty()) tail = noQ;
+            } catch (Throwable ignored) {
+            }
+            if (tail.length() > 44) tail = "…" + tail.substring(tail.length() - 42);
+            if (sniffDiag.size() >= SNIFF_DIAG_MAX) sniffDiag.pollFirst();
+            sniffDiag.addLast((hit ? "√ " : "× ") + tail);
+            final StringBuilder sb = new StringBuilder(str(R.string.player_sniffing_url)).append('\n');
+            for (String s : sniffDiag) sb.append(s).append('\n');
+            final String msg = sb.toString().trim();
+            host.view().runOnUi(() -> {
+                if (host.view() != null) host.view().showTip(msg, true, false);
+            });
+        } catch (Throwable ignored) {
+        }
+    }
+
     boolean checkVideoFormat(String url) {
         try {
             // 中转页(内嵌 url=http 参数)不是真实视频流,不当作命中
@@ -861,7 +892,11 @@ final class PlayUrlResolver {
             }
 
             if (!ad) {
-                if (checkVideoFormat(url)) {
+                boolean hit = checkVideoFormat(url);
+                // 可见诊断:把嗅探到的每个候选地址+判定结果实时显示出来,
+                // 便于用户直接看到"嗅探到底拦截到了什么、为什么没起播"。
+                showSniffDiag(url, hit);
+                if (hit) {
                     loadFoundVideoUrls.add(url);
                     loadFoundVideoUrlsHeader.put(url, headers);
                     LOG.i("echo-loadFoundVideoUrl:" + url);
