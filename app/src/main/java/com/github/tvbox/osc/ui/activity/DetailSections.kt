@@ -234,13 +234,17 @@ internal fun SourceSheet(vm: DetailViewModel, revision: Int, slideFromEnd: Boole
     }
 }
 
+/** 源延迟档位阈值(ms):低于此为"快",低于此为"中",其余"慢"。语义色见 sourceChipAccent。 */
+private const val LATENCY_FAST_MS = 300L
+private const val LATENCY_MEDIUM_MS = 800L
+
 /** 按延迟给源的耗时小字配色 */
 @Composable
 private fun sourceChipAccent(latency: Long): Color {
     return when {
         latency < 0 -> MaterialTheme.colorScheme.onSurfaceVariant
-        latency < 300 -> MaterialTheme.colorScheme.tertiary
-        latency < 800 -> MaterialTheme.colorScheme.warning
+        latency < LATENCY_FAST_MS -> MaterialTheme.colorScheme.tertiary
+        latency < LATENCY_MEDIUM_MS -> MaterialTheme.colorScheme.warning
         else -> MaterialTheme.colorScheme.error
     }
 }
