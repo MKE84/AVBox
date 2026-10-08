@@ -460,6 +460,11 @@ final class PlayUrlResolver {
     /** 聚合解析(type 3/4):超级解析 = 嗅探与 json 并发;普通聚合 = jsonExtMix */
     private void parseMix(ParseBean pb, boolean isSuper, final int gen) {
         if (host.view() != null) host.view().showTip(str(R.string.player_resolving_url), true, false);
+        // 聚合/超级解析的执行是"阻塞爬虫",jsonExtMix(公共聚合)可能挂起数十秒且不设超时;
+        // 这里在跑之前就装上统一看护超时,超时统一走 MSG_PARSE_TIMEOUT->errorWithRetry(自动切下一个解析器),
+        // 彻底杜绝"一直转圈、永不弹错"。后台线程结果到达时由 isParseResultCurrent(gen) 按代际丢弃。
+        parseHandler.removeMessages(MSG_PARSE_TIMEOUT);
+        parseHandler.sendEmptyMessageDelayed(MSG_PARSE_TIMEOUT, PARSE_TIMEOUT_MS);
         parseThreadPool = Executors.newSingleThreadExecutor();
         LinkedHashMap<String, HashMap<String, String>> jxs = new LinkedHashMap<>();
         LinkedHashMap<String, String> json_jxs = new LinkedHashMap<>();
@@ -570,6 +575,8 @@ final class PlayUrlResolver {
             final String jxFrom = rs.optString("jxFrom");
             host.view().runOnUi(() -> host.view().toast(str(R.string.player_parse_from, jxFrom)));
         }
+        // 聚合/超级解析已成功拿到地址,撤销 parseMix 入口装配的看护超时,避免 6s 到点误杀已起播
+        parseHandler.removeMessages(MSG_PARSE_TIMEOUT);
         if (host.view() != null) host.playUrl(gen, rs.optString("url", ""), headers);
     }
 
