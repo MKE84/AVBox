@@ -61,4 +61,12 @@
     <string name="toast_source_auto_disabled">該源無法使用，會導致死機，已自動停用（可在設定管理中重新啟用）</string>
     <string name="dialog_source_disabled_message">「%1$s」先前導致應用程式死機，已被自動停用。\n\n若該源已經修好，可以重新啟用；否則切換後很可能再次閃退。</string>
     <string name="settings_group_preload_cache">預載與緩存</string>
+    <string name="settings_api_log">介面日誌</string>
+    <string name="settings_api_log_desc">記錄 py / js / jar 介面的呼叫與錯誤</string>
+    <string name="settings_api_log_enable">啟用介面日誌</string>
+    <string name="settings_api_log_enable_subtitle">預設關閉。開啟後記錄每次介面呼叫的成功與失敗，便於排查源問題</string>
+    <string name="settings_api_log_refresh">重新整理</string>
+    <string name="settings_api_log_clear">清除</string>
+    <string name="settings_api_log_empty">尚無日誌</string>
+    <string name="settings_api_log_off">日誌未開啟，打開上方開關後開始記錄</string>
 </resources>

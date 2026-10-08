@@ -97,6 +97,8 @@
             android:name=".ui.activity.ConfigManageActivity" />
         <activity
             android:name=".ui.activity.SourceManageActivity" />
+            <activity
+                android:name=".ui.activity.ApiLogActivity" />
         <activity
             android:name=".ui.activity.PlaySettingsActivity" />
 
