@@ -130,8 +130,16 @@ final class PlayLoader {
                     }
                 }, sourceBean.getPlayTimeoutSeconds() * 1000L, "echo--getPlay--" + sourceBean.getKey());
                 LOG.i("echo--getPlay--result:" + json);
+                if (json == null) {
+                    // BoundedCall 返回 null = 爬虫超时/异常无响应。给出可见原因,
+                    // 便于用户截图定位"卡在正在获取播放信息"是超时还是爬虫无返回。
+                    postPlayResult(seqHolder, resultChannel, requestSeq,
+                            failInfo("取流超时(爬虫 " + sourceBean.getPlayTimeoutSeconds() + "s 无响应)"));
+                    return;
+                }
                 if (TextUtils.isEmpty(json)) {
-                    postPlayResult(seqHolder, resultChannel, requestSeq, null);
+                    postPlayResult(seqHolder, resultChannel, requestSeq,
+                            failInfo("取流返回空(爬虫未给出播放地址)"));
                     return;
                 }
                 try {
@@ -244,6 +252,17 @@ final class PlayLoader {
 
     void cancelPlayRequest() {
         playRequestSeq.incrementAndGet();
+    }
+
+    /** 取流失败时给一个带 msg 的结果:PlaybackFetch.handlePlayResult 会把 msg 显示到界面,便于用户定位原因 */
+    private JSONObject failInfo(String msg) {
+        try {
+            JSONObject o = new JSONObject();
+            o.put("msg", msg);
+            return o;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private boolean shouldDirectPlay(SourceBean sourceBean, String requestUrl) {
