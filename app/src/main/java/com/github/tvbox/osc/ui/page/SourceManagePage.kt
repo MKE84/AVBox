@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -192,7 +191,7 @@ private fun SectionTitle(text: String) {
 private fun sourceTypeLabel(sb: SourceBean): String {
     val api = sb.getApi() ?: ""
     val jar = sb.getJar() ?: ""
-    val lower = api.toLowerCase()
+    val lower = api.lowercase()
     return when {
         lower.endsWith(".py") -> "py"
         lower.endsWith(".js") -> "js"
