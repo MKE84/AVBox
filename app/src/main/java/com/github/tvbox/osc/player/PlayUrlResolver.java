@@ -242,7 +242,10 @@ final class PlayUrlResolver {
         OkGo.getInstance().cancelTag("m3u8-2");
         if (parseThreadPool != null) {
             try {
-                parseThreadPool.shutdown();
+                // shutdownNow:真中断正在跑的阻塞任务(原 shutdown 只拒绝新任务,卡住的线程永不释放,
+                // 反复切解析器会堆积线程 → "正在嗅探播放地址"假死)。同时清掉 PlayCore 排队任务。
+                parseThreadPool.shutdownNow();
+                com.github.avbox.core.PlayCore.purge();
                 parseThreadPool = null;
             } catch (Throwable th) {
                 LOG.e("PlayUrlResolver", th);
@@ -495,8 +498,14 @@ final class PlayUrlResolver {
                 // 阻塞爬虫(可跑数十秒):结果到达时先校验本轮
                 if (!isParseResultCurrent(gen)) return;
                 if (isSuper) {
-                    JSONObject rs = SuperParse.parse(jxs, parseFlag + "123", webUrl, parseTargets);
-                    if (!rs.has("url") || rs.optString("url").isEmpty()) {
+                    // 超级解析同为阻塞爬虫,套 PlayCore 真超时,超时即切下一个解析器
+                    final SuperParse.ParseTargets pt = parseTargets;
+                    final String sf = parseFlag + "123";
+                    JSONObject rs = com.github.avbox.core.PlayCore.callWithTimeout(
+                            () -> SuperParse.parse(jxs, sf, webUrl, pt),
+                            com.github.avbox.core.ParserCore.PARSE_TIMEOUT_MS + 12_000L,
+                            "superParse");
+                    if (rs == null || !rs.has("url") || rs.optString("url").isEmpty()) {
                         if (isParseResultCurrent(gen) && host.view() != null) {
                             PlaybackViewBridge bridge = host.view();
                             bridge.runOnUi(() -> errorWithRetry(str(R.string.player_parse_error), false));
@@ -533,7 +542,14 @@ final class PlayUrlResolver {
                         }
                     }
                 } else {
-                    JSONObject rs = ApiConfig.get().jsonExtMix(parseFlag + "111", pb.getUrl(), finalExtendName, jxs, webUrl);
+                    // 阻塞爬虫(可跑数十秒):用 PlayCore 套真墙钟超时,超时即返回 null,
+                    // 不再靠被占满的线程池干等;底层网络读写超时会让线程自行退出。
+                    final String mixFlag = parseFlag + "111";
+                    final String mixKey = pb.getUrl();
+                    JSONObject rs = com.github.avbox.core.PlayCore.callWithTimeout(
+                            () -> ApiConfig.get().jsonExtMix(mixFlag, mixKey, finalExtendName, jxs, webUrl),
+                            com.github.avbox.core.ParserCore.PARSE_TIMEOUT_MS + 12_000L,
+                            "jsonExtMix");
                     if (rs == null || !rs.has("url") || rs.optString("url").isEmpty()) {
                         if (isParseResultCurrent(gen) && host.view() != null) {
                             PlaybackViewBridge bridge = host.view();
