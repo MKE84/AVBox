@@ -380,16 +380,13 @@ public class ApiConfig {
         parseBeanList.clear();
         List<ParseBean> parsedParses = ConfigApplier.parseParseBeans(infoJson);
         if (!parsedParses.isEmpty()) {
-            // 白名单精简:只保留 盘古(playm3u8.cn) / 解析4(ckplayer.vip) / 所有 type=3(聚合/超级解析),
-            // 其余 URL 解析一律丢弃(用户指定)。按 url 匹配更准,避免同名不同源。
+            // 白名单放宽(2026-10-08):只剔除超级解析(type=4,常在"正在嗅探"假死),
+            // 其余解析(type0 WebView嗅探 / type1 json / type3 聚合)全部保留 ——
+            // 原"只留盘古/解析4/聚合"过窄:默认的盘古那条是"跨域 iframe 套娃"解析站,
+            // 失败后没有可用兜底,只能卡到超时。
             List<ParseBean> filtered = new java.util.ArrayList<>();
             for (ParseBean pb : parsedParses) {
-                int t = pb.getType();
-                String u = pb.getUrl() == null ? "" : pb.getUrl();
-                boolean keep = t == 3
-                        || u.contains("playm3u8.cn")
-                        || u.contains("ckplayer.vip");
-                if (keep) filtered.add(pb);
+                if (pb.getType() != 4) filtered.add(pb);
             }
             parseBeanList.addAll(filtered);
             // 超级解析(type=4)彻底关闭:它默认排在首位,常卡在"正在嗅探播地址"假死,

@@ -1000,6 +1000,66 @@ final class PlayUrlResolver {
                     null;
         }
 
+        /** 该请求是否是 HTML 文档(靠 Accept 头判断),用于决定是否注入钩子 */
+        private boolean isHtmlRequest(WebResourceRequest request) {
+            try {
+                Map<String, String> h = request.getRequestHeaders();
+                if (h == null) return false;
+                String accept = h.get("Accept");
+                if (accept == null) {
+                    for (String k : h.keySet()) {
+                        if (k != null && k.equalsIgnoreCase("Accept")) {
+                            accept = h.get(k);
+                            break;
+                        }
+                    }
+                }
+                return accept != null && accept.toLowerCase().contains("text/html");
+            } catch (Throwable t) {
+                return false;
+            }
+        }
+
+        /** 自己拉取子 frame 的 HTML,把 JS 钩子注入 <head> 后返回;失败返回 null(交回 WebView 自行加载) */
+        private WebResourceResponse interceptHtmlWithHook(String url, WebResourceRequest request) {
+            try {
+                if (url == null || url.startsWith("http://127.0.0.1")) return null;
+                okhttp3.Request.Builder b = new okhttp3.Request.Builder().url(url);
+                Map<String, String> h = request.getRequestHeaders();
+                if (h != null) {
+                    for (Map.Entry<String, String> e : h.entrySet()) {
+                        try {
+                            b.header(e.getKey(), e.getValue());
+                        } catch (Throwable ignored) {
+                        }
+                    }
+                }
+                // 带上 WebView 当前 cookie:解析站要 session,不带会 404/解析失败
+                try {
+                    String cookie = CookieManager.getInstance().getCookie(url);
+                    if (!TextUtils.isEmpty(cookie)) b.header("Cookie", cookie);
+                } catch (Throwable ignored) {
+                }
+                okhttp3.OkHttpClient client = com.github.catvod.net.OkHttp.client(10_000L);
+                try (okhttp3.Response res = client.newCall(b.build()).execute()) {
+                    if (!res.isSuccessful() || res.body() == null) return null;
+                    String ct = res.header("Content-Type", "");
+                    if (ct != null && !ct.toLowerCase().contains("html")) return null;
+                    String html = res.body().string();
+                    String tag = "<script>" + SNIFF_HOOK_JS + "</script>";
+                    int idx = html.indexOf("<head>");
+                    if (idx < 0) idx = html.indexOf("<HEAD>");
+                    String injected = idx >= 0
+                            ? html.substring(0, idx + 6) + tag + html.substring(idx + 6)
+                            : tag + html;
+                    return new WebResourceResponse("text/html", "UTF-8",
+                            new java.io.ByteArrayInputStream(injected.getBytes("UTF-8")));
+                }
+            } catch (Throwable t) {
+                return null;
+            }
+        }
+
         @Nullable
         @Override
         public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
@@ -1012,6 +1072,14 @@ final class PlayUrlResolver {
         public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
             String url = request.getUrl().toString();
             LOG.i("echo-shouldInterceptRequest url:" + url);
+            // 子 frame 的 HTML 文档:原生拦截 → 自己拉取 → 注入 JS 钩子 → 返回。
+            // 这是钩子进入"跨域 iframe"的唯一途径(onPageStarted/onPageFinished 只对主文档触发)。
+            // 解析站(盘古 → playm3u8.php → api-api.789jiexi.net 换域名)是跨域 iframe 套娃,
+            // 真实视频地址在最内层 iframe 里由 hls.js 加载 —— 不注入钩子就永远抓不到。
+            if (!request.isForMainFrame() && isHtmlRequest(request)) {
+                WebResourceResponse injected = interceptHtmlWithHook(url, request);
+                if (injected != null) return injected;
+            }
             HashMap<String, String> webHeaders = new HashMap<>();
             Map<String, String> hds = request.getRequestHeaders();
             if (hds != null && hds.keySet().size() > 0) {
