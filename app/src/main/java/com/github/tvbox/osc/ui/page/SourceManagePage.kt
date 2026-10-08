@@ -73,7 +73,7 @@ fun SourceManageScreen(onNavigateBack: () -> Unit) {
         val showHidden = remember { androidx.compose.runtime.mutableStateOf(false) }
         val hiddenKeys = remember(refreshKey) { mgr.hiddenKeys() }
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 2.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             TextButton(onClick = { showHidden.value = false }) {

@@ -46,6 +46,7 @@ import com.github.tvbox.osc.ui.components.LocalSheetDismiss
 import com.github.tvbox.osc.ui.components.VodCard
 import com.github.tvbox.osc.ui.components.AVBoxBottomSheet
 import com.github.tvbox.osc.ui.theme.filterChipColors
+import com.github.tvbox.osc.ui.theme.warning
 import com.github.tvbox.osc.ui.page.openVodCardOrDetail
 
 /** 分区标题前的裸图标(22dp、onSurface 着色):画稿图标与内置图标共用 */
@@ -239,7 +240,7 @@ private fun sourceChipAccent(latency: Long): Color {
     return when {
         latency < 0 -> MaterialTheme.colorScheme.onSurfaceVariant
         latency < 300 -> MaterialTheme.colorScheme.tertiary
-        latency < 800 -> Color(0xFFB5A642)
+        latency < 800 -> MaterialTheme.colorScheme.warning
         else -> MaterialTheme.colorScheme.error
     }
 }

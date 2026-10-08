@@ -9,6 +9,10 @@ import androidx.compose.ui.graphics.Color
 val ColorScheme.cardContainer: Color
     get() = surfaceBright
 
+/** 中间态警告色(如:延迟中等)。语义色收敛于此,严禁在组件里散落裸 hex。 */
+val ColorScheme.warning: Color
+    get() = Color(0xFFB5A642)
+
 fun ColorScheme.toPureBlack(): ColorScheme = copy(
     background = Color.Black,
     surface = Color.Black,
