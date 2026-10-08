@@ -112,7 +112,8 @@ final class PlayLoader {
                                  final SourceBean sourceBean, final String requestUrl, final String url,
                                  final String progressKey, final String subtitleKey, final String playFlag,
                                  final PushUrlParser.PushUrl pushUrl) {
-        SourceHelper.SPIDER_POOL.execute(new Runnable() {
+        // 取流走专用池:绝不让列表/详情/预载的卡死爬虫任务把它挤在队列里(否则永久卡+永不弹错)
+        SourceHelper.PLAY_POOL.execute(new Runnable() {
             @Override
             public void run() {
                 String json = BoundedCall.call(new Callable<String>() {

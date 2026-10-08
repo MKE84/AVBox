@@ -37,7 +37,15 @@ final class SourceHelper {
     private SourceHelper() {
     }
 
-    static final ExecutorService SPIDER_POOL = Executors.newFixedThreadPool(3); // 2026-09-11:单线程改 3 线程——原单线程被卡死的 spider 任务(不响应 interrupt)永久占用后,后续全部任务排队,首页永久骨架屏
+    static final ExecutorService SPIDER_POOL = Executors.newFixedThreadPool(4); // 2026-09-11:单线程改 3 线程——原单线程被卡死的 spider 任务(不响应 interrupt)永久占用后,后续全部任务排队,首页永久骨架屏
+    /** 取流专用池:与列表/详情/预载的爬虫任务隔离。取流是最关键的一跳,
+     *  绝不能被其它卡死的爬虫任务(不响应 interrupt)挤在队列里 → 否则"正在获取播放信息"永久卡、
+     *  且 15s 看护在任务内部,任务不启动永远不会超时 → 永远不弹错。 */
+    static final ExecutorService PLAY_POOL = Executors.newSingleThreadExecutor(r -> {
+        Thread t = new Thread(r, "play-fetch");
+        t.setDaemon(true);
+        return t;
+    });
     static final ExecutorService PREPARE_POOL = Executors.newFixedThreadPool(3);
 
     /** i18n: keep —— 只进日志(convertResponse → onError → LOG.i),无 UI 出口 */
