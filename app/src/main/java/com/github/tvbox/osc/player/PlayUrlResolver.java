@@ -388,7 +388,7 @@ final class PlayUrlResolver {
                     if (rs == null || !rs.has("url") || rs.optString("url").isEmpty()) {
                         if (isParseResultCurrent(gen) && host.view() != null) {
                             PlaybackViewBridge bridge = host.view();
-                            bridge.runOnUi(() -> bridge.showTip(str(R.string.player_parse_error), false, true));
+                            bridge.runOnUi(() -> errorWithRetry(str(R.string.player_parse_error), false));
                         }
                     } else {
                         HashMap<String, String> headers = PlaybackController.extractHeaders(rs);
@@ -431,23 +431,20 @@ final class PlayUrlResolver {
                 if (host.view() != null) host.view().showErrorWithRetry(err, false);
                 return;
             }
-            int nextIdx = (autoParseIndex + 1) % list.size();
-            int start = autoParseIndex;
+            int size = list.size();
+            int start = autoParseIndex;                   // 本轮起点(已试到哪)
             ParseBean next = null;
-            int guard = 0;
-            while (guard++ < list.size()) {
-                if (nextIdx == start) break; // 绕回起点,所有都试过
-                ParseBean pb = list.get(nextIdx);
+            for (int k = 1; k <= size; k++) {             // 只探索一轮,必回起点
+                int idx = (start + k) % size;             // 从 start 的下一个开始
+                if (idx == start) break;                  // 绕回起点:一圈已试完
+                ParseBean pb = list.get(idx);
                 int t = pb.getType();
-                // 按列表顺序换下一个解析器:包括其它聚合(type 3)。
-                // 仅跳过"与当前同一实现"的聚合(type 4,超级解析只有一个,跳过即可),
-                // 避免用户看到的"超级解析失败直接跳到 py、没换新解析"。
+                // 按列表顺序换下一个解析器,跳过超级解析(type 4,仅一个,无需再试)。
                 if (t != 4) {
                     next = pb;
-                    autoParseIndex = nextIdx;
+                    autoParseIndex = idx;                 // 游标前移
                     break;
                 }
-                nextIdx = (nextIdx + 1) % list.size();
             }
             if (next == null) {
                 if (host.view() != null) host.view().showErrorWithRetry(err, false);
@@ -494,7 +491,7 @@ final class PlayUrlResolver {
                     if (!rs.has("url") || rs.optString("url").isEmpty()) {
                         if (isParseResultCurrent(gen) && host.view() != null) {
                             PlaybackViewBridge bridge = host.view();
-                            bridge.runOnUi(() -> bridge.showTip(str(R.string.player_parse_error), false, true));
+                            bridge.runOnUi(() -> errorWithRetry(str(R.string.player_parse_error), false));
                         }
                     } else {
                         if (rs.has("parse") && rs.optInt("parse", 0) == 1) {
@@ -532,7 +529,8 @@ final class PlayUrlResolver {
                     if (rs == null || !rs.has("url") || rs.optString("url").isEmpty()) {
                         if (isParseResultCurrent(gen) && host.view() != null) {
                             PlaybackViewBridge bridge = host.view();
-                            bridge.runOnUi(() -> bridge.showTip(str(R.string.player_parse_error), false, true));
+                            // 聚合失败也走自动切换,别停死在这(否则不再试剩余解析器)
+                            bridge.runOnUi(() -> errorWithRetry(str(R.string.player_parse_error), false));
                         }
                     } else {
                         if (rs.has("parse") && rs.optInt("parse", 0) == 1) {
