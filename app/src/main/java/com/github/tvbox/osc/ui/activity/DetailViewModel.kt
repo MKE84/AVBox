@@ -19,6 +19,8 @@ import com.github.tvbox.osc.util.HistoryHelper
 import com.github.tvbox.osc.util.HistoryWriter
 import com.github.tvbox.osc.util.LOG
 import com.github.tvbox.osc.util.SearchHelper
+import com.github.tvbox.osc.util.SourceKind
+import com.github.tvbox.osc.util.SourceType
 import com.github.tvbox.osc.sourcedata.SourceViewModel
 import com.github.tvbox.osc.sourcedata.observeAsFlow
 import com.lzy.okgo.OkGo
@@ -549,16 +551,14 @@ class DetailViewModel : ViewModel() {
             .sortedBy { it.latency }
     }
 
-    /** 源类型小字后缀:py/js/jar/普通空串 */
+    /** 源类型小字后缀:py/js/jar/普通空串。统一判定见 util/SourceType */
     private fun sourceTypeLabel(key: String): String {
         val sb = ApiConfig.get().getSource(key) ?: return ""
-        val api = sb.api.orEmpty()
-        val lower = api.lowercase()
-        return when {
-            lower.endsWith(".py") || lower.contains(".py?") || lower.contains(".py#") -> "py"
-            lower.endsWith(".js") || lower.contains(".js?") || lower.contains(".js#") -> "js"
-            !sb.jar.isNullOrEmpty() -> "jar"
-            else -> ""
+        return when (SourceType.of(sb)) {
+            SourceKind.PY -> "py"
+            SourceKind.JS -> "js"
+            SourceKind.JAR -> "jar"
+            SourceKind.API -> ""
         }
     }
 

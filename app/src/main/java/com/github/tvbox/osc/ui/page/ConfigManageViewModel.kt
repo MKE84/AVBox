@@ -13,6 +13,8 @@ import com.github.tvbox.osc.util.HistoryHelper
 import com.github.tvbox.osc.util.KV
 import com.github.tvbox.osc.util.LanguageManager
 import com.github.tvbox.osc.util.removeLocalCopy
+import com.github.tvbox.osc.util.SourceKind
+import com.github.tvbox.osc.util.SourceType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -26,18 +28,14 @@ data class SourceTypeStats(val total: Int, val py: Int, val js: Int, val jar: In
     val spider: Int get() = py + js + jar
 }
 
-/** 从源地址/类型推断爬虫种类:py/js 看 api 后缀,否则看 jar 是否为空 */
-private fun classifySource(api: String, jar: String): Int {
-    val lower = api.lowercase()
-    return when {
-        lower.endsWith(".py") -> 1      // py
-        lower.endsWith(".js") -> 2       // js
-        lower.contains(".py?") || lower.contains(".py#") -> 1
-        lower.contains(".js?") || lower.contains(".js#") -> 2
-        !jar.isNullOrEmpty() -> 3        // jar/spider
-        else -> 0                        // 普通接口(json/xml)
+/** 从源地址/类型推断爬虫种类:py/js 看 api 后缀,否则看 jar 是否为空 → 供 SourceTypeStats 聚合。统一判定见 util/SourceType。 */
+private fun classifySource(api: String, jar: String): Int =
+    when (SourceType.of(api, jar)) {
+        SourceKind.PY -> 1
+        SourceKind.JS -> 2
+        SourceKind.JAR -> 3
+        SourceKind.API -> 0
     }
-}
 
 /** 统计当前已加载源的类型分布(py/js/jar)。读取内存中的源列表,无网络开销 */
 fun currentSourceTypeStats(): SourceTypeStats {

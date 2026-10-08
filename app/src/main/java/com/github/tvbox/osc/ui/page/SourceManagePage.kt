@@ -30,7 +30,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.tvbox.osc.api.ApiConfig
 import com.github.tvbox.osc.bean.SourceBean
+import com.github.tvbox.osc.util.SourceKind
 import com.github.tvbox.osc.util.SourceManager
+import com.github.tvbox.osc.util.SourceType
 
 /**
  * 源管理 / 最近删除:
@@ -267,18 +269,14 @@ private fun SectionTitle(text: String) {
     )
 }
 
-/** 与 ConfigManageViewModel.classifySource 一致的源类型判别(py/js/jar;类型由 api 后缀决定,非 type 字段) */
-private fun sourceTypeLabel(sb: SourceBean): String {
-    val api = sb.getApi() ?: ""
-    val jar = sb.getJar() ?: ""
-    val lower = api.lowercase()
-    return when {
-        lower.endsWith(".py") || lower.contains(".py?") || lower.contains(".py#") -> "py"
-        lower.endsWith(".js") || lower.contains(".js?") || lower.contains(".js#") -> "js"
-        !jar.isNullOrEmpty() -> "jar"
-        else -> "接口"
+/** 源类型徽标:py/js/jar/接口。统一判定见 util/SourceType */
+private fun sourceTypeLabel(sb: SourceBean): String =
+    when (SourceType.of(sb)) {
+        SourceKind.PY -> "py"
+        SourceKind.JS -> "js"
+        SourceKind.JAR -> "jar"
+        SourceKind.API -> "接口"
     }
-}
 
 @Composable
 private fun badgeColor(type: String) =
