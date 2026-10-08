@@ -389,9 +389,9 @@ public class ApiConfig {
                 if (pb.getType() != 4) filtered.add(pb);
             }
             parseBeanList.addAll(filtered);
-            // 超级解析(type=4)彻底关闭:它默认排在首位,常卡在"正在嗅探播地址"假死,
-            // 用户要求不再默认使用它,统一走普通 URL 解析(默认第一个=盘古)与 type=3 聚合。
-            // addSuperParse(); // 已移除
+            // 恢复内置超级解析(2026-10-08 用户要求):SuperParse 并行 fan-out 所有解析站,
+// 第一个出结果即用 → 不再是"一个个串行试 15s",而是"全部一起并行" → 秒解。
+            addSuperParse();
         }
         // 获取默认解析
         if (parseBeanList != null && parseBeanList.size() > 0) {
@@ -1022,6 +1022,18 @@ public class ApiConfig {
 
     public void clearJarLoader() {
         spiderLoader.clearJarLoader();
+    }
+
+    /** 内置超级解析(type=4):并行 fan-out 所有解析站,第一个出结果即用 —— 秒解的关键。
+     *  放列表首位 = 默认解析器。 */
+    private void addSuperParse() {
+        ParseBean superPb = new ParseBean();
+        // i18n: keep —— 解析名参与 DEFAULT_PARSE 持久化与比较(见 setDefaultParse),不能翻
+        superPb.setName("超级解析");
+        superPb.setUrl("SuperParse");
+        superPb.setExt("");
+        superPb.setType(4);
+        parseBeanList.add(0, superPb);
     }
 
     public void clearLoader() {
