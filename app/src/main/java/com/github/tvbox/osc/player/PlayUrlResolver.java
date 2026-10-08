@@ -716,6 +716,61 @@ final class PlayUrlResolver {
                 || u.contains("playurl") || u.contains("vurl") || u.contains("m3u8");
     }
 
+    /** JS 钩子:hook XHR/fetch/媒体元素 src,把所有 URL 经 console 上报原生。
+     *  弥补 shouldInterceptRequest 的盲区——它只看得到 WebView 发起的资源请求,
+     *  看不到页面 JS(hls.js/artplayer/crypto-js 解密后)动态加载的地址。 */
+    private static final String SNIFF_HOOK_JS =
+            "(function(){try{if(window.__avboxHook)return;window.__avboxHook=1;" +
+            "function r(u){try{if(u)console.log('__AVBOX_SNIFF__'+u);}catch(e){}}" +
+            "try{var o=XMLHttpRequest.prototype.open;XMLHttpRequest.prototype.open=function(m,u){try{r(u);}catch(e){}return o.apply(this,arguments);};}catch(e){}" +
+            "try{var f=window.fetch;if(f){window.fetch=function(i){try{var u=(typeof i==='string')?i:(i&&i.url);r(u);}catch(e){}return f.apply(this,arguments);};}}catch(e){}" +
+            "try{var d=Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype,'src');if(d&&d.set){Object.defineProperty(HTMLMediaElement.prototype,'src',{set:function(v){try{r(v);}catch(e){}return d.set.call(this,v);},get:d.get,configurable:true});}}catch(e){}" +
+            "}catch(e){}})();";
+
+    private void injectSniffHook(WebView view) {
+        try {
+            if (view != null) view.evaluateJavascript(SNIFF_HOOK_JS, null);
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /** 处理 JS 上报的 URL:走与资源拦截相同的过滤/广告/判定流程,命中即起播 */
+    private void onJsReportedUrl(String url) {
+        try {
+            if (url == null || url.isEmpty()) return;
+            if (url.startsWith("blob:") || url.startsWith("data:") || url.startsWith("javascript:")) return;
+            if (url.endsWith("/favicon.ico")) return;
+            if (!isSniffRequestOfCurrentRound()) return;
+            if (VideoParseRuler.isFilter(webUrl, url)) {
+                showSniffDiag(url, "F");
+                return;
+            }
+            if (AdBlocker.isAd(url)) {
+                if (looksLikeVideo(url)) showSniffDiag(url, "A");
+                return;
+            }
+            boolean hit = checkVideoFormat(url);
+            showSniffDiag(url, hit ? "√" : "×");
+            if (hit) {
+                loadFoundVideoUrls.add(url);
+                loadFoundVideoUrlsHeader.put(url, new HashMap<String, String>());
+                LOG.i("echo-loadFoundVideoUrl(js):" + url);
+                if (loadFoundCount.incrementAndGet() == 1) {
+                    stopLoadWebView(false);
+                    SuperParse.stopJsonJx();
+                    String u = loadFoundVideoUrls.poll();
+                    if (u == null) return;
+                    parseHandler.removeMessages(MSG_PARSE_TIMEOUT);
+                    HashMap<String, String> headers = new HashMap<>();
+                    String cookie = CookieManager.getInstance().getCookie(u);
+                    if (!TextUtils.isEmpty(cookie)) headers.put("Cookie", " " + cookie);
+                    if (host.view() != null) host.view().playUrl(u, headers);
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
     boolean checkVideoFormat(String url) {
         try {
             // 中转页(内嵌 url=http 参数)不是真实视频流,不当作命中
@@ -820,6 +875,14 @@ final class PlayUrlResolver {
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
             public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
+                try {
+                    String m = consoleMessage == null ? null : consoleMessage.message();
+                    final String P = "__AVBOX_SNIFF__";
+                    if (m != null && m.startsWith(P)) {
+                        onJsReportedUrl(m.substring(P.length()).trim());
+                    }
+                } catch (Throwable ignored) {
+                }
                 return false;
             }
 
@@ -864,12 +927,15 @@ final class PlayUrlResolver {
         @Override
         public void onPageStarted(WebView view, String url, Bitmap favicon) {
             super.onPageStarted(view, url, favicon);
+            // 尽早注入 JS 钩子,赶在页面自身脚本之前,捕获其动态加载的地址
+            injectSniffHook(view);
         }
 
         @Override
         public void onPageFinished(WebView view, String url) {
             super.onPageFinished(view, url);
             LOG.i("echo-onPageFinished url:" + url);
+            injectSniffHook(view);
             if (!url.equals("about:blank") && host.view() != null) {
                 host.view().evaluateScript(url, view);
             }
