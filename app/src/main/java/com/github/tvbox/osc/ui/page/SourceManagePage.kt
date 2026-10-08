@@ -62,44 +62,54 @@ fun SourceManageScreen(onNavigateBack: () -> Unit) {
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(Modifier.weight(1f))
-            val hiddenCount = sources.count { mgr.isHidden(it.getKey()) }
             Text(
-                text = "共 ${sources.size} 源 · 已隐藏 $hiddenCount",
+                text = "共 ${sources.size} 源 · 已隐藏 ${mgr.hiddenKeys().size}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+
+        // ===== 类型筛选: 全部源 / 已隐藏 =====
+        val showHidden = remember { androidx.compose.runtime.mutableStateOf(false) }
+        val hiddenKeys = remember(refreshKey) { mgr.hiddenKeys() }
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 2.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TextButton(onClick = { showHidden.value = false }) {
+                Text(
+                    text = "全部源",
+                    color = if (!showHidden.value) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = if (!showHidden.value) FontWeight.SemiBold else FontWeight.Normal
+                )
+            }
+            TextButton(onClick = { showHidden.value = true }) {
+                Text(
+                    text = "已隐藏 (${hiddenKeys.size})",
+                    color = if (showHidden.value) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = if (showHidden.value) FontWeight.SemiBold else FontWeight.Normal
+                )
+            }
         }
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = 24.dp)
         ) {
-            // ===== 最近删除区 =====
-            if (recent.isNotEmpty()) {
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+            if (showHidden.value) {
+                // ===== 已隐藏视图: 列出全部被隐藏的源,可单独恢复 =====
+                if (hiddenKeys.isEmpty()) {
+                    item {
                         Text(
-                            text = "最近删除",
-                            modifier = Modifier.padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold,
+                            text = "暂无已隐藏的源",
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 40.dp),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        Spacer(Modifier.weight(1f))
-                        TextButton(onClick = {
-                            mgr.clearRecentAll()
-                            refreshKey++
-                            Toast.makeText(ctx, "已清空最近删除", Toast.LENGTH_SHORT).show()
-                        }) { Text("全部清空", color = MaterialTheme.colorScheme.error) }
                     }
                 }
-                items(recent.size, key = { it }) { i ->
-                    val parts = recent[i].split("\t")
-                    val rName = parts.getOrElse(0) { recent[i] }
-                    val rKey = parts.getOrElse(1) { recent[i] }
+                items(hiddenKeys.size, key = { it }) { i ->
+                    val k = hiddenKeys[i]
                     Surface(
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 3.dp),
                         shape = RoundedCornerShape(12.dp),
@@ -110,90 +120,141 @@ fun SourceManageScreen(onNavigateBack: () -> Unit) {
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = rName,
+                                text = k,
                                 style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier.weight(1f),
                                 maxLines = 1
                             )
                             TextButton(onClick = {
-                                mgr.restore(rKey)
+                                mgr.restore(k)
                                 refreshKey++
-                                Toast.makeText(ctx, "已恢复「$rName」，刷新订阅后重新出现", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(ctx, "已恢复「$k」，刷新订阅后重新出现", Toast.LENGTH_SHORT).show()
                             }) { Text("恢复", color = MaterialTheme.colorScheme.tertiary) }
                         }
                     }
                 }
-                item { Spacer(Modifier.height(8.dp)) }
-            }
-
-            // ===== 展开的源列表 =====
-            item { SectionTitle("全部源") }
-
-            if (sources.isEmpty()) {
-                item {
-                    Text(
-                        text = "暂无源",
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 40.dp),
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            items(sources.size, key = { sources[it].getKey() ?: it }) { idx ->
-                val sb = sources[idx]
-                val hidden = mgr.isHidden(sb.getKey())
-                val typeLabel = sourceTypeLabel(sb)
-                Surface(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 3.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    color = if (hidden) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-                    else MaterialTheme.colorScheme.surface
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // 类型徽标
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = badgeColor(typeLabel)
+            } else {
+                // ===== 最近删除区 =====
+                if (recent.isNotEmpty()) {
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = typeLabel,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                fontSize = 10.sp,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                                text = "最近删除",
+                                modifier = Modifier.padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                        }
-                        Spacer(Modifier.width(10.dp))
-                        Text(
-                            text = sb.getName(),
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.weight(1f),
-                            maxLines = 1,
-                            color = if (hidden) MaterialTheme.colorScheme.onSurfaceVariant
-                            else MaterialTheme.colorScheme.onSurface
-                        )
-                        if (hidden) {
-                            Text(
-                                "已隐藏",
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.error
-                            )
-                        } else {
+                            Spacer(Modifier.weight(1f))
                             TextButton(onClick = {
-                                mgr.hide(sb)
+                                mgr.clearRecentAll()
                                 refreshKey++
-                                Toast.makeText(ctx, "已删除「${sb.getName()}」，订阅刷新不会复活", Toast.LENGTH_SHORT).show()
-                            }) { Text("删除", color = MaterialTheme.colorScheme.error) }
+                                Toast.makeText(ctx, "已清空最近删除", Toast.LENGTH_SHORT).show()
+                            }) { Text("全部清空", color = MaterialTheme.colorScheme.error) }
                         }
                     }
+                    items(recent.size, key = { it }) { i ->
+                        val parts = recent[i].split("\t")
+                        val rName = parts.getOrElse(0) { recent[i] }
+                        val rKey = parts.getOrElse(1) { recent[i] }
+                        Surface(
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 3.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = rName,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.weight(1f),
+                                    maxLines = 1
+                                )
+                                TextButton(onClick = {
+                                    mgr.restore(rKey)
+                                    refreshKey++
+                                    Toast.makeText(ctx, "已恢复「$rName」，刷新订阅后重新出现", Toast.LENGTH_SHORT).show()
+                                }) { Text("恢复", color = MaterialTheme.colorScheme.tertiary) }
+                            }
+                        }
+                    }
+                    item { Spacer(Modifier.height(8.dp)) }
                 }
+
+                    // ===== 展开的源列表 =====
+                item { SectionTitle("全部源") }
+
+                if (sources.isEmpty()) {
+                    item {
+                        Text(
+                            text = "暂无源",
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 40.dp),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                items(sources.size, key = { sources[it].getKey() ?: it }) { idx ->
+                    val sb = sources[idx]
+                    val hidden = mgr.isHidden(sb.getKey())
+                    val typeLabel = sourceTypeLabel(sb)
+                    Surface(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 3.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (hidden) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                        else MaterialTheme.colorScheme.surface
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // 类型徽标
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = badgeColor(typeLabel)
+                            ) {
+                                Text(
+                                    text = typeLabel,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                    fontSize = 10.sp,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                            Spacer(Modifier.width(10.dp))
+                            Text(
+                                text = sb.getName(),
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.weight(1f),
+                                maxLines = 1,
+                                color = if (hidden) MaterialTheme.colorScheme.onSurfaceVariant
+                                else MaterialTheme.colorScheme.onSurface
+                            )
+                            if (hidden) {
+                                Text(
+                                    "已隐藏",
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            } else {
+                                TextButton(onClick = {
+                                    mgr.hide(sb)
+                                    refreshKey++
+                                    Toast.makeText(ctx, "已删除「${sb.getName()}」，订阅刷新不会复活", Toast.LENGTH_SHORT).show()
+                                }) { Text("删除", color = MaterialTheme.colorScheme.error) }
+                            }
+                        }
+                    }
             }
-        }
-    }
-}
+            }   // close else (showHidden 分支)
+        }   // close LazyColumn
+    }   // close Column
+}   // close fun
 
 @Composable
 private fun SectionTitle(text: String) {
