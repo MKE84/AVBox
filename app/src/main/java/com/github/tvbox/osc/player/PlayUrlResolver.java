@@ -156,7 +156,7 @@ final class PlayUrlResolver {
     private final AtomicInteger sniffMissLogged = new AtomicInteger(0);
     /** 可见诊断:最近嗅探到的候选地址 + 判定结果(实时显示在提示条,便于用户截图定位) */
     private final java.util.concurrent.ConcurrentLinkedDeque<String> sniffDiag = new java.util.concurrent.ConcurrentLinkedDeque<>();
-    private static final int SNIFF_DIAG_MAX = 8;
+    private static final int SNIFF_DIAG_MAX = 10;
     private ExecutorService parseThreadPool;
     private static final int MSG_PARSE_TIMEOUT = 100;
     private static final long PARSE_TIMEOUT_MS = 20 * 1000;
@@ -680,8 +680,9 @@ final class PlayUrlResolver {
     }
 
     /** 可见诊断:收集最近嗅探到的候选地址及其判定结果,实时显示在提示条上。
-     *  用户看到"一直卡在正在嗅探"时,直接截图即可知道嗅探到底拦截到了什么、为何没起播。 */
-    private void showSniffDiag(String url, boolean hit) {
+     *  标记:√=命中可播 / ×=判定非视频 / F=被过滤规则拦 / A=被广告规则拦。
+     *  用户看到"一直卡在正在嗅探"时,直接截图即可知道嗅探拦截到了什么、卡在哪一步。 */
+    private void showSniffDiag(String url, String mark) {
         try {
             if (host.view() == null) return;
             String tail = url;
@@ -695,7 +696,7 @@ final class PlayUrlResolver {
             }
             if (tail.length() > 44) tail = "…" + tail.substring(tail.length() - 42);
             if (sniffDiag.size() >= SNIFF_DIAG_MAX) sniffDiag.pollFirst();
-            sniffDiag.addLast((hit ? "√ " : "× ") + tail);
+            sniffDiag.addLast(mark + " " + tail);
             final StringBuilder sb = new StringBuilder(str(R.string.player_sniffing_url)).append('\n');
             for (String s : sniffDiag) sb.append(s).append('\n');
             final String msg = sb.toString().trim();
@@ -704,6 +705,15 @@ final class PlayUrlResolver {
             });
         } catch (Throwable ignored) {
         }
+    }
+
+    /** 是否"长得像视频"(含视频后缀/常见参数),用于减少广告/过滤诊断的噪声 */
+    private static boolean looksLikeVideo(String url) {
+        if (url == null) return false;
+        String u = url.toLowerCase();
+        return u.contains(".m3u8") || u.contains(".mp4") || u.contains(".flv")
+                || u.contains(".ts") || u.contains(".mkv") || u.contains(".m3u")
+                || u.contains("playurl") || u.contains("vurl") || u.contains("m3u8");
     }
 
     boolean checkVideoFormat(String url) {
@@ -880,6 +890,7 @@ final class PlayUrlResolver {
             boolean isFilter = VideoParseRuler.isFilter(webUrl, url);
             if (isFilter) {
                 LOG.i("shouldInterceptLoadRequest filter:" + url);
+                showSniffDiag(url, "F");
                 return null;
             }
 
@@ -893,9 +904,8 @@ final class PlayUrlResolver {
 
             if (!ad) {
                 boolean hit = checkVideoFormat(url);
-                // 可见诊断:把嗅探到的每个候选地址+判定结果实时显示出来,
-                // 便于用户直接看到"嗅探到底拦截到了什么、为什么没起播"。
-                showSniffDiag(url, hit);
+                // 可见诊断:显示每个候选地址的判定结果(√命中/×非视频)
+                showSniffDiag(url, hit ? "√" : "×");
                 if (hit) {
                     loadFoundVideoUrls.add(url);
                     loadFoundVideoUrlsHeader.put(url, headers);
@@ -914,6 +924,9 @@ final class PlayUrlResolver {
                         if (host.view() != null) host.playUrl(url, headers);
                     }
                 }
+            } else if (looksLikeVideo(url)) {
+                // 被广告规则拦下、但本体长得像视频:很可能误杀,显示出来便于定位
+                showSniffDiag(url, "A");
             }
 
             return ad || loadFoundCount.get() > 0 ?
