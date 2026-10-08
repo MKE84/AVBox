@@ -155,7 +155,7 @@ final class PlayUrlResolver {
     private final AtomicInteger loadFoundCount = new AtomicInteger(0);
     private ExecutorService parseThreadPool;
     private static final int MSG_PARSE_TIMEOUT = 100;
-    private static final long PARSE_TIMEOUT_MS = 6 * 1000;
+    private static final long PARSE_TIMEOUT_MS = 20 * 1000;
 
     // ==================== 成员 ====================
 
