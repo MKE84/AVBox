@@ -340,7 +340,11 @@ public class JarLoader {
         InputStream is = null;
         FileOutputStream os = null;
         try {
-            Response response = OkGo.<File>get(url).execute();
+            // 网络真超时:jar 源连不通/响应慢时,connect/read 30s 超时即返回,不无限挂起。
+            // (原 OkGo.execute() 无超时,遇死源会占用线程直到系统级 TCP 超时)
+            okhttp3.OkHttpClient client = com.github.catvod.net.OkHttp.client(30_000L);
+            okhttp3.Request request = new okhttp3.Request.Builder().url(url).build();
+            okhttp3.Response response = client.newCall(request).execute();
             if (response.body() == null) return file;
             is = response.body().byteStream();
             os = new FileOutputStream(create(file));
