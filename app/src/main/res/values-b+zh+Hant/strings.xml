@@ -368,6 +368,8 @@
     <string name="theme_seed_blue">藍色</string>
     <string name="theme_seed_purple">紫色</string>
     <string name="theme_seed_pink">粉色</string>
+    <string name="theme_seed_galaxy">銀河紫</string>
+    <string name="theme_seed_ocean">深海藍</string>
     <string name="theme_style_tonal_spot">柔和</string>
     <string name="theme_style_vibrant">鮮豔</string>
     <string name="theme_style_expressive">表現力</string>

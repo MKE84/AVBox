@@ -37,6 +37,8 @@ val PresetSeeds: List<Pair<Int, Int>> = listOf(
     R.string.theme_seed_blue to 0xFF1B6EF3.toInt(),
     R.string.theme_seed_purple to 0xFF6750A4.toInt(),
     R.string.theme_seed_pink to 0xFFB04080.toInt(),
+    R.string.theme_seed_galaxy to 0xFF2B1E3E.toInt(),
+    R.string.theme_seed_ocean to 0xFF1A2332.toInt(),
 )
 
 val PaletteStyles: List<Pair<PaletteStyle, Int>> = listOf(
