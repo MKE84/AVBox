@@ -150,12 +150,13 @@ public class DefaultConfig {
             "http((?!http).)*?netease\\.com/file/.*"
     );
     public static boolean isVideoFormat(String url) {
-        Uri uri = Uri.parse(url);
-        String path = uri.getPath();
-        if (TextUtils.isEmpty(path)) {
-            return false;
+        if (TextUtils.isEmpty(url)) return false;
+        // 直接跑嗅探正则:原先"path 为空即判否"会误杀形如 https://host/?...m3u8 的直链
+        // (视频特征落在 query 而非 path),导致嗅探永不命中、卡"正在嗅探播放地址"。
+        try {
+            if (snifferMatch.matcher(url).find()) return true;
+        } catch (Throwable ignored) {
         }
-        if (snifferMatch.matcher(url).find()) return true;
         return false;
     }
 

@@ -677,7 +677,15 @@ final class PlayUrlResolver {
 
     boolean checkVideoFormat(String url) {
         try {
-            if (url.contains("url=http") || url.contains(".html")) {
+            // 中转页(内嵌 url=http 参数)不是真实视频流,不当作命中
+            if (url.contains("url=http")) {
+                return false;
+            }
+            // 只按路径判断是否是网页(避免误杀 query 里含 .html 的视频直链):
+            // 原实现 url.contains(".html") 会把 .../video.m3u8?refer=/x.html 也当网页丢弃。
+            String path = android.net.Uri.parse(url).getPath();
+            String lowerPath = path == null ? "" : path.toLowerCase();
+            if (lowerPath.endsWith(".html") || lowerPath.endsWith(".htm") || lowerPath.endsWith(".php")) {
                 return false;
             }
             if (host.sourceBean() != null && host.sourceBean().getType() == 3) {
