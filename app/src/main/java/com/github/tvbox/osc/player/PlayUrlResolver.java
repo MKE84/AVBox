@@ -153,6 +153,7 @@ final class PlayUrlResolver {
     private volatile Queue<String> loadFoundVideoUrls = new ConcurrentLinkedQueue<>();
     private volatile Map<String, HashMap<String, String>> loadFoundVideoUrlsHeader = new ConcurrentHashMap<>();
     private final AtomicInteger loadFoundCount = new AtomicInteger(0);
+    private final AtomicInteger sniffMissLogged = new AtomicInteger(0);
     private ExecutorService parseThreadPool;
     private static final int MSG_PARSE_TIMEOUT = 100;
     private static final long PARSE_TIMEOUT_MS = 20 * 1000;
@@ -276,6 +277,7 @@ final class PlayUrlResolver {
         final int gen = parseGeneration.incrementAndGet();
         stopParse();
         initParseLoadFound();
+        sniffMissLogged.set(0);
         if (pb.getType() == 4) {
             parseMix(pb, true, gen);
         } else if (pb.getType() == 0) {
@@ -307,6 +309,7 @@ final class PlayUrlResolver {
                     LOG.e("PlayUrlResolver", e);
                 }
             }
+            ApiLog.ok(ApiLog.KIND_API, pb.getName(), "嗅探启动", webUrl);
             loadWebView(pb.getUrl() + webUrl);
         } else if (pb.getType() == 1) { // json 解析
             if (host.view() != null) host.view().showTip(str(R.string.player_resolving_url), true, false);
@@ -664,13 +667,51 @@ final class PlayUrlResolver {
             if (host.sourceBean() != null && host.sourceBean().getType() == 3) {
                 Spider sp = ApiConfig.get().getCSP(host.sourceBean());
                 if (sp != null && sp.manualVideoCheck()) {
-                    return sp.isVideoFormat(url);
+                    boolean ok9 = sp.isVideoFormat(url);
+                    if (!ok9) logSniffMiss(url);
+                    return ok9;
                 }
             }
-            return VideoParseRuler.checkIsVideoForParse(webUrl, url);
+            boolean ok = VideoParseRuler.checkIsVideoForParse(webUrl, url);
+            if (!ok) logSniffMiss(url);
+            return ok;
         } catch (Exception e) {
             return false;
         }
+    }
+
+    /**
+     * 嗅探"未命中"诊断:仅当 URL 长得像视频(含视频后缀/参数)却未被判定为视频时记录,
+     * 用于定位 py/js 源卡"正在嗅探"是否因解析站页面的真实视频地址匹配不上判定规则。
+     * 每个解析进程最多记 6 条,避免刷屏。
+     */
+    private void logSniffMiss(String url) {
+        try {
+            if (sniffMissLogged.get() >= 6) return;
+            String u = url == null ? "" : url.toLowerCase();
+            boolean videoish = u.contains(".m3u8") || u.contains(".mp4") || u.contains(".flv")
+                    || u.contains(".ts") || u.contains("video") || u.contains("playurl")
+                    || u.contains("vurl") || u.contains(".webm") || u.contains("getvkey");
+            if (!videoish) return;
+            if (sniffMissLogged.incrementAndGet() > 6) return;
+            ApiLog.fail(ApiLog.KIND_API, parseNameForLog(), "嗅探未命中", abbrev(url) + " | webUrl=" + abbrev(webUrl));
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private String parseNameForLog() {
+        try {
+            if (host.sourceBean() != null && host.sourceBean().getName() != null) {
+                return host.sourceBean().getName();
+            }
+        } catch (Throwable ignored) {
+        }
+        return "-";
+    }
+
+    private String abbrev(String s) {
+        if (s == null) return "null";
+        return s.length() > 120 ? s.substring(0, 120) + "…" : s;
     }
 
     private void configWebViewSys(WebView webView) {
@@ -800,6 +841,7 @@ final class PlayUrlResolver {
                     loadFoundVideoUrls.add(url);
                     loadFoundVideoUrlsHeader.put(url, headers);
                     LOG.i("echo-loadFoundVideoUrl:" + url);
+                    ApiLog.ok(ApiLog.KIND_API, "嗅探命中", "起播", 0);
                     if (loadFoundCount.incrementAndGet() == 1) {
                         stopLoadWebView(false);
                         SuperParse.stopJsonJx();
