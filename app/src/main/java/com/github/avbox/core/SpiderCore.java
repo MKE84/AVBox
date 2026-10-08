@@ -74,7 +74,7 @@ public class SpiderCore {
         try {
             Class<?> cls = Class.forName("com.github.catvod.spider.SpiderVod");
             Spider s = (Spider) cls.getConstructor().newInstance();
-            s.init(ctx, normalize(api), "");
+            s.init(ctx, normalize(api));
             return s;
         } catch (Exception e) {
             ApiLog.fail(ApiLog.KIND_API, key, "core.api", e.getMessage());
@@ -87,7 +87,7 @@ public class SpiderCore {
     private static Spider py(Context ctx, String key, String api) {
         try {
             Spider s = new PythonSpider(key);
-            s.init(ctx, api, "");
+            s.init(ctx, api);
             return s;
         } catch (Exception e) {
             ApiLog.fail(ApiLog.KIND_PY, key, "core.py", e.getMessage());
@@ -100,7 +100,7 @@ public class SpiderCore {
     private static Spider js(Context ctx, String key, String api) {
         try {
             Spider s = new JsSpider(key, api, null);
-            s.init(ctx, api, "");
+            s.init(ctx, api);
             return s;
         } catch (Exception e) {
             ApiLog.fail(ApiLog.KIND_JS, key, "core.js", e.getMessage());
