@@ -309,7 +309,7 @@ final class PlayUrlResolver {
                     LOG.e("PlayUrlResolver", e);
                 }
             }
-            ApiLog.ok(ApiLog.KIND_API, pb.getName(), "嗅探启动", webUrl);
+            ApiLog.ok(ApiLog.KIND_API, pb.getName(), "嗅探启动:" + webUrl, 0);
             loadWebView(pb.getUrl() + webUrl);
         } else if (pb.getType() == 1) { // json 解析
             if (host.view() != null) host.view().showTip(str(R.string.player_resolving_url), true, false);
