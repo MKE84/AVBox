@@ -374,6 +374,18 @@ final class SpiderLoader {
         } else {
             currentPyKey = "";
             spider = jarLoader.getSpider(sourceBean.getKey(), sourceBean.getApi(), sourceBean.getExt(), sourceBean.getJar());
+            // 新核心接入:仅对"无 jar 的纯 api.php/provide/vod 源"兜底到通用实现,
+            // 让这类源也能出分类/列表/详情。有 jar 的源保持原失败语义(SpiderNull),
+            // 不掩盖 jar 真实加载错误。
+            if ((spider == null || spider instanceof SpiderNull)
+                    && TextUtils.isEmpty(sourceBean.getJar())) {
+                Spider fallback = com.github.avbox.core.SpiderCore.create(
+                        com.github.tvbox.osc.base.App.getInstance(),
+                        sourceBean.getKey(), sourceBean.getApi());
+                if (fallback != null) {
+                    spider = fallback;
+                }
+            }
         }
         long cost = System.currentTimeMillis() - startMs;
         boolean failed = spider == null || spider instanceof SpiderNull;
