@@ -273,12 +273,10 @@ private fun sourceTypeLabel(sb: SourceBean): String {
     val jar = sb.getJar() ?: ""
     val lower = api.lowercase()
     return when {
-        lower.endsWith(".py") -> "py"
-        lower.endsWith(".js") -> "js"
-        lower.contains(".py?") || lower.contains(".py#") -> "py"
-        lower.contains(".js?") || lower.contains(".js#") -> "js"
+        lower.endsWith(".py") || lower.contains(".py?") || lower.contains(".py#") -> "py"
+        lower.endsWith(".js") || lower.contains(".js?") || lower.contains(".js#") -> "js"
         !jar.isNullOrEmpty() -> "jar"
-        else -> "jar"
+        else -> "接口"
     }
 }
 
