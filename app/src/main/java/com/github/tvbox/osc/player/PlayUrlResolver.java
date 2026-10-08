@@ -764,7 +764,7 @@ final class PlayUrlResolver {
                     HashMap<String, String> headers = new HashMap<>();
                     String cookie = CookieManager.getInstance().getCookie(u);
                     if (!TextUtils.isEmpty(cookie)) headers.put("Cookie", " " + cookie);
-                    if (host.view() != null) host.view().playUrl(u, headers);
+                    if (host.view() != null) host.playUrl(u, headers);
                 }
             }
         } catch (Throwable ignored) {
