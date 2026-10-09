@@ -788,12 +788,6 @@ public class ApiConfig {
         void notice(String msg);
     }
 
-    public interface FastParseCallback {
-        void success(boolean parse, String url, Map<String, String> header);
-
-        void fail(int code, String msg);
-    }
-
     public SourceBean getSource(String key) {
         if (!sourceBeanList.containsKey(key)) {
             if ("push_agent".equals(key)) {

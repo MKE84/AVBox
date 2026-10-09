@@ -230,7 +230,4 @@ public class SpiderVod extends Spider {
         return bucket;
     }
 
-    @SuppressWarnings("unused")
-    public static class StringArray {
-    }
 }
