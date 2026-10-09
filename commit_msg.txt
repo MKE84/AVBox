@@ -1,0 +1,27 @@
+fix(cleanup-dead-code): 修复 M3u8 净化误杀问题(正则/isAdLikeText子串)
+
+### 净化规则审计与修复（/cleanup-dead-code）
+
+用户反馈：净化开启时无法加载视频，关闭后也不正常。
+
+**审计结论：净化规则过度激进，误删正常 ts 片段。**
+
+修复的确定性 bug（3 处）:
+
+1. REGEX_AD_SEGMENT_URI 正则过度匹配
+   - 旧: (ads?|adv|...) — adv 会匹配 /advert, /admin, /adapter, 任何含
+     adv 开头的路径关键词和域名都会被误判为广告片段 URL
+   - 修复: 分离为 adv(ert(ise(ment)?)?)?(完整关键词) + ads?(最小词边界,
+     REGEX_AD_MINIMAL), 避免 /adapter /admin 等误命中
+
+2. isAdLikeText 子串误杀 — road-/head-/lead- 被当作广告
+   - 旧: lower.contains("ad-") || lower.contains("ad_") — "road-" 含子串
+     "ad-", "head-" 含 "ad-"(hea d-), 正常媒体 ID 如
+     ID="road-scene-2"、ID="head-credits"、ID="lead-actress" 全被删除
+   - 修复: 移除 ad-/ad_/ad. 子串匹配, 只保留完整广告信号词(scte/cue/vast 等)
+
+3. isAdSegmentUri 同步使用双正则(完整关键词 + ads 词边界), 避免误杀
+
+### 未改动(保留安全网)
+- currentAdCount > totalSegments * 0.5(>50%删减率全量回滚)
+- isPlayableMediaPlaylist(EXTINF/URI 配对校验)

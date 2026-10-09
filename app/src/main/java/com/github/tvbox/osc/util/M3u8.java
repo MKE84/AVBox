@@ -34,8 +34,15 @@ public class M3u8 {
     private static final Pattern REGEX_MEDIA_DURATION = Pattern.compile(TAG_MEDIA_DURATION + ":([\\d\\.]+)\\b");
     private static final Pattern REGEX_URI = Pattern.compile("URI=\"(.+?)\"");
 
-    // 增强：广告片段 URL 特征识别（去广告接口常用规则）
-    private static final Pattern REGEX_AD_SEGMENT_URI = Pattern.compile("(?i)(^|[/?&=_.-])(ads?|adv|advert(ise(ment)?)?|commercial|preroll|pre-roll|midroll|mid-roll|postroll|post-roll|sponsor|scte|vast|vmap|interstitial|bumper)([/?&=_.-]|$)");
+    // 增强：广告片段 URL 特征识别 —— 足够严谨的边界匹配，避免误杀正常媒体路径。
+    // 只匹配独立词边界的关键词，不匹配单词内含的子串（如 road / head / load / video_adapter）
+    private static final Pattern REGEX_AD_SEGMENT_URI = Pattern.compile(
+        "(?i)(^|[/?&=_.-])(adv(ert(ise(ment)?)?)?|commercial|preroll|pre-roll|midroll|mid-roll|postroll|post-roll|sponsor|scte|vast|vmap|interstitial|bumper)([/?&=_.-]|$)"
+    );
+    // 最短可接受的纯广告关键词（单独用作路径组件才会被匹配，不在单词内部）
+    private static final Pattern REGEX_AD_MINIMAL = Pattern.compile(
+        "(?i)(^|[/?&=_.-])(ads?)([/?&=_.-]|$)"
+    );
 
     // 增强：广告域名特征（常见广告CDN）
     private static final String[] AD_DOMAIN_KEYWORDS = {
@@ -103,6 +110,8 @@ public class M3u8 {
         return  maxTimes*1.0 / (totalTimes*1.0);
     }
 
+    // 最终安全保护：净化的总片段数不能超过限制，若超过则回滚本次净化方法。
+    // timesNoAd:高端频次过滤时域名需要超过该次数才保留（只有一种域名且小于等于此数时不删此域名）
     private static int timesNoAd = 15;
     private static String removeMinorityUrl(String tsUrlPre, String m3u8content) {
         String linesplit = "\n";
@@ -634,15 +643,17 @@ public class M3u8 {
 
     private static boolean isAdLikeText(String line) {
         String lower = line.toLowerCase();
+        // 广告信号词（独立词，非子串）才判定；road-/head-/load- 等正常ID不误杀
         return lower.contains("scte") || lower.contains("cue") || lower.contains("interstitial") ||
-               lower.contains("vmap") || lower.contains("vast") || lower.contains("advert") ||
-               lower.contains("commercial") || lower.contains("ad-") || lower.contains("ad_") ||
-               lower.contains("ad.") || lower.contains("preroll") || lower.contains("midroll") ||
-               lower.contains("postroll") || lower.contains("bumper");  // 增强
+               lower.contains("vmap") || lower.contains("vast") ||
+               lower.contains("advert") || lower.contains("commercial") ||
+               lower.contains("preroll") || lower.contains("midroll") ||
+               lower.contains("postroll") || lower.contains("bumper");
     }
 
     private static boolean isAdSegmentUri(String line) {
-        return REGEX_AD_SEGMENT_URI.matcher(line).find();
+        // 先匹配完整关键词（commercial/advert/vast/vmap等），再匹配最小ads关键词（要求词边界）
+        return REGEX_AD_SEGMENT_URI.matcher(line).find() || REGEX_AD_MINIMAL.matcher(line).find();
     }
 
     // 增强：检查是否包含广告域名特征
@@ -856,7 +867,8 @@ public class M3u8 {
                 return;
             }
             segmentCount += 1;
-            if (isAdSegmentUri(line) || hasAdDomain(line)) adLikeCount += 1;  // 增强
+            // 组内域名/路径/广告特征计入
+            if (isAdSegmentUri(line) || hasAdDomain(line)) adLikeCount += 1;
             if (host.length() == 0) host = hostOf(line);
             if (pathPrefix.length() == 0) pathPrefix = pathPrefixOf(line);
         }
