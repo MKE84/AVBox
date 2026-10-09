@@ -2,17 +2,6 @@
     <string name="app_name">AVBox</string>
 
     <!-- Settings: language (language names stay endonym, same as the platform language picker) -->
-    <string name="settings_language">Language</string>
-    <string name="settings_preference_title">Preferences</string>
-    <string name="settings_preference_subtitle">Modify app usage preferences</string>
-    <string name="settings_group_language_layout">Language &amp; Layout</string>
-    <string name="settings_language_subtitle">Change the app interface language</string>
-    <string name="settings_language_system">Follow system</string>
-    <string name="settings_language_zh_hans">简体中文</string>
-    <string name="settings_language_en">English</string>
-    <string name="settings_language_zh_hant_tw">繁體(台灣)</string>
-    <string name="settings_language_zh_hant_hk">繁體(香港)</string>
-    <string name="settings_language_restart_message">Takes effect after restart</string>
 
     <!-- Player: notification -->
     <string name="player_notification_previous">Previous</string>
@@ -25,39 +14,8 @@
     <string name="common_retry">Retry</string>
 
     <!-- Live -->
-    <string name="live_empty_channels">No live channels. Check your live source settings</string>
-    <string name="live_password_title">Enter password</string>
-    <string name="live_password_hint">Group password</string>
-    <string name="live_exit_fullscreen">Exit fullscreen</string>
-    <string name="live_epg">TV Guide</string>
-    <string name="live_epg_of">TV Guide · %1$s</string>
-    <string name="live_epg_empty">No guide data</string>
-    <string name="live_settings">Live Settings</string>
-    <string name="live_need_password">Password required</string>
-    <string name="live_replaying">Replaying</string>
-    <string name="live_on_air">On Air</string>
-    <string name="live_now_playing">Now Playing</string>
-    <string name="live_group_long_press_delete">%1$s (long-press to delete)</string>
-    <string name="player_play_pause">Play/Pause</string>
 
     <!-- Subtitle sheet -->
-    <string name="subtitle_builtin">Select built-in subtitle</string>
-    <string name="subtitle_local">Select local subtitle</string>
-    <string name="subtitle_online">Search subtitles online</string>
-    <string name="subtitle_size_minus">Decrease font size</string>
-    <string name="subtitle_size_plus">Increase font size</string>
-    <string name="subtitle_move_up">Move subtitle up</string>
-    <string name="subtitle_move_down">Move subtitle down</string>
-    <string name="subtitle_style_one">Subtitle style 1</string>
-    <string name="subtitle_style_two">Subtitle style 2</string>
-    <string name="subtitle_delay_exo_hint">Subtitle delay applies to built-in subtitles</string>
-    <string name="subtitle_delay_hint">Subtitle delay applies to external subtitles only</string>
-    <string name="subtitle_position_value">Position %1$s</string>
-    <string name="subtitle_advance">Advance subtitle</string>
-    <string name="subtitle_delay">Delay subtitle</string>
-    <string name="subtitle_search_hint">Enter subtitle name</string>
-    <string name="toast_subtitle_style_ok">Style applied</string>
-    <string name="toast_subtitle_not_found">No matching subtitles found</string>
 
     <!-- Player container / player tips -->
     <string name="player_error_sniff">Sniffing error</string>
@@ -72,10 +30,8 @@
     <string name="player_last_episode">This is the last episode!</string>
     <string name="player_first_episode">This is the first episode!</string>
     <string name="toast_no_cast_url">No castable playback URL</string>
-    <string name="toast_subtitle_read_failed">Failed to read the subtitle file</string>
 
     <!-- Danmaku sheet -->
-    <string name="toast_input_empty">Input cannot be empty</string>
 
     <!-- Home -->
     <string name="home_subscription_source">Subscriptions</string>
@@ -110,10 +66,6 @@
 
     <!-- Common -->
     <string name="common_back">Back</string>
-    <string name="common_not_set">Not set</string>
-    <string name="common_set">Set</string>
-    <string name="common_vod">VOD</string>
-    <string name="common_live">Live</string>
     <string name="common_off">Off</string>
     <string name="common_on">On</string>
     <string name="common_confirm">OK</string>
@@ -194,7 +146,6 @@
     <string name="tab_home">Home</string>
     <string name="common_collect">Favorites</string>
     <string name="config_load_failed">Failed to load config</string>
-    <string name="toast_source_auto_disabled">This source cannot be used and would crash the app, so it was disabled (you can re-enable it in Config Management)</string>
     <string name="toast_press_again_to_exit">Press Back again to exit</string>
 
     <!-- Detail page: source switching and favorites -->
@@ -233,28 +184,14 @@
     <string name="theme_current_color">Current color</string>
 
     <!-- Search settings sheet -->
-    <string name="search_home_poster">Home posters</string>
     <string name="search_layout_horizontal">Horizontal</string>
     <string name="search_layout_vertical">Vertical</string>
-    <string name="search_exact">Exact search</string>
     <string name="search_sites">Search sites</string>
     <string name="search_sites_none_hint">No sites selected — searches will return nothing</string>
     <string name="search_sites_selected_hint">Selected %1$d/%2$d. Select all to search every site</string>
     <string name="search_sites_empty">No sites available</string>
 
     <!-- Live: gestures and tips -->
-    <string name="live_brightness">Brightness</string>
-    <string name="live_volume">Volume</string>
-    <string name="live_gesture_hint">%1$s %2$d%%</string>
-    <string name="live_please_select_channel">Select a channel first</string>
-    <string name="live_wrong_password">Wrong password</string>
-    <string name="live_repo_entry_not_deletable">This list comes from the repo URL and cannot be deleted separately</string>
-    <string name="live_active_config_not_deletable">The active config cannot be deleted</string>
-    <string name="toast_removed_from_history">Removed from history</string>
-    <string name="live_line_index">Line %1$d/%2$d</string>
-    <string name="live_epg_hot">Highlights</string>
-    <string name="live_epg_hot_no_info">Highlights - No program info</string>
-    <string name="live_epg_no_info">No program info</string>
 
     <!-- Dialogs -->
     <string name="dialog_kernel_prewarm_title">Performance Warning</string>
@@ -268,8 +205,6 @@
 
     <!-- Tips -->
     <string name="toast_cache_cleared">Cache cleared</string>
-    <string name="toast_no_app_for_link">No app can open this link</string>
-    <string name="toast_live_follow_vod">Live source now follows the VOD source</string>
     <string name="toast_source_in_use">The source in use cannot be deleted</string>
 
     <!-- Players -->
@@ -301,7 +236,6 @@
     <string name="detail_order_asc">Ascending</string>
     <string name="detail_order_desc">Descending</string>
     <string name="detail_switch_source">Switch source</string>
-    <string name="detail_finding_source">Finding sources…</string>
     <string name="detail_matched_sources">%1$d sources matched</string>
     <string name="detail_matched_sources_searching">Matching… %1$d found</string>
     <string name="detail_current_source">Current source</string>
@@ -324,16 +258,6 @@
 
     <!-- Settings: theme -->
     <string name="theme_color">Theme Color</string>
-    <string name="theme_app_effects">App Effects</string>
-    <string name="theme_liquid_glass">Liquid Glass</string>
-    <string name="theme_liquid_glass_hint">Liquid Glass requires Android 13 or later</string>
-    <string name="theme_reset">Reset</string>
-    <string name="theme_nav_bar">Bottom Navigation</string>
-    <string name="theme_app_controls">App Controls</string>
-    <string name="theme_blur">Blur</string>
-    <string name="theme_distortion">Distortion</string>
-    <string name="theme_translucency">Translucency</string>
-    <string name="theme_dispersion">Edge Dispersion</string>
     <string name="theme_custom_color">Custom Color</string>
     <string name="theme_custom_theme">Custom Theme</string>
     <string name="theme_mode">Theme Mode</string>
@@ -384,16 +308,7 @@
     <string name="source_push_agent">Push</string>
 
     <!-- Live: settings sheet -->
-    <string name="live_group_line">Select Line</string>
     <string name="live_group_scale">Aspect Ratio</string>
-    <string name="live_group_decoder">Decoding</string>
-    <string name="live_group_timeout">Timeout Switch</string>
-    <string name="live_group_multi_source">Multi-source Switch</string>
-    <string name="live_group_config_switch">Config Switch</string>
-    <string name="live_setting_show_time">Show Time</string>
-    <string name="live_setting_show_speed">Show Speed</string>
-    <string name="live_setting_reverse">Reverse Switching</string>
-    <string name="live_setting_cross_group">Cross-group Switching</string>
     <string name="live_source_index_name">Source %1$d</string>
 
     <!-- Config management -->
@@ -401,31 +316,15 @@
     <string name="config_switched_to">Switched to: %1$s</string>
     <string name="config_switch_repo">Switch Repo</string>
     <string name="config_add_subscribe">Add Subscription</string>
-    <string name="config_add_live_source">Add Live Source</string>
     <string name="config_edit_subscribe">Edit Subscription</string>
-    <string name="config_edit_live_source">Edit Live Source</string>
     <string name="config_empty_subscribe">No subscriptions</string>
-    <string name="config_empty_live_source">No live sources</string>
-    <string name="config_no_vod_source">No VOD source configured</string>
-    <string name="config_current_vod_source">Current VOD source: %1$s</string>
-    <string name="config_live_source_hint">Supports JSON / m3u / txt live sources</string>
     <string name="config_source_disabled_tag">Disabled</string>
     <string name="config_source_stat_total">%1$d sources</string>
 
     <!-- API log -->
-    <string name="block_add">Add</string>
-    <string name="block_empty">No block rules yet</string>
-    <string name="block_empty_hint">Tap + at top-left to add; long-press a card to delete</string>
-    <string name="block_long_hint">Long-press to delete</string>
-    <string name="block_name_label">Name</string>
-    <string name="block_keywords_label">Keywords</string>
-    <string name="block_keywords_placeholder">Separate with |, e.g. music|podcast|audiobook</string>
-    <string name="block_delete_title">Delete rule</string>
-    <string name="block_delete_confirm">Delete "%1$s"? Its keywords will no longer be blocked.</string>
     <string name="config_pick_local">Choose from local</string>
     <string name="config_field_name">Name</string>
     <string name="config_field_url">URL</string>
-    <string name="live_follow_vod_source">Follow VOD source</string>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>
@@ -435,26 +334,15 @@
     <string name="settings_theme_subtitle">Change the app colors and effects</string>
     <string name="settings_play">Playback Settings</string>
     <string name="settings_play_subtitle">Playback engine and decoding mode</string>
-    <string name="settings_default_page">Default Start Page</string>
-    <string name="settings_default_page_subtitle">Where the app opens on launch</string>
     <string name="settings_history_limit">History Limit</string>
     <string name="settings_history_limit_subtitle">Maximum number of records to keep</string>
     <string name="settings_history_limit_value">%1$d items</string>
     <string name="settings_clear_cache">Clear Cache</string>
     <string name="settings_clear_cache_subtitle">Clear the app usage cache</string>
     <string name="settings_doh_subtitle">Secure DNS</string>
-    <string name="settings_about">About</string>
-    <string name="settings_about_subtitle">View details</string>
-    <string name="settings_about_version">Version v%1$s</string>
-    <string name="settings_about_disclaimer">This app only aggregates and displays content from the internet. It does not host, create, upload, store, or download any content, and accepts no donations, tips, or payments. It is provided for open-source learning purposes only; please uninstall it within 24 hours of installation.</string>
-            <string name="settings_app_tagline">TVBox for Phone</string>
-    <string name="settings_app_version">App version</string>
 
     <!-- Settings: preferences -->
-    <string name="settings_nav_live_hidden">Hide Live in Navigation Bar</string>
-    <string name="settings_nav_live_hidden_subtitle">Hides the Live entry in the navigation bar</string>
     <string name="settings_auto_switch_line">Auto Switch Line</string>
-    <string name="settings_m3u8_purify">M3U8 Purify</string>
     <string name="settings_long_press_speed">Long-press Speed</string>
     <string name="settings_buffer_time">Buffer Time</string>
 
@@ -473,7 +361,6 @@
     <string name="player_select_player">Select a player</string>
     <string name="player_select_scale">Select picture size</string>
     <string name="player_select_speed">Select playback speed</string>
-    <string name="player_subtitle_closed">Subtitles off</string>
     <string name="player_switch_line">Switched to line %1$s</string>
     <string name="player_get_url_timeout">Timed out getting the playback URL</string>
     <string name="player_play_timeout">Playback timed out</string>
@@ -496,12 +383,9 @@
     <string name="home_load_partial_timeout">Some content timed out. Pull down to refresh</string>
     <string name="detail_rating">Rating %1$s</string>
     <string name="detail_content_not_ready">Content is not ready yet</string>
-    <string name="detail_no_playable_content">Nothing playable yet</string>
     <string name="filter_title">Filter · %1$s</string>
     <string name="filter_clear">Clear</string>
-    <string name="live_source_auto_disabled">This source was auto-disabled. You can re-enable it in Config Management</string>
     <string name="toast_file_picker_unavailable">Cannot open the file picker</string>
-    <string name="toast_permission_required">Permission required</string>
     <string name="toast_folder_data_missing">Folder data is missing, cannot open</string>
 
     <!-- Resolve / sniff / download / danmaku / cast / local source (non-UI, 2026-09-22) -->
@@ -523,7 +407,6 @@
     <string name="thunder_error_invalid_url">Invalid URL</string>
     <string name="toast_jar_load_failed">Failed to load JAR</string>
     <string name="toast_network_error">Network error</string>
-    <string name="toast_ads_removed">Removed %1$d video ads</string>
     <string name="cast_device_offline">Device offline</string>
     <string name="toast_local_config_read_failed">Failed to read the local config</string>
     <string name="toast_local_missing_files_hint">%1$d files in the same folder have not been copied. Select the folder containing this config</string>

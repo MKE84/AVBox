@@ -1,30 +1,18 @@
 <resources>
     <!-- 香港差異層:只放港台用詞不同的條目,其餘回落 values-b+zh+Hant(台灣基礎層) -->
-    <string name="subtitle_local">選擇本地字幕</string>
-    <string name="common_vod">點播</string>
     <string name="common_load_failed_network">載入失敗，請檢查網絡</string>
-    <string name="config_no_vod_source">未設定點播源</string>
-    <string name="config_current_vod_source">目前點播源：%1$s</string>
-    <string name="live_follow_vod_source">跟隨點播源</string>
-    <string name="toast_live_follow_vod">直播已跟隨點播源</string>
     <string name="home_load_failed">首頁載入失敗，請檢查網絡後重試</string>
     <string name="home_load_timeout">首頁載入超時，請檢查網絡後重試</string>
     <string name="home_load_partial_timeout">部分內容載入超時，可下拉重新整理重試</string>
     <string name="toast_network_error">網絡錯誤</string>
     <string name="thunder_error_network_refused">拒絕的網絡連接</string>
-    <string name="settings_about_disclaimer">本軟件僅提供聚合展示功能，所有資源均來自互聯網，軟件不參與任何內建、製作、上傳、儲存、下載等內容，也不接受任何捐贈、打賞、付費等謀利行為，軟件僅供開源學習參考，請於安裝後24小時內刪除。</string>
     <string name="settings_clear_cache">清除緩存</string>
     <string name="settings_clear_cache_subtitle">清理應用程式的使用緩存</string>
-    <string name="theme_nav_bar">底部導航</string>
-    <string name="settings_nav_live_hidden">導航欄隱藏直播</string>
-    <string name="settings_nav_live_hidden_subtitle">開啟後導航欄不再顯示直播入口</string>
-    <string name="theme_app_controls">應用控件</string>
     <string name="player_menu_video_track">視頻軌</string>
     <string name="player_no_video_track">沒有視頻軌</string>
     <string name="player_switch_video_track">切換視頻軌</string>
     <string name="player_lock">鎖定屏幕</string>
     <string name="detail_fullscreen_play">全屏播放</string>
-    <string name="live_exit_fullscreen">退出全屏</string>
     <string name="toast_folder_data_missing">文件夾數據缺失，無法打開</string>
     <string name="player_get_url_timeout">獲取播放地址超時</string>
     <string name="player_play_timeout">播放超時</string>
@@ -33,7 +21,6 @@
     <string name="player_play_url_empty">獲取播放地址為空</string>
     <string name="thunder_error_timeout">解析下載超時</string>
     <string name="dialog_api_url_hint">請輸入 API 地址</string>
-    <string name="live_repo_entry_not_deletable">倉庫列表來自倉庫地址，不能單獨刪除</string>
             <string name="player_rotate_portrait">旋轉到縱向</string>
     <string name="toast_local_config_read_failed">讀取本地設定失敗</string>
     <string name="toast_local_source_unreadable">本地源檔案讀不到\n請開啟「所有檔案存取」後重試（或重新匯入本地源）</string>
@@ -56,9 +43,7 @@
     <string name="history_delete_message">刪除「%1$s」的觀看記錄？</string>
     <string name="history_delete_selected_message">確定刪除選中的 %1$d 條觀看記錄嗎？</string>
     <string name="history_incognito">無痕模式：不顯示觀看記錄</string>
-    <string name="live_group_timeout">超時換源</string>
     <string name="detail_collapse">收起</string>
-    <string name="toast_source_auto_disabled">該源無法使用，會導致死機，已自動停用（可在設定管理中重新啟用）</string>
     <string name="dialog_source_disabled_message">「%1$s」先前導致應用程式死機，已被自動停用。\n\n若該源已經修好，可以重新啟用；否則切換後很可能再次閃退。</string>
     <string name="settings_group_preload_cache">預載與緩存</string>
     <string name="settings_api_log">介面日誌</string>
