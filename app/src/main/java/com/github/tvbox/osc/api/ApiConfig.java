@@ -12,8 +12,6 @@ import com.github.tvbox.osc.R;
 import com.github.tvbox.osc.base.App;
 import com.github.tvbox.osc.bean.LiveChannelGroup;
 import com.github.tvbox.osc.bean.LiveChannelItem;
-import com.github.tvbox.osc.bean.LiveSettingGroup;
-import com.github.tvbox.osc.bean.LiveSettingItem;
 import com.github.tvbox.osc.bean.ParseBean;
 import com.github.tvbox.osc.bean.ProxyRule;
 import com.github.tvbox.osc.bean.SourceBean;
@@ -238,7 +236,6 @@ public class ApiConfig {
         liveChannelGroupList.clear();
         spiderLoader.setLiveSpider("");
         spiderLoader.resetCurrentLiveSpider();
-        initLiveSettings();
         KV.put(HawkConfig.LIVE_GROUP_LIST, new JsonArray());
     }
 
@@ -401,8 +398,7 @@ public class ApiConfig {
         String live_api_url = KV.get(HawkConfig.LIVE_API_URL, "");
         if(live_api_url.isEmpty() || apiUrl.equals(live_api_url)){
             LOG.i("echo-load-config_live");
-            initLiveSettings();
-            // 不再解析 lives / 不再调用 loadLiveApi(直播功能已删,这里纯读取+拉网络无意义)
+                // 不再解析 lives / 不再调用 loadLiveApi(直播功能已删,这里纯读取+拉网络无意义)
         }
 
         // 写完立即刷新:下方 rules/ads 段若抛异常,快照不会停在上一条配置的映射上
@@ -471,7 +467,6 @@ public class ApiConfig {
         liveChannelGroupList.clear();
         spiderLoader.setLiveSpider("");
         spiderLoader.resetCurrentLiveSpider();
-        initLiveSettings();
         KV.put(HawkConfig.LIVE_GROUP_LIST, new JsonArray());
         KV.put(HawkConfig.EPG_URL, ConfigParser.extractLiveTextEpg(content));
         KV.put(HawkConfig.LIVE_WEB_HEADER, null);
@@ -489,120 +484,11 @@ public class ApiConfig {
         // spider
         spiderLoader.setLiveSpider(DefaultConfig.safeJsonString(infoJson, "spider", ""));
         // 直播源(已移除:无直播 UI 入口,不解析 lives、不拉取直播网络)
-        initLiveSettings();
 
         liveHosts = infoJson.has("hosts") ? ConfigParser.parseHosts(infoJson.getAsJsonArray("hosts")) : null;
         // DNS 只认 OkGoHelper.myHosts 快照,写完必须刷新,否则直播 hosts 实际不生效
         OkGoHelper.refreshHosts();
         LOG.i("echo-api-live-config-----------load");
-    }
-
-    private final List<LiveSettingGroup> liveSettingGroupList = new ArrayList<>();
-    private void initLiveSettings() {
-        ArrayList<String> groupNames = new ArrayList<>(Arrays.asList(
-                str(R.string.live_group_line), str(R.string.live_group_scale), str(R.string.live_group_decoder),
-                str(R.string.live_group_timeout), str(R.string.settings_preference_title),
-                str(R.string.live_group_multi_source), str(R.string.live_group_config_switch)));
-        ArrayList<ArrayList<String>> itemsArrayList = new ArrayList<>();
-        ArrayList<String> sourceItems = new ArrayList<>();
-        ArrayList<String> scaleItems = new ArrayList<>(Arrays.asList(
-                str(R.string.common_default), "16:9", "4:3",
-                str(R.string.player_scale_fill), str(R.string.player_scale_origin), str(R.string.player_scale_crop)));
-        ArrayList<String> playerDecoderItems = new ArrayList<>(Arrays.asList(
-                str(R.string.player_decode_hard), str(R.string.player_decode_soft)));
-        ArrayList<String> timeoutItems = new ArrayList<>(Arrays.asList("5s", "10s", "15s", "20s", "25s", "30s"));
-        ArrayList<String> personalSettingItems = new ArrayList<>(Arrays.asList(
-                str(R.string.live_setting_show_time), str(R.string.live_setting_show_speed),
-                str(R.string.live_setting_reverse), str(R.string.live_setting_cross_group)));
-        ArrayList<String> yumItems = new ArrayList<>();
-        ArrayList<String> liveApiHistoryItems = new ArrayList<>();
-
-        itemsArrayList.add(sourceItems);
-        itemsArrayList.add(scaleItems);
-        itemsArrayList.add(playerDecoderItems);
-        itemsArrayList.add(timeoutItems);
-        itemsArrayList.add(personalSettingItems);
-        itemsArrayList.add(yumItems);
-        itemsArrayList.add(liveApiHistoryItems);
-
-        liveSettingGroupList.clear();
-        for (int i = 0; i < groupNames.size(); i++) {
-            LiveSettingGroup liveSettingGroup = new LiveSettingGroup();
-            ArrayList<LiveSettingItem> liveSettingItemList = new ArrayList<>();
-            liveSettingGroup.setGroupIndex(i);
-            liveSettingGroup.setGroupName(groupNames.get(i));
-            for (int j = 0; j < itemsArrayList.get(i).size(); j++) {
-                LiveSettingItem liveSettingItem = new LiveSettingItem();
-                liveSettingItem.setItemIndex(j);
-                liveSettingItem.setItemName(itemsArrayList.get(i).get(j));
-                liveSettingItemList.add(liveSettingItem);
-            }
-            liveSettingGroup.setLiveSettingItems(liveSettingItemList);
-            liveSettingGroupList.add(liveSettingGroup);
-        }
-        refreshLiveApiHistoryItems();
-    }
-
-    public List<LiveSettingGroup> getLiveSettingGroupList() {
-        return liveSettingGroupList;
-    }
-
-    /**
-     * 刷新直播设置「配置切换」组(第 6 组):第 0 项固定为合成的「跟随点播源」(无条件占位,避免下标漂移),
-     * 其后为候选项 —— 第 i 项的 itemIndex = i + 1。
-     *
-     * <p>2026-09-21 多仓:当前直播源来自仓列表时,第 1 项起改列**仓里的子源**而不是配置历史。
-     */
-    public void refreshLiveApiHistoryItems() {
-        if (liveSettingGroupList.size() < 7) return;
-        ArrayList<LiveSettingItem> liveSettingItemList = new ArrayList<>();
-        LiveSettingItem followItem = new LiveSettingItem();
-        followItem.setItemIndex(0);
-        followItem.setItemName(str(R.string.live_follow_vod_source));
-        liveSettingItemList.add(followItem);
-        ArrayList<String> entries = getLiveConfigEntries();
-        for (int i = 0; i < entries.size(); i++) {
-            LiveSettingItem liveSettingItem = new LiveSettingItem();
-            liveSettingItem.setItemIndex(i + 1);
-            liveSettingItem.setItemName(HistoryHelper.getApiLineName(entries.get(i)));
-            liveSettingItemList.add(liveSettingItem);
-        }
-        liveSettingGroupList.get(6).setLiveSettingItems(liveSettingItemList);
-    }
-
-    /** 「配置切换」当前列的是仓列表还是配置历史 —— UI 点击/删除时据此取值 */
-    public boolean isLiveApiLineMode() {
-        return HistoryHelper.isLiveApiLineUrl(KV.get(HawkConfig.LIVE_API_URL, ""));
-    }
-
-    /** 「配置切换」第 1 项起的条目:仓模式给仓列表,否则给配置历史(与上面刷新用的是同一份) */
-    public ArrayList<String> getLiveConfigEntries() {
-        return HistoryHelper.isLiveApiLineUrl(KV.get(HawkConfig.LIVE_API_URL, ""))
-                ? HistoryHelper.getLiveApiLines()
-                : KV.get(HawkConfig.LIVE_API_HISTORY, new ArrayList<String>());
-    }
-
-    /**
-     * 同 {@link #getLiveConfigEntries()},但剥成纯地址列表。
-     *
-     * <p>条目是 {@code "名字\t链接"} 的行,而选中判定要比对地址 —— 直接拿整行去 indexOf 永远匹配不上
-     * (表现为「配置切换」当前项不高亮)。
-     */
-    public ArrayList<String> getLiveConfigUrls() {
-        ArrayList<String> urls = new ArrayList<>();
-        for (String entry : getLiveConfigEntries()) {
-            String url = HistoryHelper.getApiLineUrl(entry);
-            if (!TextUtils.isEmpty(url)) urls.add(url);
-        }
-        return urls;
-    }
-
-    /** 「配置切换」组第 {@code position} 项对应的直播源地址(第 0 项是「跟随点播源」,返回空串) */
-    public String getLiveApiHistoryUrl(int position) {
-        ArrayList<String> urls = getLiveConfigUrls();
-        int index = position - 1;
-        if (index < 0 || index >= urls.size()) return "";
-        return urls.get(index);
     }
 
     public void loadLives(JsonArray livesArray) {

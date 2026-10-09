@@ -3,7 +3,6 @@ package com.github.tvbox.osc.api;
 import androidx.media3.common.util.UriUtil;
 
 import com.github.tvbox.osc.bean.Depot;
-import com.github.tvbox.osc.bean.LiveSettingItem;
 import com.github.tvbox.osc.bean.SourceBean;
 import com.github.tvbox.osc.util.DefaultConfig;
 import com.github.tvbox.osc.util.HeaderGuard;
@@ -167,20 +166,6 @@ final class ConfigParser {
         if (!infoJson.has("urls")) return false;
         JsonElement urls = infoJson.get("urls");
         return urls != null && urls.isJsonArray() && urls.getAsJsonArray().size() > 0;
-    }
-
-    /** 直播设置「配置切换」组的候选项:没写 name 的用"线路N"占位 */
-    static ArrayList<LiveSettingItem> parseLiveSettingItems(JsonArray livesGroups) {
-        ArrayList<LiveSettingItem> liveSettingItemList = new ArrayList<>();
-        for (int i = 0; i < livesGroups.size(); i++) {
-            JsonObject jsonObject = livesGroups.get(i).getAsJsonObject();
-            String name = jsonObject.has("name") ? jsonObject.get("name").getAsString() : "线路" + (i + 1); // i18n: keep(数据默认名,进 bean 且被 ConfigParserTest 锁定)
-            LiveSettingItem liveSettingItem = new LiveSettingItem();
-            liveSettingItem.setItemIndex(i);
-            liveSettingItem.setItemName(name);
-            liveSettingItemList.add(liveSettingItem);
-        }
-        return liveSettingItemList;
     }
 
     /** 配置顶层 hosts 数组,形如 "a.com=1.2.3.4";value 里再出现 = 也保留(只按第一个 = 拆) */

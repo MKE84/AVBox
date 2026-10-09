@@ -5,7 +5,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import com.github.tvbox.osc.bean.LiveSettingItem;
 import com.github.tvbox.osc.bean.SourceBean;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -271,20 +270,6 @@ public class ConfigParserTest {
     }
 
     // ---------- 直播多源与 hosts ----------
-
-    @Test
-    public void parseLiveSettingItems_namesAndIndexes() {
-        List<LiveSettingItem> items = ConfigParser.parseLiveSettingItems(
-                jsonArray("[{\"name\":\"线路A\"},{},{\"name\":\"\"}]"));
-
-        assertEquals(3, items.size());
-        assertEquals(0, items.get(0).getItemIndex());
-        assertEquals("线路A", items.get(0).getItemName());
-        assertEquals(1, items.get(1).getItemIndex());
-        assertEquals("线路2", items.get(1).getItemName());
-        // 显式给了空名字就保留空名字,不再兜底
-        assertEquals("", items.get(2).getItemName());
-    }
 
     @Test
     public void parseHosts_splitsOnFirstEqualsOnly() {
