@@ -73,6 +73,7 @@
     <string name="player_first_episode">已经是第一集了!</string>
     <string name="toast_no_cast_url">暂无可投屏播放地址</string>
     <string name="toast_subtitle_read_failed">读取字幕文件失败</string>
+    <string name="toast_input_empty">输入内容不能为空</string>
 
     <!-- 首页 -->
     <string name="home_subscription_source">订阅源</string>
