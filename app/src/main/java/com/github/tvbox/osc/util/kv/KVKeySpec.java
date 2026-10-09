@@ -160,12 +160,6 @@ public final class KVKeySpec implements KVDecoder.TypeRegistry {
         // 风险源黑名单:元素类型必须显式登记,否则读回来退化成 LinkedTreeMap(见本文件末的教训)
         register(HawkConfig.BOOT_DISABLED_SOURCES, new TypeToken<ArrayList<String>>() {
         });
-        // 用户手动隐藏的源 key 集合(防订阅刷新复活)
-        register(HawkConfig.HIDDEN_SOURCES, new TypeToken<ArrayList<String>>() {
-        });
-        // "最近删除"记录(name\tkey)
-        register(HawkConfig.RECENT_DELETED_SOURCES, new TypeToken<ArrayList<String>>() {
-        });
         register(HawkConfig.BOOT_VOD_SOURCE, "");
         register(HawkConfig.BOOT_LIVE_SOURCE, "");
         // 0L 是 Long 哨兵:尝试次数与加载时刻必须按 long 解码,否则读回来对不上类型

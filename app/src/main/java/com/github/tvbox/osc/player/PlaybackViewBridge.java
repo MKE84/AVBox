@@ -83,17 +83,11 @@ public interface PlaybackViewBridge {
     /** 停掉旁路资源(磁力/p2p/dash 代理;既有 mController.stopOther) */
     void stopOtherPlayers();
 
-    /** 收起歌词视图(切集/换源) */
-    void clearLyric();
-
     /** 清空封面 */
     void clearArtwork();
 
     /** 盖一层黑帧(复用播放器换集时避免上一集画面残留) */
     void clearVideoFrame();
-
-    /** 外挂字幕视图显隐(起播前复位为隐藏,需要时由字幕决策链路再显示) */
-    void setSubtitleViewVisible(boolean visible);
 
     /** 让页面复位"新一次播放开始"的侧写标记(exitingPreview) */
     void onNewPlayStarted();

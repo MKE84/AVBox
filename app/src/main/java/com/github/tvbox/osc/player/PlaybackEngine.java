@@ -756,10 +756,6 @@ public final class PlaybackEngine implements PlaybackHostApi {
         }
 
         @Override
-        public void clearLyric() {
-        }
-
-        @Override
         public void clearArtwork() {
             if (!released) videoView.clearArtwork();
         }
@@ -767,10 +763,6 @@ public final class PlaybackEngine implements PlaybackHostApi {
         @Override
         public void clearVideoFrame() {
             if (!released) videoView.clearVideoFrame();
-        }
-
-        @Override
-        public void setSubtitleViewVisible(boolean visible) {
         }
 
         @Override

@@ -74,20 +74,6 @@ final class PlayContainerControlListener implements VodControlListener {
     }
 
     @Override
-    public void closeSubtitles() {
-        container.closeSubtitles();
-    }
-
-    @Override
-    public void selectSubtitle() {
-        try {
-            container.selectMySubtitle();
-        } catch (Exception e) {
-            LOG.e("PlayContainer", e);
-        }
-    }
-
-    @Override
     public void selectAudioTrack() {
         container.selectMyAudioTrack();
     }

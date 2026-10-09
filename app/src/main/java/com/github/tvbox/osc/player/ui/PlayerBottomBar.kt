@@ -200,14 +200,6 @@ private fun PlayerActionPill(
             modifier = Modifier.weight(1f),
         )
         PlayerPillIconButton(
-            iconRes = R.drawable.player_ic_menu_subtitle,
-            label = stringResource(R.string.player_menu_subtitle),
-            box = iconBox,
-            onClick = actions::onSubtitleClicked,
-            onLongClick = actions::onSubtitleLongClicked,
-            modifier = Modifier.weight(1f),
-        )
-        PlayerPillIconButton(
             iconRes = R.drawable.player_ic_menu_audio,
             label = stringResource(R.string.player_menu_audio_track),
             box = iconBox,

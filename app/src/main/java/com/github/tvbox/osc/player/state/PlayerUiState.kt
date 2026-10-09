@@ -3,7 +3,6 @@ package com.github.tvbox.osc.player.state
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.github.tvbox.osc.bean.Subtitle
 import com.github.tvbox.osc.bean.VodInfo
 import com.github.tvbox.osc.dlna.CastVideo
 import com.github.tvbox.osc.player.effect.PictureEffectUnavailableReason
@@ -123,11 +122,7 @@ class PlayerUiState {
         tipErr = err
     }
 
-    // —— Step 6 对话框 sheet 化（替代 View 版 Subtitle/SearchSubtitle/Cast/Episode Dialog） ——
-    /** 字幕设置面板 */
-    var subtitleSheet: SubtitleSheetState? by mutableStateOf(null)
-    /** 字幕搜索面板 */
-    var subtitleSearchSheet: SubtitleSearchSheetState? by mutableStateOf(null)
+    // —— Step 6 对话框 sheet 化（替代 View 版 Cast/Episode Dialog） ——
     /** 投屏设备面板 */
     var castSheet: CastSheetState? by mutableStateOf(null)
     /** 详情页选集面板在屏（面板状态归 DetailViewModel，这里只收一个投影） */
@@ -136,7 +131,6 @@ class PlayerUiState {
     /** 有覆盖层面板在屏：面板期间冻结底栏的 10s 自动收起（见 ComposeVideoController.idleHideRunnable） */
     val overlayPanelOpen: Boolean
         get() = selectDialog != null || paramsSheet != null ||
-                subtitleSheet != null || subtitleSearchSheet != null ||
                 castSheet != null || episodeSheetOpen
 
     // —— 衍生可见性（照搬 updatePortraitMenu 的逐按钮规则；与方向无关，预览态由菜单行/解析行的 previewMode 守卫） —
@@ -248,30 +242,6 @@ class PictureParamsState(
     val onCompareChanged: (Boolean) -> Unit,
 )
 
-/** 字幕设置面板状态（替代 View 版 SubtitleDialog）；exoInternal = Exo 内置字幕模式（字号百分比/字幕上下移） */
-class SubtitleSheetState(
-    val exoInternal: Boolean,
-    val hasInternal: Boolean,
-    val onSelectInternal: () -> Unit,
-    val onSelectLocal: () -> Unit,
-    val onSelectRemote: () -> Unit,
-    /** 外挂字幕文字样式:0=样式一 白色,1=样式二 粉色(#FFB6C1) */
-    val onSelectStyle: (Int) -> Unit = {},
-    /** 字号按钮只写了设置,需播放层立即按当前形态(预览 0.6×/全屏 1×)应用到字幕视图 */
-    val onTextSizeChange: () -> Unit = {},
-    val onReset: () -> Unit = {},
-)
-
-/**
- * 字幕搜索面板状态（替代 View 版 SearchSubtitleDialog）。
- *
- * onLoadSubtitle 第二参 = 该文件所属**发布页**地址（直链只对当集有效，发布页才是可跨集的身份）。
- */
-class SubtitleSearchSheetState(
-    val searchWord: String,
-    val onLoadSubtitle: (Subtitle, String) -> Unit,
-)
-
 /** 投屏设备面板状态（替代 View 版 CastDeviceDialog） */
 class CastSheetState(
     val video: CastVideo,
@@ -307,8 +277,6 @@ interface PlayerActions {
     /** 打开页面的选集面板（详情页弹层，横屏全屏下的选集入口） */
     fun onEpisodeClicked()
     fun onCastClicked()
-    fun onSubtitleClicked()
-    fun onSubtitleLongClicked()
     fun onAudioTrackClicked()
     fun onVideoTrackClicked()
     fun onRotateClicked()

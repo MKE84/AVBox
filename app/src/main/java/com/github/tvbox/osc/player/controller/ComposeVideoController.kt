@@ -44,11 +44,9 @@ import com.github.tvbox.osc.player.state.SelectDialogState
 import com.github.tvbox.osc.player.ui.PlayerOverlay
 import com.github.tvbox.osc.player.usecase.PlayerSwitchUseCase
 import com.github.tvbox.osc.player.usecase.WebParseUseCase
-import com.github.tvbox.osc.subtitle.widget.SimpleSubtitleView
 import com.github.tvbox.osc.ui.theme.AVBoxTheme
 import com.github.tvbox.osc.util.HawkConfig
 import com.github.tvbox.osc.util.PlayerHelper
-import com.github.tvbox.osc.util.SubtitleHelper
 import com.github.tvbox.osc.util.KV
 import com.github.tvbox.osc.util.PlaybackProgress
 import org.greenrobot.eventbus.EventBus
@@ -97,8 +95,6 @@ class ComposeVideoController @JvmOverloads constructor(
         get() = mControlWrapper
 
     // —— 原生字幕视图（PlayContainer 直接操作，保留 View 引用） ——
-    private lateinit var mSubtitleView: SimpleSubtitleView
-    private lateinit var mLyricView: SimpleSubtitleView
     private lateinit var mExoSubtitleView: SubtitleView
 
     internal var curPlayState = 0
@@ -159,46 +155,14 @@ class ComposeVideoController @JvmOverloads constructor(
 
         initNativeSubtitleViews()
         initComposeLayer()
-
-        // —— 初始状态（对齐旧 initView 屏显初始化） ——
-        state.sysTimeVisible = false
-        state.isPortrait =
-            resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
-        initSubtitleInfo()
     }
 
     override fun getLayoutId(): Int = 0
 
     /** 原生字幕视图（z-order：Compose 层之下，与旧布局一致） */
     private fun initNativeSubtitleViews() {
-        val vs5 = resources.getDimensionPixelSize(R.dimen.vs_5)
-        val vs15 = resources.getDimensionPixelSize(R.dimen.vs_15)
-        val vs20 = resources.getDimensionPixelSize(R.dimen.vs_20)
-
-        mSubtitleView = SimpleSubtitleView(context).apply {
-            gravity = Gravity.CENTER
-            setTextColor(0xFFFFFFFF.toInt())
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
-            setPadding(vs20, vs15, vs20, vs15)
-            visibility = View.VISIBLE
-        }
-        addView(
-            mSubtitleView,
-            LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT, Gravity.BOTTOM),
-        )
-
         mExoSubtitleView = SubtitleView(context).apply { visibility = View.GONE }
         addView(mExoSubtitleView, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
-
-        mLyricView = SimpleSubtitleView(context).apply {
-            gravity = Gravity.CENTER
-            setTextColor(0xFF00FF00.toInt())
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
-            textScaleX = 1.1f
-            setPadding(vs5, vs20, vs5, vs20)
-            visibility = View.GONE
-        }
-        addView(mLyricView, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT, Gravity.CENTER))
     }
 
     private fun initComposeLayer() {
@@ -216,9 +180,7 @@ class ComposeVideoController @JvmOverloads constructor(
         addView(composeView)
     }
 
-    private fun initSubtitleInfo() {
-        mSubtitleView.setTextSize(SubtitleHelper.getTextSize(mActivity).toFloat())
-    }
+    // (外挂字幕功能已移除，保留 ExoPlayer 内置轨道渲染)
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
@@ -656,10 +618,6 @@ class ComposeVideoController @JvmOverloads constructor(
 
     override fun getUiState(): PlayerUiState = state
 
-    override fun getSubtitleView(): SimpleSubtitleView = mSubtitleView
-
-    override fun getLyricView(): SimpleSubtitleView = mLyricView
-
     override fun getExoSubtitleView(): SubtitleView = mExoSubtitleView
 
     override fun setListener(l: VodControlListener?) {
@@ -937,20 +895,6 @@ class ComposeVideoController @JvmOverloads constructor(
 
     override fun onCastClicked() {
         listener?.clickCast()
-    }
-
-    override fun onSubtitleClicked() {
-        if (!fastClickAllowed("zimu")) return
-        listener?.selectSubtitle()
-        keepControlsAlive()
-    }
-
-    override fun onSubtitleLongClicked() {
-        if (!fastClickAllowed("zimu_long")) return
-        // 关闭字幕归播放层:要落"这个片不要字幕"的记忆并让它跨集生效
-        listener?.closeSubtitles()
-        hideBottom()
-        Toast.makeText(context, context.getString(R.string.player_subtitle_closed), Toast.LENGTH_SHORT).show()
     }
 
     override fun onAudioTrackClicked() {

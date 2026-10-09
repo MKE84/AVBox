@@ -129,11 +129,6 @@ final class PlayContainerViewBridge implements PlaybackViewBridge {
     }
 
     @Override
-    public void clearLyric() {
-        container.clearLyricView();
-    }
-
-    @Override
     public void clearArtwork() {
         if (container.mVideoView != null) container.mVideoView.clearArtwork();
     }
@@ -141,12 +136,6 @@ final class PlayContainerViewBridge implements PlaybackViewBridge {
     @Override
     public void clearVideoFrame() {
         if (container.mVideoView != null) container.mVideoView.clearVideoFrame();
-    }
-
-    @Override
-    public void setSubtitleViewVisible(boolean visible) {
-        if (container.mController == null) return;
-        container.mController.getSubtitleView().setVisibility(visible ? View.VISIBLE : View.GONE);
     }
 
     @Override

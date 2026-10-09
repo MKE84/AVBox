@@ -963,7 +963,6 @@ public class PlaybackController {
 
         if (view != null) {
             view.stopOtherPlayers();
-            view.clearLyric();
             if (reusePlayer) {
                 // 复用起播必经此处补落盘:同片换集有停播链路兜底(幂等),换内容(含音乐页换歌)则是唯一时机
                 savePreviousContentProgress();
@@ -997,8 +996,6 @@ public class PlaybackController {
             CacheManager.delete(MD5.string2MD5(subtitleCacheKey()), 0);
         } else {
             inheritProgressIfNeeded();
-            // 外挂字幕视图先复位为隐藏,真有字幕再由字幕决策链路(applyDefaultSubtitle/setSubtitlePath)显示
-            if (view != null) view.setSubtitleViewVisible(false);
         }
 
         if (Jianpian.isJpUrl(vs.url)) {// 荐片地址特殊判断

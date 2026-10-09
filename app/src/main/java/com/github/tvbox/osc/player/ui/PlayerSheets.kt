@@ -66,7 +66,7 @@ import kotlinx.coroutines.launch
 
 /**
  * 播放器面板公共骨架:面板容器/标题/按钮/标签行/chips/步进/输入框/加载指示,以及弹窗壳 [PlayerDialog]。
- * 具体面板见 SubtitleSheets / CastSheet / PlayerSelectDialog,同为播放器 Dialog 形态。
+ * 具体面板见 CastSheet / PlayerSelectDialog,同为播放器 Dialog 形态。
  *
  * 视觉走 M3 语义色与形状:面板 `surfaceContainer` + 18dp 圆角 + 轻投影;
  * 选项 `surfaceBright`,选中 `primaryContainer`;提示文字 `onSurfaceVariant`。

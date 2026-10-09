@@ -48,7 +48,6 @@ import com.github.tvbox.osc.ui.components.SettingsGroup
 import com.github.tvbox.osc.ui.components.SettingsOptionMenuRow
 import com.github.tvbox.osc.ui.components.SettingsRow
 import com.github.tvbox.osc.ui.activity.ConfigManageActivity
-import com.github.tvbox.osc.ui.activity.SourceManageActivity
 import com.github.tvbox.osc.ui.activity.ApiLogActivity
 import com.github.tvbox.osc.ui.activity.PlaySettingsActivity
 import com.github.tvbox.osc.ui.activity.ThemeSettingsActivity
@@ -212,14 +211,6 @@ fun SettingsPage(
                         subtitle = stringResource(R.string.settings_config_manage_subtitle),
                         iconRes = R.drawable.ic_settings_api,
                         onClick = { ConfigManageActivity.start(context) },
-                    )
-                }
-                SettingsCard(SettingsCardPosition.MIDDLE) {
-                    SettingsRow(
-                        title = "源管理",
-                        subtitle = "删除失效源·最近删除·防复活",
-                        iconRes = R.drawable.ic_settings_api,
-                        onClick = { SourceManageActivity.start(context) },
                     )
                 }
                 SettingsCard(SettingsCardPosition.MIDDLE) {

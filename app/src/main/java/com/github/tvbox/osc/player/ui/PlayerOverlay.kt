@@ -103,13 +103,7 @@ fun PlayerOverlay(
             )
         }
 
-        // Step 6 对话框 Compose 化（替代 View 版 Subtitle/SearchSubtitle/Cast Dialog）
-        state.subtitleSheet?.let { sheet ->
-            SubtitleSheet(sheet) { state.subtitleSheet = null }
-        }
-        state.subtitleSearchSheet?.let { sheet ->
-            SubtitleSearchSheet(sheet) { state.subtitleSearchSheet = null }
-        }
+        // Step 6 对话框 Compose 化（替代 View 版 Cast Dialog）
         state.castSheet?.let { sheet ->
             CastSheet(sheet) { state.castSheet = null }
         }

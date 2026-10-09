@@ -21,7 +21,6 @@ import androidx.annotation.NonNull;
 import com.github.tvbox.osc.R;
 import android.widget.FrameLayout;
 import com.github.tvbox.osc.bean.VodInfo;
-import com.github.tvbox.osc.data.CacheManager;
 import com.github.tvbox.osc.dlna.CastVideo;
 import com.github.tvbox.osc.event.RefreshEvent;
 import com.github.tvbox.osc.player.ExoPlayer;
@@ -42,20 +41,13 @@ import com.github.tvbox.osc.player.controller.PlayerControlApi;
 import com.github.tvbox.osc.player.state.CastSheetState;
 import com.github.tvbox.osc.player.state.PlayerUiState;
 import com.github.tvbox.osc.player.state.SelectDialogState;
-import com.github.tvbox.osc.player.state.SubtitleSearchSheetState;
-import com.github.tvbox.osc.player.state.SubtitleSheetState;
 import me.jessyan.autosize.internal.CustomAdapt;
 import com.github.tvbox.osc.util.HawkConfig;
 import com.github.tvbox.osc.util.HistoryHelper;
 import com.github.tvbox.osc.util.LOG;
-import com.github.tvbox.osc.util.MD5;
 import com.github.tvbox.osc.util.PlayerHelper;
-import com.github.tvbox.osc.util.SubtitleHelper;
 import com.github.tvbox.osc.util.TrackMemory;
 import com.github.tvbox.osc.util.KV;
-import com.github.tvbox.osc.sourcedata.SubtitleViewModel;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.lifecycle.ViewModelStoreOwner;
 import androidx.media3.common.text.Cue;
 import androidx.media3.ui.CaptionStyleCompat;
 
@@ -65,7 +57,6 @@ import org.greenrobot.eventbus.ThreadMode;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 
@@ -280,17 +271,7 @@ public class PlayContainer extends FrameLayout implements CustomAdapt, PlaybackH
     private final List<Cue> exoCues = new ArrayList<>();
     private boolean exoInternalSubtitle;
 
-    /** 字幕决定代际:用户每次选字幕/每轮起播决策自增;在途的在线字幕解析只在这期间没变时才允许落地 */
-    private int subtitleDecisionSeq;
-
     private final long videoDuration = -1;
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void refresh(RefreshEvent event) {
-        if (event.type == RefreshEvent.TYPE_SUBTITLE_SIZE_CHANGE) {
-            applySubtitleTextSize();
-        }
-    }
 
     private void init() {
         initView();
@@ -314,7 +295,6 @@ public class PlayContainer extends FrameLayout implements CustomAdapt, PlaybackH
         mController = new ComposeVideoController(mActivity);
         mController.setKernelProvider(() -> mVideoView);
 
-        mController.getLyricView().setTextSize(previewMode ? 16 : 24);
         mController.setCanChangePosition(true);
         mController.setEnableInNormal(true);
         mController.setGestureEnabled(true);
@@ -369,138 +349,6 @@ public class PlayContainer extends FrameLayout implements CustomAdapt, PlaybackH
         }
     }
 
-    void setSubtitle(String path) {
-        if (path != null && path .length() > 0) {
-            subtitleDecisionSeq++;
-            hideExoInternalSubtitle();
-            mController.getSubtitleView().setVisibility(View.GONE);
-            mController.getSubtitleView().setSubtitlePath(path);
-            setSubtitleViewTextStyle(KV.get(HawkConfig.SUBTITLE_TEXT_STYLE, 0));
-            mController.getSubtitleView().setVisibility(View.VISIBLE);
-        }
-    }
-
-    void selectMySubtitle() {
-        try {
-            if (!isAttached() || mVideoView == null) return;
-            PlayerUiState uiState = mController.getUiState();
-            AbstractPlayer mediaPlayer = mVideoView.getMediaPlayer();
-            boolean hasInternal = mController.getSubtitleView().hasInternal || hasExoInternalSubtitle(mediaPlayer);
-            boolean exoInternal = mediaPlayer instanceof ExoPlayer && exoInternalSubtitle;
-            uiState.setSubtitleSheet(new SubtitleSheetState(
-                    exoInternal,
-                    hasInternal,
-                    () -> {
-                        selectMyInternalSubtitle();
-                        return kotlin.Unit.INSTANCE;
-                    },
-                    () -> {
-                        openLocalSubtitleChooser();
-                        return kotlin.Unit.INSTANCE;
-                    },
-                    () -> {
-                        openSubtitleSearchSheet();
-                        return kotlin.Unit.INSTANCE;
-                    },
-                    style -> {
-                        KV.put(HawkConfig.SUBTITLE_TEXT_STYLE, style);
-                        setSubtitleViewTextStyle(style);
-                        return kotlin.Unit.INSTANCE;
-                    },
-                    () -> {
-                        applySubtitleTextSize();
-                        return kotlin.Unit.INSTANCE;
-                    },
-                    () -> {
-                        SubtitleHelper.reset();
-                        setSubtitleViewTextStyle(0);
-                        applySubtitleTextSize();
-                        return kotlin.Unit.INSTANCE;
-                    }));
-        } catch (Exception e) {
-            LOG.e("PlayContainer", e);
-        }
-    }
-
-    private void openLocalSubtitleChooser() {
-        if (pageHost != null) pageHost.launchLocalSubtitlePicker();
-    }
-
-    public void onLocalSubtitlePicked(android.net.Uri uri) {
-        final android.app.Activity activity = mActivity;
-        if (activity == null || activity.isFinishing()) return;
-        new Thread(() -> {
-            try {
-                String name = queryDisplayName(activity, uri);
-                if (name == null || !name.contains(".")) name = "local_subtitle.srt";
-                name = name.replaceAll("[\\\\/:*?\"<>|]", "_");
-                File dst = new File(activity.getCacheDir(), "subtitle_" + System.currentTimeMillis() + "_" + name);
-                try (java.io.InputStream in = activity.getContentResolver().openInputStream(uri);
-                     java.io.FileOutputStream out = new java.io.FileOutputStream(dst)) {
-                    byte[] buf = new byte[8192];
-                    int len;
-                    while ((len = in.read(buf)) > 0) out.write(buf, 0, len);
-                }
-                String path = dst.getAbsolutePath();
-                activity.runOnUiThread(() -> {
-                    if (!isAttached()) return;
-                    LOG.i("echo-Local Subtitle Path: " + path);
-                    // 本地文件在整部片里通用,记进片级记忆(文件被系统清掉时按失效回落)
-                    TrackMemory.saveSubtitle(trackMemoryKey(), TrackMemory.subtitleLocal(path));
-                    setSubtitle(path);
-                });
-            } catch (Exception e) {
-                LOG.e("echo-Local Subtitle copy err: " + e);
-                activity.runOnUiThread(() -> {
-                    if (isAttached()) {
-                        android.widget.Toast.makeText(activity, activity.getString(R.string.toast_subtitle_read_failed), android.widget.Toast.LENGTH_SHORT).show();
-                    }
-                });
-            }
-        }).start();
-    }
-
-    private String queryDisplayName(android.app.Activity activity, android.net.Uri uri) {
-        try (android.database.Cursor c = activity.getContentResolver().query(uri, null, null, null, null)) {
-            if (c != null && c.moveToFirst()) {
-                int idx = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME);
-                if (idx >= 0) return c.getString(idx);
-            }
-        } catch (Exception ignored) {
-            LOG.d("PlayContainer", "query display name failed, keep null");
-        }
-        return null;
-    }
-
-    private void openSubtitleSearchSheet() {
-        if (!isAttached()) return;
-        String word = (scheduler.vod().playFlag.contains("Ali") || scheduler.vod().playFlag.contains("parse"))
-                ? scheduler.vod().playNote : scheduler.vod().name;
-        PlayerUiState uiState = mController.getUiState();
-        uiState.setSubtitleSearchSheet(new SubtitleSearchSheetState(word == null ? "" : word, (subtitle, releaseUrl) -> {
-            if (!isAttached()) return kotlin.Unit.INSTANCE;
-            mActivity.runOnUiThread(() -> {
-                String zimuUrl = subtitle.getUrl();
-                LOG.i("echo-Remote Subtitle Url: " + zimuUrl);
-                // 只记发布页 + 文件名(直链只对当集有效):换集按集号回同一发布页取本集文件
-                TrackMemory.saveSubtitle(trackMemoryKey(),
-                        TrackMemory.subtitleOnline(releaseUrl, subtitle.getName()));
-                setSubtitle(zimuUrl);
-            });
-            return kotlin.Unit.INSTANCE;
-        }));
-    }
-
-    @SuppressLint("UseCompatLoadingForColorStateLists")
-    void setSubtitleViewTextStyle(int style) {
-        if (style == 0) {
-            mController.getSubtitleView().setTextColor(getContext().getResources().getColorStateList(R.color.color_FFFFFF));
-        } else if (style == 1) {
-            mController.getSubtitleView().setTextColor(getContext().getResources().getColorStateList(R.color.color_FFB6C1));
-        }
-        applyExoSubtitleStyle();
-    }
-
     void selectMyAudioTrack() {
         trackSelector.selectAudioTrack();
     }
@@ -532,16 +380,10 @@ public class PlayContainer extends FrameLayout implements CustomAdapt, PlaybackH
                     if (pos < 0 || pos >= bean.size()) return kotlin.Unit.INSTANCE;
                     TrackInfoBean value = bean.get(pos);
                     try {
-                        // 在途的在线字幕解析作废:别让它回头盖掉用户这一手
-                        subtitleDecisionSeq++;
                         for (TrackInfoBean subtitle : bean) {
                             subtitle.selected = TrackSelectorDelegate.isSameTrack(subtitle, value);
                         }
                         if (mediaPlayer instanceof ExoPlayer) {
-                            mController.getSubtitleView().setVisibility(View.GONE);
-                            mController.getSubtitleView().destroy();
-                            mController.getSubtitleView().clearSubtitleCache();
-                            mController.getSubtitleView().isInternal = false;
                             exoInternalSubtitle = true;
                             ((ExoPlayer) mediaPlayer).setTrack(value);
                             ((ExoPlayer) mediaPlayer).setInternalSubtitleDelay(SubtitleHelper.getTimeDelay());
@@ -712,20 +554,10 @@ public class PlayContainer extends FrameLayout implements CustomAdapt, PlaybackH
         }
     }
 
-                    void initSubtitleView() {
+    void initSubtitleView() {
         if (mVideoView == null) return;
         TrackInfo trackInfo = null;
         AbstractPlayer mediaPlayer = mVideoView.getMediaPlayer();
-        mController.getLyricView().setTextSize(previewMode ? 16 : 24);
-        applySubtitleTextSize();
-        mController.getLyricView().setVisibility(View.GONE);
-        mController.getLyricView().reset();
-        mController.getLyricView().bindToMediaPlayer(mediaPlayer);
-        mController.getLyricView().setMergeSameTime(true);
-        mController.getLyricView().setLyricMode(true);
-        mController.getLyricView().setPlaySubtitleCacheKey(scheduler.lyricCacheKey());
-        mController.getSubtitleView().hasInternal = false;
-        mController.getSubtitleView().isInternal = false;
         hideExoInternalSubtitle();
         String memoryKey = trackMemoryKey();
         if (mediaPlayer instanceof ExoPlayer) {
@@ -733,7 +565,6 @@ public class PlayContainer extends FrameLayout implements CustomAdapt, PlaybackH
             exoPlayer.setContentKey(memoryKey);
             trackInfo = exoPlayer.getTrackInfo();
             if (trackInfo != null && !trackInfo.getSubtitle().isEmpty()) {
-                mController.getSubtitleView().hasInternal = true;
                 exoInternalSubtitle = true;
                 mController.getExoSubtitleView().setVisibility(View.VISIBLE);
                 exoPlayer.setInternalSubtitleDelay(SubtitleHelper.getTimeDelay());
@@ -747,72 +578,20 @@ public class PlayContainer extends FrameLayout implements CustomAdapt, PlaybackH
             }
             exoPlayer.restoreTracks();
         }
-        // 歌词来源:内联 data: 在内存里、毫秒级;URL 歌词优先吃本集缓存,否则每次起播都要走网络(快慢全看源站,慢链还要等满 10s 超时)
-        String lyric = scheduler.playLyric();
-        String lyricPath = lyric;
-        if (TextUtils.isEmpty(lyric) || !lyric.startsWith("data:")) {
-            String cachedLyric = cachedPlayPath(scheduler.lyricCacheKey());
-            if (!TextUtils.isEmpty(cachedLyric)) lyricPath = cachedLyric;
-        }
-        if (!TextUtils.isEmpty(lyricPath)) {
-            mController.getLyricView().setSubtitlePath(lyricPath);
-            mController.getLyricView().setVisibility(View.VISIBLE);
-        }
-        mController.getSubtitleView().bindToMediaPlayer(mVideoView.getMediaPlayer());
-        mController.getSubtitleView().setPlaySubtitleCacheKey(scheduler.subtitleCacheKey());
-        applySubtitleDecision(mediaPlayer, trackInfo);
     }
 
     /**
-     * 字幕决策:本片记忆(用户显式选择)优先,其次本集缓存 → 源站字幕 → 内置默认。
-     *
-     * <p>显式选择压过源站每集给的字幕(点过来源就是明确意图);任一步拿不到就落到默认链,不新增"没字幕"的空档。
+     * 字幕决策:字幕功能已整体移除，仅保留播放器内核自带的字幕轨道直出。
      */
     private void applySubtitleDecision(AbstractPlayer mediaPlayer, TrackInfo trackInfo) {
-        final String memoryKey = trackMemoryKey();
-        // 新一轮决策:上一轮在途的在线字幕解析作废
-        subtitleDecisionSeq++;
-        String record = TrackMemory.loadSubtitle(memoryKey);
-        if (TrackMemory.isSubtitleOff(record)) {
-            closeSubtitleViews();
-            return;
-        }
-        if (TrackMemory.isSubtitleLocal(record)) {
-            String path = TrackMemory.localPath(record);
-            if (!TextUtils.isEmpty(path) && new File(path).exists()) {
-                setSubtitle(path);
-                return;
-            }
-            LOG.i("echo-track-memory local subtitle gone, fallback: " + path);
-        } else if (TrackMemory.isSubtitleOnline(record)) {
-            final AbstractPlayer player = mediaPlayer;
-            final TrackInfo info = trackInfo;
-            resolveRememberedOnlineSubtitle(memoryKey, record, () -> applyDefaultSubtitle(player, info));
-            return;
-        } else if (TrackMemory.isSubtitleTrack(record) && mController.getSubtitleView().hasInternal) {
-            // 轨道已由播放器按指纹还原(定位失败也会退默认选轨),这里只补"内置字幕在显示"的视图状态
+        if (hasExoInternalSubtitle(mediaPlayer)) {
             showInternalSubtitle(mediaPlayer);
-            return;
         }
-        applyDefaultSubtitle(mediaPlayer, trackInfo);
     }
 
     /** 无记忆(或记忆失效)时的既有链路:本集缓存 → 源站字幕 → 内置字幕 */
     private void applyDefaultSubtitle(AbstractPlayer mediaPlayer, TrackInfo trackInfo) {
-        String subtitlePathCache = cachedPlayPath(scheduler.subtitleCacheKey());
-        if (subtitlePathCache != null && !subtitlePathCache.isEmpty()) {
-            hideExoInternalSubtitle();
-            mController.getSubtitleView().setSubtitlePath(subtitlePathCache);
-            return;
-        }
-        if (scheduler.playSubtitle() != null && scheduler.playSubtitle() .length() > 0) {
-            hideExoInternalSubtitle();
-            mController.getSubtitleView().setSubtitlePath(scheduler.playSubtitle());
-            return;
-        }
-        if (!mController.getSubtitleView().hasInternal) return;
-        ensureInternalSubtitleTrackSelected(mediaPlayer, trackInfo);
-        showInternalSubtitle(mediaPlayer);
+        applySubtitleDecision(mediaPlayer, trackInfo);
     }
 
     /** 让内置字幕显示出来(选哪条轨由播放器负责,这里只管视图与延时) */
@@ -839,79 +618,11 @@ public class PlayContainer extends FrameLayout implements CustomAdapt, PlaybackH
         }
     }
 
-    /**
-     * 还原"在线字幕"选择:同一发布页里按集号找本集文件,取不到就回落默认链(直链只对当集有效,入库的是发布页)。
-     *
-     * <p>发布页 + 直链是两跳异步请求,回来时可能已换集/换源/用户自己选过字幕,故落地前必须过
-     * {@link #isSubtitleResultCurrent} 的三道守卫。
-     */
-    private void resolveRememberedOnlineSubtitle(String memoryKey, String record, Runnable fallback) {
-        String releaseUrl = TrackMemory.onlineRelease(record);
-        // ViewModel 挂在宿主 Activity 上(与字幕面板同一实例);拿不到就回落,不猜
-        if (TextUtils.isEmpty(releaseUrl) || !(mActivity instanceof ViewModelStoreOwner)) {
-            runOnUi(fallback);
-            return;
-        }
-        VodInfo.VodSeries series = scheduler.vod() == null ? null
-                : scheduler.currentSeries(scheduler.vod().playFlag, scheduler.vod().playIndex);
-        String episodeName = series == null ? "" : series.name;
-        String fileNameHint = TrackMemory.onlineFileName(record);
-        final String episodeKey = scheduler.progressKey();
-        final int decisionSeq = subtitleDecisionSeq;
-        LOG.i("echo-track-memory online subtitle: release=" + releaseUrl + " episode=" + episodeName);
-        new ViewModelProvider((ViewModelStoreOwner) mActivity).get(SubtitleViewModel.class).pickEpisodeSubtitle(
-                releaseUrl, episodeName, fileNameHint,
-                subtitle -> runOnUi(() -> {
-                    if (!isSubtitleResultCurrent(memoryKey, episodeKey, decisionSeq)) return;
-                    String url = subtitle == null ? null : subtitle.getUrl();
-                    if (TextUtils.isEmpty(url)) { // 302 头缺失等同失败:必须回落,否则这个片永远没字幕
-                        LOG.i("echo-track-memory online subtitle empty url, fallback");
-                        fallback.run();
-                        return;
-                    }
-                    LOG.i("echo-track-memory online subtitle picked: " + subtitle.getName());
-                    setSubtitle(url);
-                }),
-                () -> runOnUi(() -> {
-                    if (!isSubtitleResultCurrent(memoryKey, episodeKey, decisionSeq)) return;
-                    LOG.i("echo-track-memory online subtitle miss, fallback");
-                    fallback.run();
-                }));
-    }
-
-    /** 在途字幕结果是否仍然有效(换源 / 换集 / 用户中途自己选过字幕 ⇒ 作废) */
-    private boolean isSubtitleResultCurrent(String memoryKey, String episodeKey, int decisionSeq) {
-        if (!isAttached() || subtitleDecisionSeq != decisionSeq) return false;
-        if (!TextUtils.equals(memoryKey, trackMemoryKey())) return false;
-        return TextUtils.equals(episodeKey, scheduler.progressKey());
-    }
-
     /** 回调线程不确定,统一回 UI 线程再动视图 */
     private void runOnUi(Runnable action) {
         Activity activity = mActivity;
         if (activity == null) return;
         activity.runOnUiThread(action);
-    }
-
-    /** 关闭字幕视图(内置 + 外挂);歌词是独立功能(独立缓存键),不跟着关 */
-    private void closeSubtitleViews() {
-        try {
-            hideExoInternalSubtitle();
-            mController.getSubtitleView().setVisibility(View.GONE);
-            mController.getSubtitleView().destroy();
-            mController.getSubtitleView().clearSubtitleCache();
-            mController.getSubtitleView().isInternal = false;
-        } catch (Exception e) {
-            LOG.e("echo-close-subtitle-error:" + e.getMessage());
-        }
-    }
-
-    /** 长按字幕按钮:关闭全部字幕并记住"这个片不要字幕"(换集不再自动开) */
-    public void closeSubtitles() {
-        if (mVideoView == null) return;
-        closeSubtitleViews();
-        subtitleDecisionSeq++;
-        TrackMemory.saveSubtitle(trackMemoryKey(), TrackMemory.SUBTITLE_OFF);
     }
 
     /** 本片记忆键;直播/无剧集信息时为空串 ⇒ 记忆读写全部跳过 */
@@ -923,27 +634,6 @@ public class PlayContainer extends FrameLayout implements CustomAdapt, PlaybackH
 
     private void rebindPlaybackOverlay() {
         initSubtitleView();
-    }
-
-    /**
-     * 某集已落盘的字幕/歌词来源:内联 data: 直接可用;本地文件要确认还在(系统可能清 /zimu/ 缓存目录,否则会静默无字幕);
-     * 其余情况返回空,由调用方回退到本次起播的新地址。
-     */
-    private String cachedPlayPath(String cacheKey) {
-        if (TextUtils.isEmpty(cacheKey)) return "";
-        Object cached = CacheManager.getCache(MD5.string2MD5(cacheKey));
-        if (!(cached instanceof String)) return "";
-        String path = (String) cached;
-        if (TextUtils.isEmpty(path)) return "";
-        if (path.startsWith("data:")) return path;
-        return new File(path).exists() ? path : "";
-    }
-
-            void clearLyricView() {
-        if (mController == null || mController.getLyricView() == null) return;
-        mController.getLyricView().setVisibility(View.GONE);
-        mController.getLyricView().destroy();
-        mController.getLyricView().setText("");
     }
 
     void releasePlayerKernel() {
@@ -1202,16 +892,7 @@ public void setPreviewMode(boolean previewMode) {
 this.previewMode = previewMode;
 if (mController != null) {
 mController.setPreviewMode(previewMode);
-mController.getLyricView().setTextSize(previewMode ? 16 : 24);
-applySubtitleTextSize();
 }
-}
-
-/** 字幕字号 = 设置值 × 当前形态(预览 0.6×/全屏 1×);统一走 setTextSize(float)=sp —— SimpleSubtitleView 只重写了 float 重载(描边层 backGroundText 随之同步),int 实参会被加宽到 float,同样落到该重载 */
-private void applySubtitleTextSize() {
-if (mController == null || mController.getSubtitleView() == null) return;
-int size = SubtitleHelper.getTextSize(mActivity);
-mController.getSubtitleView().setTextSize(previewMode ? size * 0.6f : (float) size);
 }
 
 public void toggleControllerControls() {
