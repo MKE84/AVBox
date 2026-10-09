@@ -46,7 +46,6 @@ import com.github.tvbox.osc.player.usecase.PlayerSwitchUseCase
 import com.github.tvbox.osc.player.usecase.WebParseUseCase
 import com.github.tvbox.osc.subtitle.widget.SimpleSubtitleView
 import com.github.tvbox.osc.ui.theme.AVBoxTheme
-import com.github.tvbox.osc.util.DanmuHelper
 import com.github.tvbox.osc.util.HawkConfig
 import com.github.tvbox.osc.util.PlayerHelper
 import com.github.tvbox.osc.util.SubtitleHelper
@@ -165,8 +164,6 @@ class ComposeVideoController @JvmOverloads constructor(
         state.sysTimeVisible = false
         state.isPortrait =
             resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
-        updateDanmuBtnState()
-        updateDanmuSearchBtnState()
         initSubtitleInfo()
     }
 
@@ -383,7 +380,6 @@ class ComposeVideoController @JvmOverloads constructor(
 
     /** 可见性规则与 msg 1002 等价 */
     private fun applyShowBottom() {
-        updateDanmuSearchBtnState()
         state.controlsVisible = true
         state.topLeftVisible = true
         state.topRightVisible = true
@@ -548,11 +544,6 @@ class ComposeVideoController @JvmOverloads constructor(
             onSetTimeStart = { markTimeStart() },
             onSetTimeEnd = { markTimeEnd() },
             onResetTime = { onTimeResetClicked() },
-            onSearchDanmu = if (state.danmuSearchAvailable) {
-                { onDanmuSearchClicked() }
-            } else {
-                null
-            },
         )
     }
 
@@ -642,15 +633,6 @@ class ComposeVideoController @JvmOverloads constructor(
         }
     }
 
-    private fun updateDanmuBtnState() {
-        state.danmuOpen = DanmuHelper.isOpen()
-    }
-
-    private fun updateDanmuSearchBtnState() {
-        state.danmuSearchAvailable = ApiConfig.get().hasDanmuSearchUi()
-    }
-
-    /** 直播源(duration==0)隐藏倍速/片头尾按钮;取不到时长按可显示处理 */
     private fun updateLiveButtonsState() {
         state.liveButtonsVisible = runCatching { mControlWrapper?.duration ?: 0L != 0L }.getOrDefault(true)
     }
@@ -711,7 +693,6 @@ class ComposeVideoController @JvmOverloads constructor(
     override fun setUrlTitle(playTitleInfo: String) = Unit
 
     override fun setHasDanmu(hasDanmu: Boolean) {
-        updateDanmuBtnState()
     }
 
     override fun setCanChangePosition(canChangePosition: Boolean) {
@@ -982,28 +963,6 @@ class ComposeVideoController @JvmOverloads constructor(
         if (!fastClickAllowed("video")) return
         listener?.selectVideoTrack()
         keepControlsAlive()
-    }
-
-    override fun onDanmuSettingClicked() {
-        if (!fastClickAllowed("danmu")) return
-        listener?.showDanmuSetting()
-    }
-
-    override fun onDanmuSettingLongClicked() {
-        if (!fastClickAllowed("danmu_long")) return
-        val opened = listener?.toggleDanmu() ?: false
-        hideBottom()
-        Toast.makeText(context, context.getString(if (opened) R.string.player_danmu_opened else R.string.player_danmu_temp_closed), Toast.LENGTH_SHORT).show()
-    }
-
-    override fun onDanmuSearchClicked() {
-        listener?.searchDanmuUi(false)
-        hideBottom()
-    }
-
-    override fun onDanmuSearchLongClicked() {
-        listener?.searchDanmuUi(true)
-        hideBottom()
     }
 
     override fun onRotateClicked() {

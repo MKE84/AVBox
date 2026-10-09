@@ -13,17 +13,12 @@ import androidx.annotation.Nullable;
 
 import com.github.tvbox.osc.util.ImgUtil;
 
-import master.flame.danmaku.controller.DrawHandler;
-import master.flame.danmaku.danmaku.model.BaseDanmaku;
-import master.flame.danmaku.danmaku.model.DanmakuTimer;
-import master.flame.danmaku.ui.widget.DanmakuView;
 import xyz.doikki.videoplayer.player.AbstractPlayer;
 import xyz.doikki.videoplayer.player.VideoView;
 import xyz.doikki.videoplayer.render.TextureRenderView;
 import xyz.doikki.videoplayer.render.TextureRenderViewFactory;
 
-public class MyVideoView extends VideoView implements DrawHandler.Callback {
-    private DanmakuView danmuView;
+public class MyVideoView extends VideoView {
     private ImageView artworkView;
     /** 封面的在途图片请求句柄:换图/隐藏前必须先取消,否则过期海报可能盖到画面上(见 clearArtwork) */
     private coil3.request.Disposable artworkDisposable;
@@ -238,25 +233,21 @@ public class MyVideoView extends VideoView implements DrawHandler.Callback {
     @Override
     public void seekTo(long pos) {
         super.seekTo(pos);
-        if (haveDanmu()) danmuView.seekTo(pos);
     }
 
     @Override
     public void resume() {
         super.resume();
-        if (haveDanmu()) danmuView.resume();
     }
 
     @Override
     public void start() {
         super.start();
-        if (haveDanmu()) danmuView.resume();
     }
 
     @Override
     public void pause() {
         super.pause();
-        if (haveDanmu()) danmuView.pause();
     }
 
     @Override
@@ -264,41 +255,5 @@ public class MyVideoView extends VideoView implements DrawHandler.Callback {
         super.release();
         // 键随内核一起作废:直播页/音乐页直接 setUrl 起播从不推键,留着上一部片的键会吃掉它们的默认字幕
         mTrackMemoryKey = "";
-        if (haveDanmu()) danmuView.release();
-    }
-
-    private boolean haveDanmu() {
-        return danmuView != null && danmuView.isPrepared();
-    }
-
-    public void setDanmuView(DanmakuView view) {
-        danmuView = view;
-        if (danmuView != null) danmuView.setCallback(this);
-    }
-
-    public DanmakuView getDanmuView() {
-        return danmuView;
-    }
-
-    @Override
-    public void prepared() {
-        post(() -> {
-            if (danmuView == null) return;
-            if (isPlaying() && danmuView.isPrepared()) {
-                danmuView.start(getCurrentPosition());
-            }
-        });
-    }
-
-    @Override
-    public void updateTimer(DanmakuTimer timer) {
-    }
-
-    @Override
-    public void danmakuShown(BaseDanmaku danmaku) {
-    }
-
-    @Override
-    public void drawingFinished() {
     }
 }

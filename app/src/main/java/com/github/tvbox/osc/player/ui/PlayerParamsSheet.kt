@@ -117,21 +117,6 @@ private fun PlaybackParams(
             onClick = onToggleOsd,
             modifier = Modifier.fillMaxWidth(),
         )
-        sheet.onSearchDanmu?.let { onSearch ->
-            Spacer(Modifier.height(playerDim(R.dimen.vs_30)))
-            val dismissThen = LocalSheetDismissThen.current
-            SheetButton(
-                text = stringResource(R.string.player_menu_search_danmu),
-                iconRes = R.drawable.player_ic_menu_danmu,
-                onClick = {
-                    dismissThen {
-                        onSearch()
-                        onDismiss()
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
     }
 }
 

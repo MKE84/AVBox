@@ -129,16 +129,6 @@ final class PlayContainerViewBridge implements PlaybackViewBridge {
     }
 
     @Override
-    public void resetDanmu() {
-        container.resetDanmuState();
-    }
-
-    @Override
-    public void startDanmuIfReady() {
-        container.startDanmuIfReady();
-    }
-
-    @Override
     public void clearLyric() {
         container.clearLyricView();
     }
@@ -272,11 +262,6 @@ final class PlayContainerViewBridge implements PlaybackViewBridge {
     @Override
     public void showParse(boolean show) {
         if (container.mController != null) container.mController.showParse(show);
-    }
-
-    @Override
-    public void checkDanmu(String danmaku, Runnable onFailed) {
-        container.checkDanmu(danmaku, onFailed == null ? null : onFailed::run);
     }
 
     @Override

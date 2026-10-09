@@ -208,14 +208,6 @@ private fun PlayerActionPill(
             modifier = Modifier.weight(1f),
         )
         PlayerPillIconButton(
-            iconRes = R.drawable.player_ic_menu_danmu,
-            label = stringResource(R.string.player_menu_danmu),
-            box = iconBox,
-            onClick = actions::onDanmuSettingClicked,
-            onLongClick = actions::onDanmuSettingLongClicked,
-            modifier = Modifier.weight(1f),
-        )
-        PlayerPillIconButton(
             iconRes = R.drawable.player_ic_menu_audio,
             label = stringResource(R.string.player_menu_audio_track),
             box = iconBox,

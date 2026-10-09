@@ -188,7 +188,6 @@ public final class PlaybackEngine implements PlaybackHostApi {
                 if (controller.handlePlayStateForMusicSession(playState)) {
                     return;
                 }
-                activeView().startDanmuIfReady();
             }
         });
         return view;
@@ -432,7 +431,6 @@ public final class PlaybackEngine implements PlaybackHostApi {
         }
         // ④ 摘视图与页面 View 引用(防引擎持有页面)
         videoView.setVideoController(null);
-        videoView.setDanmuView(null);
         videoView.detachContainerFromHost();
         controller.setViewBridge(headlessView);
         // 页面已摘、播放已停,但实例仍留着(跨页复用的收益所在)—— 给它一个释放上界:
@@ -540,7 +538,6 @@ public final class PlaybackEngine implements PlaybackHostApi {
         // 而此时 owner 往往还是那个页面(守卫拒停)⇒ 通知与 wake/wifi 锁会残留。释放路径必须绕过守卫。
         PlaybackService.forceStopSession(appContext);
         videoView.setVideoController(null);
-        videoView.setDanmuView(null);
         videoView.release();
         controller.releaseFetch();
         controller.stopParse();
@@ -759,10 +756,6 @@ public final class PlaybackEngine implements PlaybackHostApi {
         }
 
         @Override
-        public void resetDanmu() {
-        }
-
-        @Override
         public void clearLyric() {
         }
 
@@ -876,10 +869,6 @@ public final class PlaybackEngine implements PlaybackHostApi {
         }
 
         @Override
-        public void checkDanmu(String danmaku, Runnable onFailed) {
-        }
-
-        @Override
         public String encodeUrl(String url) {
             return PlayerSwitchUseCase.encodeUrl(url);
         }
@@ -896,11 +885,6 @@ public final class PlaybackEngine implements PlaybackHostApi {
 
         @Override
         public void attachSniffWebView(WebView webView) {
-        }
-
-        @Override
-        public void startDanmuIfReady() {
-            // 无页面 = 无弹幕视图
         }
 
         @Override

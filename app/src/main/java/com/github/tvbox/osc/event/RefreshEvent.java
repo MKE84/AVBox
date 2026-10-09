@@ -13,8 +13,6 @@ public class RefreshEvent {
     public static final int TYPE_SEARCH_RESULT = 6;
     public static final int TYPE_API_URL_CHANGE = 8;
     public static final int TYPE_SUBTITLE_SIZE_CHANGE = 12;
-    public static final int TYPE_SET_DANMU_SETTINGS = 18;
-    public static final int TYPE_DANMU_REFRESH = 19;
     public static final int TYPE_PLAY_QUALITY = 20;
     public static final int TYPE_COLLECT_REFRESH = 21;
     /** 播放头真的推进过(即"看过"),由 PlaybackProgress 每集发一次,观看历史据此落库 */

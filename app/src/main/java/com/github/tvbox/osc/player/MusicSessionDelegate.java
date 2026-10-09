@@ -19,7 +19,7 @@ import xyz.doikki.videoplayer.player.VideoView;
 
 /**
  * 音乐会话与媒体通知:有音频轨就维护会话/通知(影视同样),纯音频才保留后台播放;
- * 另含封面兜底、弹幕地址、清晰度切换。
+ * 另含封面兜底、清晰度切换。
  */
 final class MusicSessionDelegate {
 
@@ -49,8 +49,6 @@ final class MusicSessionDelegate {
 
     /** 纯音频封面地址(影视绝不设置:否则视频被压成海报) */
     private String playArtwork;
-    /** 当前集的弹幕地址(取流结果或弹幕搜索的产物;退页面重进时页面要重新拿一份) */
-    private String playDanmu;
     /** 取流结果里的封面(音乐页等"后挂载页面"读它拿封面;通知用的 {@link #playArtwork} 只允许纯音频) */
     private String currentArtwork;
 
@@ -80,7 +78,6 @@ final class MusicSessionDelegate {
     String playArtwork() {
         return playArtwork;
     }
-
     @Nullable
     String currentArtwork() {
         return currentArtwork;
@@ -88,15 +85,6 @@ final class MusicSessionDelegate {
 
     void setCurrentArtwork(String artwork) {
         this.currentArtwork = artwork;
-    }
-
-    @Nullable
-    String playDanmu() {
-        return playDanmu;
-    }
-
-    void setPlayDanmu(String danmu) {
-        this.playDanmu = danmu == null ? "" : danmu;
     }
 
     /** 起播失败/换源点击即停:清会话标记并停掉通知 */
@@ -121,7 +109,7 @@ final class MusicSessionDelegate {
     /**
      * 播放状态回调里的"音乐会话"部分(页面状态监听里调用)。
      *
-     * @return true = 切换集期间本集已播完(仅保留会话,调用方应直接 return,不再走弹幕等后续逻辑)
+     * @return true = 切换集期间本集已播完(仅保留会话,调用方应直接 return,不再走后续逻辑)
      */
     boolean handlePlayStateForMusicSession(int playState) {
         PlaybackAttemptState st = host.attemptState();
@@ -143,7 +131,7 @@ final class MusicSessionDelegate {
         if (!st.switchingPlayback) {
             if (playState == VideoView.STATE_PLAYBACK_COMPLETED) {
                 // ⚠️ **不能在此直接 updateMusicSession()**。
-                // 引擎的状态监听器注册在页面之前(见 PlaybackEngine.createPlayerView 与
+                // 引擎的状态监听器注册在页面之前(见 PlaybackEngine.createPlayerView 与 PlaybackController 的监听注册),
                 // 所以 COMPLETED 到达时**本方法总是先跑**,
                 // 而"要续播下一集"的登记(beginSwitchPlayback)在页面监听器里(onSongCompleted
                 // → playAt/replayCurrent),此刻尚未执行 ⇒ switchingPlayback 读到的必然是 false,

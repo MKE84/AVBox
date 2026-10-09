@@ -68,7 +68,6 @@ public final class KVKeySpec implements KVDecoder.TypeRegistry {
         register(HawkConfig.DOH_JSON, "");
         register(HawkConfig.LIVE_API_URL, "");
         register(HawkConfig.REMOTE_TVBOX, "");
-        register(HawkConfig.DANMU_API, "");
         register(HawkConfig.THEME_PALETTE_STYLE, "");
         // 画质参数(调色)预置名(PicturePreset 枚举名)
         register(HawkConfig.PICTURE_PRESET, "");
@@ -99,7 +98,6 @@ public final class KVKeySpec implements KVDecoder.TypeRegistry {
         register(HawkConfig.LONG_PRESS_SPEED, 0);
         register(HawkConfig.BUFFER_TIMES, 0);
         register(HawkConfig.PRELOAD_DURATION, 0);
-        register(HawkConfig.DANMU_MAX_LINE, 0);
         register(HawkConfig.THEME_SOURCE, 0);
         register(HawkConfig.THEME_MODE, 0);
         register(HawkConfig.THEME_SEED, 0);
@@ -124,9 +122,6 @@ public final class KVKeySpec implements KVDecoder.TypeRegistry {
         register(HawkConfig.KERNEL_PREWARM, false);
         register(HawkConfig.EXO_VIDEO_DYNAMIC_SCHEDULING, false);
         register(HawkConfig.PRELOAD_NEXT_EPISODE, false);
-        register(HawkConfig.DANMU_OPEN, false);
-        register(HawkConfig.DANMU_RANDOM_COLOR, false);
-        register(HawkConfig.DANMU_API_USE_DEFAULT, false);
         register(HawkConfig.LIQUID_GLASS_NAVBAR, false);
         register(HawkConfig.LIQUID_GLASS_CONTROLS, false);
         register(HawkConfig.LIQUID_GLASS_DISPERSION, false);
@@ -136,9 +131,6 @@ public final class KVKeySpec implements KVDecoder.TypeRegistry {
         register(HawkConfig.LIQUID_GLASS_BLUR, 0f);
         register(HawkConfig.LIQUID_GLASS_DISTORTION, 0f);
         register(HawkConfig.LIQUID_GLASS_TRANSLUCENCY, 0f);
-        register(HawkConfig.DANMU_SPEED, 0f);
-        register(HawkConfig.DANMU_ALPHA, 0f);
-        register(HawkConfig.DANMU_SIZE_SCALE, 0f);
         register(HawkConfig.SUBTITLE_EXO_POSITION, 0f);
         // 画质参数(调色):预置名 + 8 项滑条值
         register(HawkConfig.PICTURE_SATURATION, 0f);

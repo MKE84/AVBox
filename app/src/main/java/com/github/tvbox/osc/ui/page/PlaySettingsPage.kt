@@ -52,7 +52,6 @@ fun PlaySettingsScreen(onNavigateBack: () -> Unit, vm: SettingsViewModel = viewM
     var sliderPreloadDuration by remember(state.preloadDuration) { mutableStateOf(state.preloadDuration) }
     var sliderSpeed by remember(state.longPressSpeed) { mutableStateOf(state.longPressSpeed) }
     var sliderBuffer by remember(state.bufferTimes) { mutableStateOf(state.bufferTimes) }
-    var danmuApiDialog by remember { mutableStateOf(false) }
 
     val listState = rememberScrollState()
     AppTopBarScaffold(
@@ -241,23 +240,6 @@ fun PlaySettingsScreen(onNavigateBack: () -> Unit, vm: SettingsViewModel = viewM
                     )
                 }
                 SettingsCard(SettingsCardPosition.MIDDLE) {
-                    SettingsSwitchRow(
-                        title = stringResource(R.string.settings_danmu_switch),
-                        leadingIconRes = R.drawable.ic_pref_danmu,
-                        checked = state.danmuOpen,
-                        onCheckedChange = { vm.put(HawkConfig.DANMU_OPEN, it) },
-                    )
-                }
-                SettingsCard(SettingsCardPosition.MIDDLE) {
-                    SettingsRow(
-                        title = stringResource(R.string.settings_danmu_api),
-                        leadingIconRes = R.drawable.ic_pref_danmu_api,
-                        // 不显示接口链接本身:填过什么只有编辑弹窗里可见
-                        valueText = stringResource(if (state.danmuApi.isEmpty()) R.string.common_not_set else R.string.common_set),
-                        onClick = { danmuApiDialog = true },
-                    )
-                }
-                SettingsCard(SettingsCardPosition.MIDDLE) {
                     SettingsSliderRow(
                         title = stringResource(R.string.settings_long_press_speed),
                         leadingIconRes = R.drawable.ic_pref_long_press_speed,
@@ -317,18 +299,6 @@ fun PlaySettingsScreen(onNavigateBack: () -> Unit, vm: SettingsViewModel = viewM
                 }) {
                     Text(stringResource(R.string.dialog_kernel_prewarm_confirm))
                 }
-            },
-        )
-    }
-
-    if (danmuApiDialog) {
-        TextEditDialog(
-            title = stringResource(R.string.settings_danmu_api),
-            initialText = state.danmuApi,
-            onDismiss = { danmuApiDialog = false },
-            onConfirm = { text ->
-                vm.put(HawkConfig.DANMU_API, text)
-                danmuApiDialog = false
             },
         )
     }

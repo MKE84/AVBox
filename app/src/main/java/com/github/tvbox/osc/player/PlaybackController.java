@@ -963,7 +963,6 @@ public class PlaybackController {
 
         if (view != null) {
             view.stopOtherPlayers();
-            view.resetDanmu();
             view.clearLyric();
             if (reusePlayer) {
                 // 复用起播必经此处补落盘:同片换集有停播链路兜底(幂等),换内容(含音乐页换歌)则是唯一时机
@@ -1287,15 +1286,6 @@ public class PlaybackController {
     @Nullable
     public String currentArtwork() {
         return music.currentArtwork();
-    }
-
-    @Nullable
-    public String playDanmu() {
-        return music.playDanmu();
-    }
-
-    public void setPlayDanmu(String danmu) {
-        music.setPlayDanmu(danmu);
     }
 
     public void cancelInFlight() {

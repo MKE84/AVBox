@@ -7,8 +7,6 @@ import com.github.tvbox.osc.bean.ParseBean;
 import com.github.tvbox.osc.bean.VodInfo;
 import com.github.tvbox.osc.event.RefreshEvent;
 import com.github.tvbox.osc.player.controller.VodControlListener;
-import com.github.tvbox.osc.player.state.DanmuSettingSheetState;
-import com.github.tvbox.osc.util.DanmuHelper;
 import com.github.tvbox.osc.util.LOG;
 import com.github.tvbox.osc.util.WatchProgressStore;
 import org.greenrobot.eventbus.EventBus;
@@ -24,32 +22,8 @@ final class PlayContainerControlListener implements VodControlListener {
     }
 
     @Override
-    public void showDanmuSetting() {
-        if (!container.isAttached()) return;
-        container.mController.getUiState().setDanmuSettingSheet(new DanmuSettingSheetState(() -> {
-            container.openDanmuSearchSheet();
-            return kotlin.Unit.INSTANCE;
-        }, () -> {
-            DanmuHelper.reset();
-            container.applyDanmuSettings(true);
-            return kotlin.Unit.INSTANCE;
-        }));
-    }
-
-    @Override
-    public boolean toggleDanmu() {
-        return container.danmuLoadController != null && container.danmuLoadController.toggle();
-    }
-
-    @Override
     public void showEpisodes() {
         if (container.pageHost != null) container.pageHost.showEpisodeSheet();
-    }
-
-    @Override
-    public void searchDanmuUi(boolean longClick) {
-        VodInfo.VodSeries series = container.scheduler.vod() == null ? null : container.scheduler.currentSeries(container.scheduler.vod().playFlag, container.scheduler.vod().playIndex);
-        ApiConfig.get().searchDanmuUi(container.scheduler.vod() == null ? "" : container.scheduler.vod().name, series == null ? "" : series.name, longClick);
     }
 
     @Override
@@ -127,7 +101,6 @@ final class PlayContainerControlListener implements VodControlListener {
     public void prepared() {
         container.initSubtitleView();
         if (container.mVideoView != null) container.mVideoView.prepared();
-        container.startDanmuIfReady();
     }
     @Override
     public void startPlayUrl(String url, HashMap<String, String> headers) {

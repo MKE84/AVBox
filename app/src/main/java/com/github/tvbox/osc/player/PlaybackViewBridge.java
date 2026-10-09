@@ -83,15 +83,6 @@ public interface PlaybackViewBridge {
     /** 停掉旁路资源(磁力/p2p/dash 代理;既有 mController.stopOther) */
     void stopOtherPlayers();
 
-    /** 复位弹幕加载状态(切集/换源) */
-    void resetDanmu();
-
-    /**
-     * 播放器进入可播状态后启动弹幕(内核/弹幕视图都就绪才真正开始的判定在页面侧)。
-     * P2 状态监听搬到服务后由服务调用;无页面时为空操作。
-     */
-    void startDanmuIfReady();
-
     /** 收起歌词视图(切集/换源) */
     void clearLyric();
 
@@ -159,9 +150,6 @@ public interface PlaybackViewBridge {
 
     /** 解析中标记(控制器菜单的"解析"状态) */
     void showParse(boolean show);
-
-    /** 触发弹幕加载({@code onFailed} 为 null 时不回调) */
-    void checkDanmu(String danmaku, Runnable onFailed);
 
     /** URL 编码(字幕文件名等) */
     String encodeUrl(String url);

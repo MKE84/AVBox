@@ -75,23 +75,7 @@
     <string name="toast_subtitle_read_failed">Failed to read the subtitle file</string>
 
     <!-- Danmaku sheet -->
-    <string name="danmu_settings">Danmaku Settings</string>
-    <string name="danmu_online">Online Danmaku</string>
-    <string name="danmu_color">Danmaku Color</string>
-    <string name="danmu_color_random">Random</string>
-    <string name="danmu_speed">Danmaku Speed</string>
-    <string name="danmu_speed_very_slow">Very Slow</string>
-    <string name="danmu_speed_slow">Slow</string>
-    <string name="danmu_speed_normal">Normal</string>
-    <string name="danmu_speed_fast">Fast</string>
-    <string name="danmu_size">Danmaku Size</string>
-    <string name="danmu_size_value">Level %1$d</string>
-    <string name="danmu_lines">Danmaku Lines</string>
-    <string name="danmu_lines_value">%1$d lines</string>
-    <string name="danmu_alpha">Danmaku Opacity</string>
-    <string name="danmu_search_hint">Enter danmaku name</string>
     <string name="toast_input_empty">Input cannot be empty</string>
-    <string name="toast_danmu_not_found">No matching danmaku found</string>
 
     <!-- Home -->
     <string name="home_subscription_source">Subscriptions</string>
@@ -155,8 +139,6 @@
     <string name="player_menu_subtitle">Subtitle</string>
     <string name="player_menu_audio_track">Audio</string>
     <string name="player_menu_video_track">Video</string>
-    <string name="player_menu_danmu">Danmaku</string>
-    <string name="player_menu_search_danmu">Search Danmaku</string>
     <string name="player_menu_params">Playback settings</string>
     <string name="player_menu_more">More</string>
     <string name="player_menu_parse">Parse</string>
@@ -473,8 +455,6 @@
     <string name="settings_nav_live_hidden_subtitle">Hides the Live entry in the navigation bar</string>
     <string name="settings_auto_switch_line">Auto Switch Line</string>
     <string name="settings_m3u8_purify">M3U8 Purify</string>
-    <string name="settings_danmu_switch">Danmaku Switch</string>
-    <string name="settings_danmu_api">Danmaku API</string>
     <string name="settings_long_press_speed">Long-press Speed</string>
     <string name="settings_buffer_time">Buffer Time</string>
 
@@ -494,8 +474,6 @@
     <string name="player_select_scale">Select picture size</string>
     <string name="player_select_speed">Select playback speed</string>
     <string name="player_subtitle_closed">Subtitles off</string>
-    <string name="player_danmu_opened">Danmaku on</string>
-    <string name="player_danmu_temp_closed">Danmaku temporarily off</string>
     <string name="player_switch_line">Switched to line %1$s</string>
     <string name="player_get_url_timeout">Timed out getting the playback URL</string>
     <string name="player_play_timeout">Playback timed out</string>
@@ -543,10 +521,6 @@
     <string name="thunder_error_buffer">Buffer too small</string>
     <string name="thunder_error_copyright">Copyright restricted: download not allowed</string>
     <string name="thunder_error_invalid_url">Invalid URL</string>
-    <string name="danmu_search_api_empty">Danmaku search API is empty</string>
-    <string name="danmu_url_empty">Danmaku URL is empty</string>
-    <string name="danmu_content_empty">No danmaku content received</string>
-    <string name="danmu_search_failed">Danmaku search failed</string>
     <string name="toast_jar_load_failed">Failed to load JAR</string>
     <string name="toast_network_error">Network error</string>
     <string name="toast_ads_removed">Removed %1$d video ads</string>

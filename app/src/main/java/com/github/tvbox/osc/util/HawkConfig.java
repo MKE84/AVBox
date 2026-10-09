@@ -133,15 +133,6 @@ public class HawkConfig {
      * (直播页不启用,见 MyVideoView 点播标记)。改关原因:CacheDataSource 与 App 内本地代理
      * (spider 自建/网盘)的区间读取语义不兼容,实测导致 EXO 起播失败(设置页已加提示副标题)。
      */
-    public static final String DANMU_OPEN = "danmu_open";
-    public static final String DANMU_MAX_LINE = "danmu_max_line";
-    public static final String DANMU_SPEED = "danmu_speed";
-    public static final String DANMU_ALPHA = "danmu_alpha";
-    public static final String DANMU_SIZE_SCALE = "danmu_size_scale";
-    public static final String DANMU_RANDOM_COLOR = "danmu_random_color";
-    public static final String DANMU_API = "danmu_api";
-    /** 弹幕接口是否用内置默认(原为 DanmakuApi 内的字面量键,2026-09-13 KV 迁移时集中登记) */
-    public static final String DANMU_API_USE_DEFAULT = "danmu_api_use_default";
     // 源名快照(2026-09-14):HashMap<sourceKey, 源显示名>。历史记录只存 sourceKey 不存源名,
     // 换源/冷启动后源不在当前配置里时,历史卡片靠这份快照兜底显示记录时的完整源名(含 emoji)
     public static final String SOURCE_NAME_CACHE = "source_name_cache";

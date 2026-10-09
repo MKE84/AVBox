@@ -75,23 +75,7 @@
     <string name="toast_subtitle_read_failed">讀取字幕檔案失敗</string>
 
     <!-- 彈幕面板 -->
-    <string name="danmu_settings">彈幕設定</string>
-    <string name="danmu_online">線上彈幕</string>
-    <string name="danmu_color">彈幕顏色</string>
-    <string name="danmu_color_random">隨機</string>
-    <string name="danmu_speed">彈幕速度</string>
-    <string name="danmu_speed_very_slow">超慢</string>
-    <string name="danmu_speed_slow">慢</string>
-    <string name="danmu_speed_normal">適中</string>
-    <string name="danmu_speed_fast">快</string>
-    <string name="danmu_size">彈幕大小</string>
-    <string name="danmu_size_value">%1$d 級</string>
-    <string name="danmu_lines">彈幕行數</string>
-    <string name="danmu_lines_value">%1$d 行</string>
-    <string name="danmu_alpha">彈幕透明</string>
-    <string name="danmu_search_hint">請輸入彈幕名稱</string>
     <string name="toast_input_empty">輸入內容不能為空</string>
-    <string name="toast_danmu_not_found">未查詢到符合的彈幕</string>
 
     <!-- 首頁 -->
     <string name="home_subscription_source">訂閱源</string>
@@ -155,8 +139,6 @@
     <string name="player_menu_subtitle">字幕</string>
     <string name="player_menu_audio_track">音軌</string>
     <string name="player_menu_video_track">視訊軌</string>
-    <string name="player_menu_danmu">彈幕</string>
-    <string name="player_menu_search_danmu">搜彈幕</string>
     <string name="player_menu_params">播放參數</string>
     <string name="player_menu_more">更多</string>
     <string name="player_menu_parse">解析</string>
@@ -473,8 +455,6 @@
     <string name="settings_nav_live_hidden_subtitle">開啟後導覽列不再顯示直播入口</string>
     <string name="settings_auto_switch_line">自動換線</string>
     <string name="settings_m3u8_purify">M3U8 淨化</string>
-    <string name="settings_danmu_switch">彈幕開關</string>
-    <string name="settings_danmu_api">彈幕 API</string>
     <string name="settings_long_press_speed">長按倍速</string>
     <string name="settings_buffer_time">緩衝時間</string>
 
@@ -494,8 +474,6 @@
     <string name="player_select_scale">請選擇畫面尺寸</string>
     <string name="player_select_speed">請選擇播放倍速</string>
     <string name="player_subtitle_closed">字幕已關閉</string>
-    <string name="player_danmu_opened">彈幕已開啟</string>
-    <string name="player_danmu_temp_closed">彈幕已暫時關閉</string>
     <string name="player_switch_line">線路切換至%1$s</string>
     <string name="player_get_url_timeout">取得播放位址逾時</string>
     <string name="player_play_timeout">播放逾時</string>
@@ -543,10 +521,6 @@
     <string name="thunder_error_buffer">緩衝區不足</string>
     <string name="thunder_error_copyright">版權限制：無權下載</string>
     <string name="thunder_error_invalid_url">無效連結</string>
-    <string name="danmu_search_api_empty">彈幕搜尋介面為空</string>
-    <string name="danmu_url_empty">彈幕位址為空</string>
-    <string name="danmu_content_empty">未取得彈幕內容</string>
-    <string name="danmu_search_failed">彈幕搜尋失敗</string>
     <string name="toast_jar_load_failed">JAR 載入失敗</string>
     <string name="toast_network_error">網路錯誤</string>
     <string name="toast_ads_removed">已移除影片廣告 %1$d 則</string>

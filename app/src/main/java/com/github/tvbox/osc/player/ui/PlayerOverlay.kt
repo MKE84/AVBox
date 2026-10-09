@@ -103,13 +103,7 @@ fun PlayerOverlay(
             )
         }
 
-        // Step 6 对话框 Compose 化（替代 View 版 Danmu/SearchDanmu/Subtitle/SearchSubtitle/Cast Dialog）
-        state.danmuSettingSheet?.let { sheet ->
-            DanmuSettingSheet(sheet) { state.danmuSettingSheet = null }
-        }
-        state.danmuSearchSheet?.let { sheet ->
-            DanmuSearchSheet(sheet) { state.danmuSearchSheet = null }
-        }
+        // Step 6 对话框 Compose 化（替代 View 版 Subtitle/SearchSubtitle/Cast Dialog）
         state.subtitleSheet?.let { sheet ->
             SubtitleSheet(sheet) { state.subtitleSheet = null }
         }

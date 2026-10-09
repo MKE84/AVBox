@@ -39,9 +39,7 @@ import com.github.tvbox.osc.player.TrackInfo;
 import com.github.tvbox.osc.player.TrackInfoBean;
 import com.github.tvbox.osc.player.controller.ComposeVideoController;
 import com.github.tvbox.osc.player.controller.PlayerControlApi;
-import com.github.tvbox.osc.player.danmu.DanmuLoadController;
 import com.github.tvbox.osc.player.state.CastSheetState;
-import com.github.tvbox.osc.player.state.DanmuSearchSheetState;
 import com.github.tvbox.osc.player.state.PlayerUiState;
 import com.github.tvbox.osc.player.state.SelectDialogState;
 import com.github.tvbox.osc.player.state.SubtitleSearchSheetState;
@@ -72,7 +70,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import me.jessyan.autosize.AutoSize;
-import master.flame.danmaku.ui.widget.DanmakuView;
 import xyz.doikki.videoplayer.controller.BaseVideoController;
 import xyz.doikki.videoplayer.player.AbstractPlayer;
 import xyz.doikki.videoplayer.player.VideoView;
@@ -116,23 +113,22 @@ public class PlayContainer extends FrameLayout implements CustomAdapt, PlaybackH
         LayoutInflater.from(activity).inflate(R.layout.view_play_container, this, true);
         PlayerTipBridge.hide();
         init();
-        // 提示层(加载/错误遮罩)画在控制器 Compose 层:状态要桥进控制层,并收起位置在控制器之上的弹幕视图。
-        // 挂监听在 init() 之后(mController/danmuLoadController 已就位)与 hide() 之后(免旧容器残留回调)
+        // 提示层(加载/错误遮罩)画在控制器 Compose 层:状态要桥进控制层,并收起位置在控制器之上的提示视图。
+        // 挂监听在 init() 之后与 hide() 之后(免旧容器残留回调)
         PlayerTipBridge.setTipStateListener(tipStateListener);
         scheduler.setViewBridge(viewBridge);
         if (engine != null) engine.attach(this);
     }
 
-    /** 提示层状态变化:桥入控制层状态(遮罩在视频面之上、顶栏/底栏之下),并让弹幕视图让位 */
+    /** 提示层状态变化:桥入控制层状态(遮罩在视频面之上、顶栏/底栏之下),并让提示视图让位 */
     private void onTipStateChanged(PlayerTipState tip) {
         if (mHandler == null) return;
         boolean showing = tip.getLoading() || tip.getErr();
-        // 提示可能由调度/取流线程写入(setTip 会从解析链路直接调用),控制层状态与弹幕视图可见性统一回主线程
+        // 提示可能由调度/取流线程写入(setTip 会从解析链路直接调用),控制层状态统一回主线程
         mHandler.post(() -> {
             if (mController != null) {
                 mController.getUiState().applyTip(tip.getMsg(), tip.getLoading(), tip.getErr());
             }
-            if (danmuLoadController != null) danmuLoadController.setOverlayHidden(showing);
         });
     }
 
@@ -257,10 +253,6 @@ public class PlayContainer extends FrameLayout implements CustomAdapt, PlaybackH
             EventBus.getDefault().unregister(this);
         }
         trackSelector.invalidatePendingSwitch();
-        if (danmuLoadController != null) {
-            danmuLoadController.destroy();
-            danmuLoadController = null;
-        }
         mVideoView = null;
         if (mController != null) mController.stopOther();
         mActivity = null;
@@ -285,8 +277,6 @@ public class PlayContainer extends FrameLayout implements CustomAdapt, PlaybackH
         private Handler mHandler;
     boolean exitingPreview = false;
     private boolean previewMode;
-    private DanmakuView mDanmuView;
-    DanmuLoadController danmuLoadController;
     private final List<Cue> exoCues = new ArrayList<>();
     private boolean exoInternalSubtitle;
 
@@ -300,56 +290,13 @@ public class PlayContainer extends FrameLayout implements CustomAdapt, PlaybackH
         if (event.type == RefreshEvent.TYPE_SUBTITLE_SIZE_CHANGE) {
             applySubtitleTextSize();
         }
-        if (event.type == RefreshEvent.TYPE_SET_DANMU_SETTINGS) {
-            setDanmuViewSettings(event.obj instanceof Boolean && (Boolean) event.obj);
-        } else if (event.type == RefreshEvent.TYPE_DANMU_REFRESH) {
-            checkDanmu(event.obj instanceof String ? (String) event.obj : "");
-        }
     }
 
     private void init() {
         initView();
-        initDanmuView();
     }
 
-    private void initDanmuView() {
-        mDanmuView = findViewById(R.id.danmaku);
-        danmuLoadController = new DanmuLoadController(mVideoView, mController, mDanmuView);
-    }
-
-    private void setDanmuViewSettings(boolean reload) {
-        if (danmuLoadController != null) danmuLoadController.applySettings(reload);
-    }
-
-    void applyDanmuSettings(boolean reload) {
-        setDanmuViewSettings(reload);
-    }
-
-    private void checkDanmu(String danmu) {
-        checkDanmu(danmu, null);
-    }
-
-    void checkDanmu(String danmu, DanmuLoadController.LoadCallback callback) {
-        scheduler.setPlayDanmu(danmu);
-        if (danmuLoadController != null) {
-            VodInfo.VodSeries series = scheduler.vod() == null ? null : scheduler.currentSeries(scheduler.vod().playFlag, scheduler.vod().playIndex);
-            danmuLoadController.check(danmu, scheduler.vod() == null ? "" : scheduler.vod().name, series == null ? "" : series.name, callback);
-        }
-    }
-
-    void startDanmuIfReady() {
-        if (danmuLoadController != null) danmuLoadController.startIfReady();
-    }
-
-    void resetDanmuState() {
-        if (danmuLoadController != null) danmuLoadController.reset();
-    }
-
-    void reloadDanmuForPlayback() {
-        if (danmuLoadController != null) danmuLoadController.reloadForPlayback();
-    }
-
-        private void initView() {
+    private void initView() {
         EventBus.getDefault().register(this);
         mHandler = new Handler(new Handler.Callback() {
             @Override
@@ -393,20 +340,6 @@ public class PlayContainer extends FrameLayout implements CustomAdapt, PlaybackH
             if (mVideoView != null) mVideoView.pause();
             return kotlin.Unit.INSTANCE;
         }));
-    }
-
-    void openDanmuSearchSheet() {
-        if (!isAttached()) return;
-        VodInfo.VodSeries series = scheduler.vod() == null ? null : scheduler.currentSeries(scheduler.vod().playFlag, scheduler.vod().playIndex);
-        PlayerUiState uiState = mController.getUiState();
-        uiState.setDanmuSearchSheet(new DanmuSearchSheetState(
-                series == null ? "" : series.name,
-                scheduler.vod() == null ? "" : scheduler.vod().name,
-                danmu -> {
-                    if (!isAttached()) return kotlin.Unit.INSTANCE;
-                    checkDanmu(danmu);
-                    return kotlin.Unit.INSTANCE;
-                }));
     }
 
     /**
@@ -990,7 +923,6 @@ public class PlayContainer extends FrameLayout implements CustomAdapt, PlaybackH
 
     private void rebindPlaybackOverlay() {
         initSubtitleView();
-        checkDanmu(scheduler.playDanmu());
     }
 
     /**
@@ -1033,7 +965,6 @@ public class PlayContainer extends FrameLayout implements CustomAdapt, PlaybackH
         handedOver = false;
         if (mVideoView != null) {
             mVideoView.setVideoController((BaseVideoController) mController);
-            if (danmuLoadController != null) danmuLoadController.setVideoView(mVideoView);
         }
         LOG.i("echo-p2 revive engine after release");
         return true;
@@ -1102,7 +1033,6 @@ public class PlayContainer extends FrameLayout implements CustomAdapt, PlaybackH
     }
 
     void replayCurrentAddress() {
-        reloadDanmuForPlayback();
         String url = scheduler.webPlayUrl();
         if (url != null && !url.isEmpty()) {
             scheduler.stopParse();
@@ -1308,7 +1238,6 @@ mController.toggleControlBar();
             releasePlayerKernel();
         }
         if (mController != null) mController.stopOther();
-        resetDanmuState();
         scheduler.setWebPlayUrl(null);
         scheduler.setWebHeaderMap(null);
         scheduler.initParseLoadFound();

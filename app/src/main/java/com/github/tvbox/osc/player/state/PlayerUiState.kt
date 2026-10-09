@@ -90,8 +90,6 @@ class PlayerUiState {
     var playerType: Int by mutableStateOf(2)
     /** 直播源（duration==0）时隐藏倍速与片头尾按钮 */
     var liveButtonsVisible: Boolean by mutableStateOf(true)
-    var danmuOpen: Boolean by mutableStateOf(false)
-    var danmuSearchAvailable: Boolean by mutableStateOf(false)
     /** 当前播放会话的影片数据（页面在会话建立/接管时写入）；选集入口可见性由它派生，缓存成标志会在同片接管时漏写 */
     var sessionVod: VodInfo? by mutableStateOf(null)
     /** 详情页竖屏预览态（setPreviewMode 写入）：呼出控件栏时只显示进度行，不显示菜单行 */
@@ -125,11 +123,7 @@ class PlayerUiState {
         tipErr = err
     }
 
-    // —— Step 6 对话框 sheet 化（替代 View 版 DanmuSetting/SearchDanmu/Subtitle/SearchSubtitle/Cast/Episode Dialog） ——
-    /** 弹幕设置面板；内部配置直接读写 DanmuHelper + EventBus，无需业务回调 */
-    var danmuSettingSheet: DanmuSettingSheetState? by mutableStateOf(null)
-    /** 弹幕搜索面板 */
-    var danmuSearchSheet: DanmuSearchSheetState? by mutableStateOf(null)
+    // —— Step 6 对话框 sheet 化（替代 View 版 Subtitle/SearchSubtitle/Cast/Episode Dialog） ——
     /** 字幕设置面板 */
     var subtitleSheet: SubtitleSheetState? by mutableStateOf(null)
     /** 字幕搜索面板 */
@@ -141,13 +135,11 @@ class PlayerUiState {
 
     /** 有覆盖层面板在屏：面板期间冻结底栏的 10s 自动收起（见 ComposeVideoController.idleHideRunnable） */
     val overlayPanelOpen: Boolean
-        get() = selectDialog != null || paramsSheet != null || danmuSettingSheet != null ||
-                danmuSearchSheet != null || subtitleSheet != null || subtitleSearchSheet != null ||
+        get() = selectDialog != null || paramsSheet != null ||
+                subtitleSheet != null || subtitleSearchSheet != null ||
                 castSheet != null || episodeSheetOpen
 
-    // —— 衍生可见性（照搬 updatePortraitMenu 的逐按钮规则；与方向无关，预览态由菜单行/解析行的 previewMode 守卫） ——
-
-    val danmuBtnVisible: Boolean get() = danmuOpen
+    // —— 衍生可见性（照搬 updatePortraitMenu 的逐按钮规则；与方向无关，预览态由菜单行/解析行的 previewMode 守卫） —
 
     /** 选集入口可见:当前线路剧集数 >1(面板只列剧集,单集时点开没有可选项);数据未就绪按不可见处理 */
     val episodeBtnVisible: Boolean
@@ -227,8 +219,6 @@ class ParamsSheetState(
     val onSetTimeStart: () -> Unit,
     val onSetTimeEnd: () -> Unit,
     val onResetTime: () -> Unit,
-    /** 弹幕搜索入口;订阅源不支持时为 null（该组不显示） */
-    val onSearchDanmu: (() -> Unit)?,
 )
 
 /** 画质参数面板状态：值取自 KV，改动即时落库并下发内核；面板只保留拖动中的副本（拖动不重建本对象） */
@@ -256,19 +246,6 @@ class PictureParamsState(
     val onReset: () -> Unit,
     /** 按住对比：true = 临时按恒等参数出画（松手复原） */
     val onCompareChanged: (Boolean) -> Unit,
-)
-
-/** 弹幕设置面板状态（Step 6 替代 View 版 DanmuSettingDialog）；onReset = 恢复面板内各项默认（开关与搜索源不在面板内） */
-class DanmuSettingSheetState(
-    val onOpenSearch: () -> Unit,
-    val onReset: () -> Unit = {},
-)
-
-/** 弹幕搜索面板状态（替代 View 版 SearchDanmuDialog）；onLoad = 命中弹幕 XML 回调（PlayContainer.checkDanmu） */
-class DanmuSearchSheetState(
-    val episode: String,
-    val searchWord: String,
-    val onLoad: (String) -> Unit,
 )
 
 /** 字幕设置面板状态（替代 View 版 SubtitleDialog）；exoInternal = Exo 内置字幕模式（字号百分比/字幕上下移） */
@@ -334,10 +311,6 @@ interface PlayerActions {
     fun onSubtitleLongClicked()
     fun onAudioTrackClicked()
     fun onVideoTrackClicked()
-    fun onDanmuSettingClicked()
-    fun onDanmuSettingLongClicked()
-    fun onDanmuSearchClicked()
-    fun onDanmuSearchLongClicked()
     fun onRotateClicked()
     /** 打开播放参数抽屉（右侧竖排入口） */
     fun onParamsClicked()

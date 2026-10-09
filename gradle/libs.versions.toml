@@ -29,7 +29,6 @@ xstream = "1.4.21"
 eventbus = "3.3.1"
 mmkv = "2.4.2"
 junit = "4.13.2"
-danmakuFlameMaster = "0.9.25"
 okgo = "3.0.4"
 xxPermissions = "28.3"
 jsoup = "1.23.2"
@@ -78,7 +77,6 @@ xstream = { group = "com.thoughtworks.xstream", name = "xstream", version.ref = 
 eventbus = { group = "org.greenrobot", name = "eventbus", version.ref = "eventbus" }
 mmkv = { group = "com.tencent", name = "mmkv", version.ref = "mmkv" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
-danmaku-flame-master = { group = "com.github.ctiao", name = "DanmakuFlameMaster", version.ref = "danmakuFlameMaster" }
 okgo = { group = "com.lzy.net", name = "okgo", version.ref = "okgo" }
 xx-permissions = { group = "com.github.getActivity", name = "XXPermissions", version.ref = "xxPermissions" }
 jsoup = { group = "org.jsoup", name = "jsoup", version.ref = "jsoup" }

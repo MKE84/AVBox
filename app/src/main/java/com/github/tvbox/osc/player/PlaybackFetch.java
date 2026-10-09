@@ -8,7 +8,6 @@ import androidx.lifecycle.Observer;
 
 import com.github.tvbox.osc.R;
 import com.github.tvbox.osc.api.ApiConfig;
-import com.github.tvbox.osc.api.DanmakuApi;
 import com.github.tvbox.osc.bean.VodInfo;
 import com.github.tvbox.osc.sourcedata.SourceViewModel;
 import com.github.tvbox.osc.util.FileUtils;
@@ -143,8 +142,6 @@ final class PlaybackFetch {
                 }
                 // 取流成功,手动选线标记完成使命,后续失败恢复走正常自动策略
                 controller.setUserPickedLine(false);
-                String danmaku = info.optString("danmaku", "").trim();
-                final String danmuProgressKey = controller.progressKey();
                 controller.setWebUserAgent(null);
                 controller.setWebHeaderMap(null);
                 HashMap<String, String> headers = PlaybackController.extractHeaders(info);
@@ -159,16 +156,6 @@ final class PlaybackFetch {
                 } else {
                     if (view != null) view.showParse(false);
                     if (view != null) controller.playUrl(playUrl + url, headers);
-                }
-                if (TextUtils.isEmpty(danmaku)) {
-                    checkDanmu("", null);
-                    searchDanmu("");
-                } else {
-                    checkDanmu(danmaku, () -> {
-                        if (TextUtils.equals(danmuProgressKey, controller.progressKey())) {
-                            searchDanmu("");
-                        }
-                    });
                 }
             } catch (Throwable th) {
                 controller.handleResolvePlayUrlFailed(controller.str(R.string.player_get_info_error));
@@ -210,30 +197,5 @@ final class PlaybackFetch {
         if (TextUtils.isEmpty(name)) return false;
         String value = name.toLowerCase(Locale.ROOT);
         return value.contains("lyric") || value.contains("lrc") || name.contains("歌词"); // i18n: keep
-    }
-
-    /** 取流结果没带弹幕地址时联网搜一份(与进度键绑定:切集后旧结果作废) */
-    private void searchDanmu(String danmaku) {
-        if (!TextUtils.isEmpty(danmaku) || !DanmakuApi.canSearch(controller.sourceBean()) || controller.vod() == null) return;
-        VodInfo.VodSeries series = controller.currentSeries(controller.vod().playFlag, controller.vod().playIndex);
-        String key = controller.progressKey();
-        DanmakuApi.search(controller.vod().name, series == null ? "" : series.name, new DanmakuApi.SearchCallback() {
-            @Override
-            public void onFound(String url) {
-                if (!TextUtils.equals(key, controller.progressKey())) return;
-                checkDanmu(url, null);
-            }
-
-            @Override
-            public void onNotFound() {
-                if (!TextUtils.equals(key, controller.progressKey())) return;
-                checkDanmu("", null);
-            }
-        });
-    }
-
-    private void checkDanmu(String danmaku, Runnable onFailed) {
-        PlaybackViewBridge view = controller.viewBridge();
-        if (view != null) view.checkDanmu(danmaku, onFailed);
     }
 }
