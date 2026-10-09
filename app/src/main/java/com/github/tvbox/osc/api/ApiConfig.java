@@ -68,6 +68,10 @@ public class ApiConfig {
     private ParseBean mDefaultParse;
     private final List<LiveChannelGroup> liveChannelGroupList;
     private final List<ParseBean> parseBeanList;
+    /** 超级解析的并行"燃料":完整解析站列表(含在线站)。
+     *  对外列表 parseBeanList 只有"超级解析",但 SuperParse 的 web iframe / json 并行
+     *  仍需要这些在线站做 fan-out 目标 —— 所以单独存一份,不删。 */
+    private final List<ParseBean> allParseBeans = new java.util.ArrayList<>();
     private List<String> vipParseFlags;
     // 点播/直播两套 hosts 分开存:合并视图见 getMyHost,避免直播配置把点播的覆盖掉。
     // volatile:DNS 解析在 OkHttp 线程读,配置解析在主线程写
@@ -378,19 +382,18 @@ public class ApiConfig {
         vipParseFlags = DefaultConfig.safeJsonStringList(infoJson, "flags");
         // 解析地址
         parseBeanList.clear();
+        allParseBeans.clear();
         List<ParseBean> parsedParses = ConfigApplier.parseParseBeans(infoJson);
         if (!parsedParses.isEmpty()) {
-            // 白名单放宽(2026-10-08):只剔除超级解析(type=4,常在"正在嗅探"假死),
-            // 其余解析(type0 WebView嗅探 / type1 json / type3 聚合)全部保留 ——
-            // 原"只留盘古/解析4/聚合"过窄:默认的盘古那条是"跨域 iframe 套娃"解析站,
-            // 失败后没有可用兜底,只能卡到超时。
+            // 只剔除超级解析(type=4,避免重复);其余全部收集
             List<ParseBean> filtered = new java.util.ArrayList<>();
             for (ParseBean pb : parsedParses) {
                 if (pb.getType() != 4) filtered.add(pb);
             }
-            parseBeanList.addAll(filtered);
-            // 恢复内置超级解析(2026-10-08 用户要求):SuperParse 并行 fan-out 所有解析站,
-// 第一个出结果即用 → 不再是"一个个串行试 15s",而是"全部一起并行" → 秒解。
+            // 在线解析:从"对外列表"里删掉(用户要求:只留内置超级解析),
+            // 但**保留为超级解析的并行燃料**(SuperParse 靠它们做 web iframe / json fan-out)。
+            allParseBeans.addAll(filtered);
+            // 对外列表只放内置超级解析 → 默认解析器 = 超级解析(并行,秒解)
             addSuperParse();
         }
         // 获取默认解析
@@ -985,6 +988,11 @@ public class ApiConfig {
 
     public List<ParseBean> getParseBeanList() {
         return parseBeanList;
+    }
+
+    /** 超级解析并行 fan-out 用的完整解析站列表(含"在线解析",不对外展示/不参与串行回退) */
+    public List<ParseBean> getAllParseBeans() {
+        return allParseBeans;
     }
 
     public List<String> getVipParseFlags() {

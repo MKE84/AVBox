@@ -34,12 +34,11 @@ public class JsonParallel {
     private static volatile Task currentTask;
 
     private static final class Task {
-        // 秒解关键:显式短超时。默认 client 无读超时会有一个慢解析站拖住整轮;
-        // 5 线程并行 + 6s 上限 = 任一解析站 6s 内不出结果即作废,不阻塞其它已经可用的结果。
+        // 秒解关键:显式短超时。任一解析站 4s 内不出结果即作废,不阻塞其它已可用的结果。
         final OkHttpClient client = new OkHttpClient.Builder()
-                .connectTimeout(6, java.util.concurrent.TimeUnit.SECONDS)
-                .readTimeout(6, java.util.concurrent.TimeUnit.SECONDS)
-                .writeTimeout(6, java.util.concurrent.TimeUnit.SECONDS)
+                .connectTimeout(4, java.util.concurrent.TimeUnit.SECONDS)
+                .readTimeout(4, java.util.concurrent.TimeUnit.SECONDS)
+                .writeTimeout(4, java.util.concurrent.TimeUnit.SECONDS)
                 .build();
         final ExecutorService executorService = Executors.newFixedThreadPool(5);
         final List<Future<JSONObject>> futures = new ArrayList<>();

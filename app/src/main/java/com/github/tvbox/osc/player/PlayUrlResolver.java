@@ -157,6 +157,9 @@ final class PlayUrlResolver {
     /** 可见诊断:最近嗅探到的候选地址 + 判定结果(实时显示在提示条,便于用户截图定位) */
     private final java.util.concurrent.ConcurrentLinkedDeque<String> sniffDiag = new java.util.concurrent.ConcurrentLinkedDeque<>();
     private static final int SNIFF_DIAG_MAX = 10;
+    /** 嗅探结果短缓存:同一解析页地址(含剧集 id)在 TTL 内直接复用 → 重复播放/换线秒起播,不再重走整个嗅探 */
+    private static final long SNIFF_CACHE_TTL_MS = 2 * 60 * 1000L;
+    private final java.util.concurrent.ConcurrentHashMap<String, Object[]> sniffCache = new java.util.concurrent.ConcurrentHashMap<>();
     private ExecutorService parseThreadPool;
     private static final int MSG_PARSE_TIMEOUT = 100;
     private static final long PARSE_TIMEOUT_MS = 20 * 1000;
@@ -178,7 +181,7 @@ final class PlayUrlResolver {
                 parseBean.setUrl(playUrl.substring(5));
             } else if (playUrl.startsWith("parse:")) {
                 String parseRedirect = playUrl.substring(6);
-                for (ParseBean pb : ApiConfig.get().getParseBeanList()) {
+                for (ParseBean pb : ApiConfig.get().getAllParseBeans()) {
                     if (pb.getName().equals(parseRedirect)) {
                         parseBean = pb;
                         break;
@@ -285,6 +288,19 @@ final class PlayUrlResolver {
         initParseLoadFound();
         sniffMissLogged.set(0);
         sniffDiag.clear();
+        // 秒解:同一解析页在 TTL 内已解析成功过 → 直接复用,跳过整个嗅探/解析
+        try {
+            Object[] sniffed = sniffCache.get(webUrl);
+            if (sniffed != null && sniffed.length >= 2 && sniffed[0] instanceof String
+                    && System.currentTimeMillis() - ((Long) sniffed[1]) < SNIFF_CACHE_TTL_MS) {
+                String cu = (String) sniffed[0];
+                LOG.i("echo-sniff-cache-hit:" + cu);
+                showSniffDiag(cu, "√缓存");
+                if (host.view() != null) host.playUrl(cu, null);
+                return;
+            }
+        } catch (Throwable ignored) {
+        }
         if (pb.getType() == 4) {
             parseMix(pb, true, gen);
         } else if (pb.getType() == 0) {
@@ -384,7 +400,7 @@ final class PlayUrlResolver {
             if (host.view() != null) host.view().showTip(str(R.string.player_resolving_url), true, false);
             parseThreadPool = Executors.newSingleThreadExecutor();
             LinkedHashMap<String, String> jxs = new LinkedHashMap<>();
-            for (ParseBean p : ApiConfig.get().getParseBeanList()) {
+            for (ParseBean p : ApiConfig.get().getAllParseBeans()) {
                 if (p.getType() == 1) {
                     jxs.put(p.getName(), p.mixUrl());
                 }
@@ -479,7 +495,8 @@ final class PlayUrlResolver {
         LinkedHashMap<String, HashMap<String, String>> jxs = new LinkedHashMap<>();
         LinkedHashMap<String, String> json_jxs = new LinkedHashMap<>();
         String extendName = "";
-        for (ParseBean p : ApiConfig.get().getParseBeanList()) {
+        // 超级解析的并行燃料:用**全量**列表(含被"删掉"的在线解析),否则 fan-out 就空了
+        for (ParseBean p : ApiConfig.get().getAllParseBeans()) {
             HashMap<String, String> data = new HashMap<String, String>();
             data.put("url", p.getUrl());
             if (p.getUrl().equals(pb.getUrl())) {
@@ -716,6 +733,15 @@ final class PlayUrlResolver {
                 || u.contains("playurl") || u.contains("vurl") || u.contains("m3u8");
     }
 
+    /** 嗅探命中即缓存(webUrl → 真实地址),供同页重复播放秒起播 */
+    private void cacheSniffHit(String playUrlFound) {
+        try {
+            if (playUrlFound == null || playUrlFound.isEmpty()) return;
+            sniffCache.put(webUrl, new Object[]{playUrlFound, System.currentTimeMillis()});
+        } catch (Throwable ignored) {
+        }
+    }
+
     /** JS 钩子:hook XHR/fetch/媒体元素 src,把所有 URL 经 console 上报原生。
      *  弥补 shouldInterceptRequest 的盲区——它只看得到 WebView 发起的资源请求,
      *  看不到页面 JS(hls.js/artplayer/crypto-js 解密后)动态加载的地址。 */
@@ -754,6 +780,7 @@ final class PlayUrlResolver {
             if (hit) {
                 loadFoundVideoUrls.add(url);
                 loadFoundVideoUrlsHeader.put(url, new HashMap<String, String>());
+                cacheSniffHit(url);
                 LOG.i("echo-loadFoundVideoUrl(js):" + url);
                 if (loadFoundCount.incrementAndGet() == 1) {
                     stopLoadWebView(false);
@@ -975,6 +1002,7 @@ final class PlayUrlResolver {
                 if (hit) {
                     loadFoundVideoUrls.add(url);
                     loadFoundVideoUrlsHeader.put(url, headers);
+                    cacheSniffHit(url);
                     LOG.i("echo-loadFoundVideoUrl:" + url);
                     ApiLog.ok(ApiLog.KIND_API, "嗅探命中", "起播", 0);
                     if (loadFoundCount.incrementAndGet() == 1) {
