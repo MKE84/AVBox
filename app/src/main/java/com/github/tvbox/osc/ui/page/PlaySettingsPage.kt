@@ -242,14 +242,6 @@ fun PlaySettingsScreen(onNavigateBack: () -> Unit, vm: SettingsViewModel = viewM
                 }
                 SettingsCard(SettingsCardPosition.MIDDLE) {
                     SettingsSwitchRow(
-                        title = stringResource(R.string.settings_m3u8_purify),
-                        leadingIconRes = R.drawable.ic_pref_m3u8_purify,
-                        checked = state.m3u8Purify,
-                        onCheckedChange = { vm.put(HawkConfig.M3U8_PURIFY, it) },
-                    )
-                }
-                SettingsCard(SettingsCardPosition.MIDDLE) {
-                    SettingsSwitchRow(
                         title = stringResource(R.string.settings_danmu_switch),
                         leadingIconRes = R.drawable.ic_pref_danmu,
                         checked = state.danmuOpen,

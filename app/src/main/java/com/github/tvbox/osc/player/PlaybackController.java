@@ -1084,30 +1084,14 @@ public class PlaybackController {
         playUrl(url, headers);
     }
 
-    /** 取流结果入口:先按 M3U8 去广告规则分流,再交给 goPlayUrl 起播 */
+    /** 取流结果入口:统一交给 goPlayUrl 起播 */
     public void playUrl(String url, HashMap<String, String> headers) {
         startSwitchLinePlayTimeout();
         url = attachProxySiteKey(url);
         if (!url.startsWith("data:application")) {
             EventBus.getDefault().post(new RefreshEvent(RefreshEvent.TYPE_REFRESH, url));//更新播放地址
         }
-        if (!KV.get(HawkConfig.M3U8_PURIFY, false)) {
-            goPlayUrl(url, headers);
-            return;
-        }
-        if (url.startsWith("http://127.0.0.1") || !url.contains(".m3u8")) {
-            goPlayUrl(url, headers);
-            return;
-        }
-        if (vod() != null && DefaultConfig.noAd(vod().playFlag)) {
-            goPlayUrl(url, headers);
-            return;
-        }
-        LOG.i("echo-playM3u8:" + url);
-        // 净化链是唯一不走 goPlayUrl 的起播路径(净化完成回调 startPlayUrl),起播前由页面桥校验代际
-        if (view != null) view.playM3u8(url, headers, playUrlGeneration);
-        // 净化期间先记下起点地址,否则净化源上 autoRetry/retryAfterStartedError 找不到可重播地址
-        setWebPlayUrl(url);
+        goPlayUrl(url, headers);
     }
 
     /** 真正起播一个可播地址(外部播放器 / dash 强制 EXO / 复用播放器换集都在这里分流) */

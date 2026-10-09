@@ -253,13 +253,6 @@ public final class PreloadCoordinator {
             gaveUp(snapshot);
             return;
         }
-        if (url.contains(".m3u8")
-                && KV.get(HawkConfig.M3U8_PURIFY, false)
-                && !DefaultConfig.noAd(snapshot.playFlag)) {
-            LOG.i("echo-preload-giveup: m3u8 purify on, url=" + url);
-            gaveUp(snapshot);
-            return;
-        }
         HashMap<String, String> headers = extractHeaders(info);
         long startPos = snapshot.startSkipMs;
         // 无痕:预载起点同样不认旧进度,否则自动连播的下一集会带着上次的位置起播

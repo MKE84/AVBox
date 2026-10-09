@@ -112,7 +112,6 @@ public final class KVKeySpec implements KVDecoder.TypeRegistry {
         register(HawkConfig.LIVE_CROSS_GROUP, false);
         register(HawkConfig.LIVE_SHOW_NET_SPEED, false);
         register(HawkConfig.LIVE_SHOW_TIME, false);
-        register(HawkConfig.M3U8_PURIFY, false);
         register(HawkConfig.AUTO_SWITCH_LINE, false);
         register(HawkConfig.DEFAULT_LOAD_LIVE, false);
         register(HawkConfig.INCOGNITO, false);

@@ -82,7 +82,6 @@ public class HawkConfig {
     public static final String LIVE_GROUP_INDEX = "live_group_index";
     public static final String LIVE_GROUP_LIST = "live_group_list";
     public static final String LIVE_API_URL = "live_api_url";
-    public static final String M3U8_PURIFY = "m3u8_purify";
     public static final String AUTO_SWITCH_LINE = "auto_switch_line";
     /** 收藏页栅格列数(2/3;设置页"收藏页布局"写入,默认 3) */
     /** 全局接口日志开关(py/js/jar/接口调用记录);默认关,设置页可开 */
