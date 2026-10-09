@@ -1,7 +1,6 @@
 package com.github.tvbox.osc.player;
 
 import android.content.Context;
-import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.ViewGroup;
@@ -617,10 +616,6 @@ public final class PlaybackEngine implements PlaybackHostApi {
 
     @Override
     public void showCast() {
-    }
-
-    @Override
-    public void onLocalSubtitlePicked(Uri uri) {
     }
 
     @Override

@@ -4,12 +4,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
-import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.setContent
 import com.github.tvbox.osc.ui.theme.enableTransparentEdgeToEdge
 import androidx.activity.OnBackPressedCallback
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.compose.foundation.layout.size
@@ -40,20 +38,6 @@ class DetailActivity : BaseActivity(), PageHost {
     var playContainer: PlayContainer? = null
         private set
     private var fullScreen = false
-
-    private val localSubtitlePicker = registerForActivityResult(
-        ActivityResultContracts.OpenDocument()
-    ) { uri: Uri? ->
-        if (uri != null) playContainer?.onLocalSubtitlePicked(uri)
-    }
-
-    override fun launchLocalSubtitlePicker() {
-        try {
-            localSubtitlePicker.launch(arrayOf("*/*"))
-        } catch (e: Exception) {
-            Toast.makeText(this, getString(R.string.toast_file_picker_unavailable), Toast.LENGTH_SHORT).show()
-        }
-    }
 
     override fun getLayoutResID(): Int = R.layout.activity_main
 

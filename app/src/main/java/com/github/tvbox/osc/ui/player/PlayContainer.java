@@ -48,6 +48,7 @@ import com.github.tvbox.osc.util.LOG;
 import com.github.tvbox.osc.util.PlayerHelper;
 import com.github.tvbox.osc.util.TrackMemory;
 import com.github.tvbox.osc.util.KV;
+import com.github.tvbox.osc.util.SubtitleHelper;
 import androidx.media3.common.text.Cue;
 import androidx.media3.ui.CaptionStyleCompat;
 

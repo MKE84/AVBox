@@ -55,9 +55,6 @@ public interface PlaybackHostApi {
     /** 投屏面板(详情页标题行入口复用播放器底栏同一条链路) */
     void showCast();
 
-    /** SAf 本地字幕选择结果回调 */
-    void onLocalSubtitlePicked(Uri uri);
-
     void hostResume();
 
     void hostPause();

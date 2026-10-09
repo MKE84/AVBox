@@ -28,9 +28,6 @@ public interface PageHost {
     /** 轻提示 */
     void toast(@NonNull CharSequence text);
 
-    /** 打开系统文件选择器挑本地字幕(SAF,结果回调到播放侧的 onLocalSubtitlePicked) */
-    void launchLocalSubtitlePicker();
-
     /** 申请通知权限(媒体通知兜底,已授权时调用无副作用) */
     void requestNotificationPermission();
 
