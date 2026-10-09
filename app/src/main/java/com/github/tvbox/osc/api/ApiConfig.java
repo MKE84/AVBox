@@ -753,14 +753,6 @@ public class ApiConfig {
         return spiderLoader.getLiveCSP(url);
     }
 
-    public void searchDanmuUi(String name, String episode, boolean longClick) {
-        spiderLoader.searchDanmuUi(name, episode, longClick);
-    }
-
-    public boolean hasDanmuSearchUi() {
-        return spiderLoader.hasDanmuSearchUi();
-    }
-
     public int getLiveConnectTimeoutSeconds() {
         return (KV.get(HawkConfig.LIVE_CONNECT_TIMEOUT, 1) + 1) * 5;
     }

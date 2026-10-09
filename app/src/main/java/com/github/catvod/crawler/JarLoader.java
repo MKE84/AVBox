@@ -35,8 +35,6 @@ public class JarLoader {
 
     private final ConcurrentHashMap<String, DexClassLoader> loaders = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Method> proxyMethods = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, Method> danmuClickMethods = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, Method> danmuLongClickMethods = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Spider> spiders = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Object> locks = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, String> siteJarKeys = new ConcurrentHashMap<>();
@@ -71,8 +69,6 @@ public class JarLoader {
         }
         loaders.clear();
         proxyMethods.clear();
-        danmuClickMethods.clear();
-        danmuLongClickMethods.clear();
         spiders.clear();
         locks.clear();
         siteJarKeys.clear();
@@ -90,7 +86,6 @@ public class JarLoader {
             DexClassLoader loader = new DexClassLoader(file.getAbsolutePath(), cachePath, cachePath, AppContextHolder.context().getClassLoader());
             invokeInit(loader);
             invokeProxy(key, loader);
-            invokeDanmaku(key, loader);
             injectProxyPort(loader);
             loaders.put(key, loader);
             LOG.i("echo--jar-load success key=" + key + ", file=" + file.getAbsolutePath());
@@ -120,24 +115,6 @@ public class JarLoader {
             proxyMethods.put(key, method);
         } catch (Throwable e) {
             LOG.e("echo-proxy-jar: register fail key=" + key + " | " + e);
-        }
-    }
-
-    private void invokeDanmaku(String key, DexClassLoader loader) {
-        try {
-            Class<?> clz = loader.loadClass("com.github.catvod.spider.Danmaku");
-            try {
-                danmuClickMethods.put(key, clz.getMethod("onClick", String.class, String.class));
-            } catch (Throwable ignored) {
-                LOG.d("JarLoader", "danmaku onClick method not found");
-            }
-            try {
-                danmuLongClickMethods.put(key, clz.getMethod("onLongClick", String.class, String.class));
-            } catch (Throwable ignored) {
-                LOG.d("JarLoader", "danmaku onLongClick method not found");
-            }
-        } catch (Throwable ignored) {
-            LOG.d("JarLoader", "danmaku class not found in jar");
         }
     }
 
@@ -229,22 +206,6 @@ public class JarLoader {
                 return new SpiderNull();
             }
         }
-    }
-
-    public void searchDanmuUi(String name, String episode, boolean longClick) {
-        try {
-            ConcurrentHashMap<String, Method> methods = longClick ? danmuLongClickMethods : danmuClickMethods;
-            Method method = methods.get(recent);
-            if (method == null) method = methods.get("main");
-            if (method == null) return;
-            method.invoke(null, name, episode);
-        } catch (Throwable e) {
-            LOG.e("JarLoader", e);
-        }
-    }
-
-    public boolean hasDanmuSearchUi() {
-        return danmuClickMethods.containsKey(recent) || danmuLongClickMethods.containsKey(recent);
     }
 
     public JSONObject jsonExt(String key, LinkedHashMap<String, String> jxs, String url) {

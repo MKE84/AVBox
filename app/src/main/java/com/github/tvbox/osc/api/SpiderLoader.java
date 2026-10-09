@@ -63,7 +63,6 @@ final class SpiderLoader {
     private final JsLoader jsLoader = new JsLoader();
     private final IPyLoader pyLoader = new pyLoader();
     private final ExecutorService jarLoadExecutor = Executors.newSingleThreadExecutor();
-    private final ExecutorService danmuSearchExecutor = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final Set<String> warmedSearchSpiderKeys = new HashSet<>();
     private final String userAgent = "okhttp/3.15";
@@ -527,21 +526,6 @@ final class SpiderLoader {
 
     JSONObject jsonExtMix(String flag, String key, String name, LinkedHashMap<String, HashMap<String, String>> jxs, String url) {
         return jarLoader.jsonExtMix(flag, key, name, jxs, url);
-    }
-
-    void searchDanmuUi(String name, String episode, boolean longClick) {
-        danmuSearchExecutor.execute(() -> {
-            try {
-                jarLoader.searchDanmuUi(name, episode, longClick);
-            } catch (Throwable th) {
-                LOG.e("ApiConfig searchDanmuUi error: " + th.getMessage());
-                LOG.e("SpiderLoader", th);
-            }
-        });
-    }
-
-    boolean hasDanmuSearchUi() {
-        return jarLoader.hasDanmuSearchUi();
     }
 
     // ---------- 清理 ----------
