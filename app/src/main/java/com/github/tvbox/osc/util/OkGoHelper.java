@@ -5,7 +5,6 @@ import androidx.annotation.NonNull;
 
 import com.github.tvbox.osc.api.ApiConfig;
 import com.github.tvbox.osc.bean.ProxyRule;
-import com.github.tvbox.osc.player.danmu.Parser;
 import com.github.tvbox.osc.util.net.OkProxySelector;
 import com.github.tvbox.osc.util.net.ProxyAuthenticator;
 import com.github.tvbox.osc.util.SSL.SSLSocketFactoryCompat;
@@ -452,7 +451,6 @@ public class OkGoHelper {
         noRedirectClient = builder.build();
 
         initExoOkHttpClient();
-        Parser.resetHttpClient();
         com.github.catvod.net.OkHttp.resetClient();
     }
 

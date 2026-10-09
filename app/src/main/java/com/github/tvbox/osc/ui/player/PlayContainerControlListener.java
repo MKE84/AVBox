@@ -100,7 +100,6 @@ final class PlayContainerControlListener implements VodControlListener {
     @Override
     public void prepared() {
         container.initSubtitleView();
-        if (container.mVideoView != null) container.mVideoView.prepared();
     }
     @Override
     public void startPlayUrl(String url, HashMap<String, String> headers) {
