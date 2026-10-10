@@ -152,9 +152,6 @@ final class PlayUrlResolver {
     private volatile Map<String, HashMap<String, String>> loadFoundVideoUrlsHeader = new ConcurrentHashMap<>();
     private final AtomicInteger loadFoundCount = new AtomicInteger(0);
     private final AtomicInteger sniffMissLogged = new AtomicInteger(0);
-    /** 可见诊断:最近嗅探到的候选地址 + 判定结果(实时显示在提示条,便于用户截图定位) */
-    private final java.util.concurrent.ConcurrentLinkedDeque<String> sniffDiag = new java.util.concurrent.ConcurrentLinkedDeque<>();
-    private static final int SNIFF_DIAG_MAX = 10;
     /** 嗅探结果短缓存:同一解析页地址(含剧集 id)在 TTL 内直接复用 → 重复播放/换线秒起播,不再重走整个嗅探 */
     private static final long SNIFF_CACHE_TTL_MS = 2 * 60 * 1000L;
     private final java.util.concurrent.ConcurrentHashMap<String, Object[]> sniffCache = new java.util.concurrent.ConcurrentHashMap<>();
@@ -284,7 +281,6 @@ final class PlayUrlResolver {
         stopParse();
         initParseLoadFound();
         sniffMissLogged.set(0);
-        sniffDiag.clear();
         // 秒解:同一解析页在 TTL 内已解析成功过 → 直接复用,跳过整个嗅探/解析
         try {
             Object[] sniffed = sniffCache.get(webUrl);
@@ -690,32 +686,11 @@ final class PlayUrlResolver {
         });
     }
 
-    /** 可见诊断:收集最近嗅探到的候选地址及其判定结果,实时显示在提示条上。
-     *  标记:√=命中可播 / ×=判定非视频 / F=被过滤规则拦 / A=被广告规则拦。
-     *  用户看到"一直卡在正在嗅探"时,直接截图即可知道嗅探拦截到了什么、卡在哪一步。 */
+    /** 嗅探诊断浮层已移除:此方法保留为空实现,仅作调用点占位。
+     *  原功能:把候选地址及其判定(√/×/F/A)实时显示在提示条上供截图排查。
+     *  去掉原因:正常播放时该列表刷屏干扰,且"正在嗅探播放地址"提示已在进入嗅探时单独显示。 */
     private void showSniffDiag(String url, String mark) {
-        try {
-            if (host.view() == null) return;
-            String tail = url;
-            try {
-                int q = url.indexOf('?');
-                String noQ = q > 0 ? url.substring(0, q) : url;
-                int slash = noQ.lastIndexOf('/');
-                tail = slash >= 0 ? noQ.substring(slash + 1) : noQ;
-                if (tail.isEmpty()) tail = noQ;
-            } catch (Throwable ignored) {
-            }
-            if (tail.length() > 44) tail = "…" + tail.substring(tail.length() - 42);
-            if (sniffDiag.size() >= SNIFF_DIAG_MAX) sniffDiag.pollFirst();
-            sniffDiag.addLast(mark + " " + tail);
-            final StringBuilder sb = new StringBuilder(str(R.string.player_sniffing_url)).append('\n');
-            for (String s : sniffDiag) sb.append(s).append('\n');
-            final String msg = sb.toString().trim();
-            host.view().runOnUi(() -> {
-                if (host.view() != null) host.view().showTip(msg, true, false);
-            });
-        } catch (Throwable ignored) {
-        }
+        // no-op:诊断浮层已下线
     }
 
     /** 是否"长得像视频"(含视频后缀/常见参数),用于减少广告/过滤诊断的噪声 */
