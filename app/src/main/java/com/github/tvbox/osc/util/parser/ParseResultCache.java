@@ -26,7 +26,7 @@ public final class ParseResultCache {
     private static final LinkedHashMap<String, Entry> CACHE =
             new LinkedHashMap<String, Entry>(16, 0.75f, true) {
                 @Override
-                protected boolean removeEldestEntry(Map.Entry<String, Entry> eldest) {
+                protected boolean removeEldestEntry(java.util.Map.Entry<String, ParseResultCache.Entry> eldest) {
                     return size() > MAX_ENTRIES;
                 }
             };
