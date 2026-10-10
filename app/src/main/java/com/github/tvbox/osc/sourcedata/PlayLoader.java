@@ -119,13 +119,13 @@ final class PlayLoader {
                 String json = BoundedCall.call(new Callable<String>() {
                     @Override
                     public String call() {
-                        Spider sp = ApiConfig.get().getCSP(sourceBean);
                         if (TextUtils.isEmpty(requestUrl)) return "";
+                        // getCSP/playerContent 可能抛 Error:接住,与 DetailLoader 同口径
                         try {
-                            LOG.i("echo--getPlay--id: " + requestUrl);
+                            Spider sp = ApiConfig.get().getCSP(sourceBean);
                             return sp.playerContent(playFlag, requestUrl, ApiConfig.get().getVipParseFlags());
-                        } catch (Exception e) {
-                            LOG.i("echo--getPlay--error: " + e.getMessage());
+                        } catch (Throwable t) {
+                            LOG.i("echo--getPlay--error: " + t);
                             return "";
                         }
                     }

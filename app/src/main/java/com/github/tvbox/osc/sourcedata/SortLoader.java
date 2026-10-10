@@ -179,10 +179,15 @@ final class SortLoader {
                 String sortJson = BoundedCall.call(new Callable<String>() {
                     @Override
                     public String call() {
-                        Spider sp = ApiConfig.get().getCSP(sourceBean);
-                        String json = sp.homeContent(true);
-//                            LOG.i("echo--getSort :" + json);
-                        return json;
+                        // getCSP/homeContent 可能抛 Error(爬虫 <clinit> / 伪造 .so):接住,
+                        // 与 DetailLoader/ListLoader 同口径
+                        try {
+                            Spider sp = ApiConfig.get().getCSP(sourceBean);
+                            return sp.homeContent(true);
+                        } catch (Throwable t) {
+                            LOG.i("echo--getSort--error: " + t);
+                            return "";
+                        }
                     }
                 }, sourceBean.getPlayTimeoutSeconds() * 1000L, "echo--getSort--" + sourceBean.getKey());
                 if (sortJson != null) {

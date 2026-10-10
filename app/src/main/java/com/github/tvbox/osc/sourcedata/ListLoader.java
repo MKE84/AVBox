@@ -86,8 +86,15 @@ final class ListLoader {
                 String json = BoundedCall.call(new Callable<String>() {
                     @Override
                     public String call() {
-                        Spider sp = ApiConfig.get().getCSP(homeSourceBean);
-                        return sp.categoryContent(sortData.id, page + "", true, sortData.filterSelect);
+                        // getCSP/categoryContent 可能抛 Error(爬虫 <clinit> / 伪造 .so):接住,
+                        // 与 DetailLoader 同口径,避免异常穿透到 BoundedCall 之外的错位崩。
+                        try {
+                            Spider sp = ApiConfig.get().getCSP(homeSourceBean);
+                            return sp.categoryContent(sortData.id, page + "", true, sortData.filterSelect);
+                        } catch (Throwable t) {
+                            LOG.i("echo--getList--error: " + t);
+                            return "";
+                        }
                     }
                 }, homeSourceBean.getPlayTimeoutSeconds() * 1000L, "echo--getList--" + homeSourceBean.getKey());
 //                    LOG.i("echo-categoryContent:"+json);
@@ -222,10 +229,14 @@ final class ListLoader {
                     String sortJson = BoundedCall.call(new Callable<String>() {
                         @Override
                         public String call() {
-                            Spider sp = ApiConfig.get().getCSP(sourceBean);
-                            String json = sp.homeVideoContent();
-//                            LOG.i("echo--getHomeRecList :" + json);
-                            return json;
+                            // 同 getListFromSpider:接住 Error,避免穿透
+                            try {
+                                Spider sp = ApiConfig.get().getCSP(sourceBean);
+                                return sp.homeVideoContent();
+                            } catch (Throwable t) {
+                                LOG.i("echo--getHomeRecList--error: " + t);
+                                return "";
+                            }
                         }
                     }, sourceBean.getPlayTimeoutSeconds() * 1000L, "echo--getHomeRecList--" + sourceBean.getKey());
                     if (sortJson != null) {

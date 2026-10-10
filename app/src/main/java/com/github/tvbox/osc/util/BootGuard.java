@@ -1,6 +1,5 @@
 package com.github.tvbox.osc.util;
 
-import android.content.Context;
 import android.os.SystemClock;
 
 
@@ -66,7 +65,6 @@ public final class BootGuard {
     public static void install() {
         final Thread.UncaughtExceptionHandler previous = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
-            writeCrashStack(thread, throwable);
             // 不写标记的崩溃不参与停用判定,否则界面 bug 也会把源算成"崩过"
             if (looksSourceRelatedSafely(throwable)) {
                 writeCrashMarker();
@@ -75,29 +73,6 @@ public final class BootGuard {
             }
             if (previous != null) previous.uncaughtException(thread, throwable);
         });
-    }
-
-    /**
-     * 把崩溃完整堆栈写进应用文件目录(crash_YYYYMMDD_HHmmss.txt)。
-     * 仅作诊断:拿到真实堆栈后即可关闭,不影响 boot-guard 停用判定。
-     */
-    private static void writeCrashStack(Thread thread, Throwable throwable) {
-        try {
-            Context ctx = AppContextHolder.context();
-            if (ctx == null) return;
-            String name = "crash_" + new java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.US).format(new java.util.Date()) + ".txt";
-            File f = new File(ctx.getFilesDir(), name);
-            StringBuilder sb = new StringBuilder(2048);
-            sb.append("thread=").append(thread != null ? thread.getName() : "?").append('\n');
-            sb.append("time=").append(System.currentTimeMillis()).append('\n');
-            java.io.StringWriter sw = new java.io.StringWriter();
-            if (throwable != null) throwable.printStackTrace(new java.io.PrintWriter(sw));
-            sb.append(sw).append('\n');
-            java.io.FileOutputStream fo = new java.io.FileOutputStream(f);
-            try { fo.write(sb.toString().getBytes("UTF-8")); } finally { fo.close(); }
-            LOG.i("boot-guard: crash stack -> " + f.getAbsolutePath());
-        } catch (Throwable ignored) {
-        }
     }
 
     /**

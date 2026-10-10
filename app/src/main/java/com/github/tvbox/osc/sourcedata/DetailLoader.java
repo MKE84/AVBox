@@ -122,14 +122,17 @@ final class DetailLoader {
                 String json = BoundedCall.call(new Callable<String>() {
                     @Override
                     public String call() {
-                        Spider sp = ApiConfig.get().getCSP(sourceBean);
                         List<String> ids = new ArrayList<>();
                         ids.add(id);
+                        // getCSP 与 detailContent 都可能抛 Error(爬虫 <clinit> / 伪造 .so 加载):
+                        // 必须一并接住,否则 Error 穿透 Callable → 虽被 BoundedCall 的 future.get()
+                        // 包成 ExecutionException,但 getCSP 在旧版位于 try 外时一旦抛 Error,
+                        // 空 Spider 被后续引用才崩,错位难查。catch Throwable 一次兜死。
                         try {
-//                                LOG.i("echo--getDetail--id: " + id);
+                            Spider sp = ApiConfig.get().getCSP(sourceBean);
                             return sp.detailContent(ids);
-                        } catch (Exception e) {
-                            LOG.i("echo--getDetail--error: " + e.getMessage());
+                        } catch (Throwable t) {
+                            LOG.i("echo--getDetail--error: " + t);
                             return "";
                         }
                     }

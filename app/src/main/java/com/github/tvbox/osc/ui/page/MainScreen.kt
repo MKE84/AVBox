@@ -94,7 +94,16 @@ private enum class AppTab(@StringRes val labelRes: Int, @DrawableRes val icon: I
 
 @Composable
 fun MainScreen() {
-    LaunchedEffect(Unit) { AppBootstrap.start() }
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        AppBootstrap.start()
+        // BootGuard 检测到源导致崩溃时会自动停用并记录一次性提示;
+        // 这里读后即清,用 toast 告知用户,否则用户只会看到"订阅突然没了"
+        val disabled = com.github.tvbox.osc.util.BootGuard.takeSafeDisabledNotice()
+        if (disabled.isNotEmpty()) {
+            Toast.makeText(context, R.string.toast_boot_source_disabled, Toast.LENGTH_LONG).show()
+        }
+    }
     val boot by AppBootstrap.state.collectAsState()
     Box(modifier = Modifier.fillMaxSize()) {
         MainContent()

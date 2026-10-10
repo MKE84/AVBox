@@ -218,6 +218,9 @@ class HomeViewModel : ViewModel() {
         LOG.i("echo--sort-manual-retry: key=$key")
         sortLoadFailed.value = false
         sortRetried = true
+        // 手动重试即已消耗自动重试配额,避免连环重试;同时清分区重试计数,
+        // 与 loadHome() 对齐(review 20261001 发现 3)
+        listRetried.clear()
         rec.value = Rec(PartitionState.Loading, emptyList())
         sortsLoaded.value = false
         pageLoading.value = true

@@ -204,6 +204,7 @@
     <!-- 提示 -->
     <string name="toast_cache_cleared">清理成功</string>
     <string name="toast_source_in_use">正在使用的源不能删除</string>
+    <string name="toast_boot_source_disabled">检测到源导致应用崩溃，已自动停用该源，请到订阅管理重新配置或更换</string>
 
     <!-- 播放器 -->
     <string name="player_exo">Media3</string>
