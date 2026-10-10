@@ -55,6 +55,7 @@ chaquopy {
             // 而 Chaquopy 检测到 -i 后不会再自动附加自己的仓库(chaquopy/pip_install.py),故显式补上
             options("-i", "https://mirrors.aliyun.com/pypi/simple/")
             options("--extra-index-url", "https://chaquo.com/pypi-13.1")
+            options("--extra-index-url", "https://pypi.org/simple")
             install("lxml")
             install("ujson")
             install("pyquery==2.0.2")
