@@ -157,7 +157,8 @@ final class PlayUrlResolver {
     private final java.util.concurrent.ConcurrentHashMap<String, Object[]> sniffCache = new java.util.concurrent.ConcurrentHashMap<>();
     private ExecutorService parseThreadPool;
     private static final int MSG_PARSE_TIMEOUT = 100;
-    private static final long PARSE_TIMEOUT_MS = 20 * 1000;
+    /** 解析/嗅探看护超时:慢站点/弱网留足时间(用户实测部分解析页需 30s+ 才出直链),超时统一走 MSG_PARSE_TIMEOUT->errorWithRetry(自动切下一个解析器) */
+    private static final long PARSE_TIMEOUT_MS = 45 * 1000;
 
     // ==================== 成员 ====================
 
@@ -455,13 +456,12 @@ final class PlayUrlResolver {
                 int idx = (start + k) % size;             // 从 start 的下一个开始
                 if (idx == start) break;                  // 绕回起点:一圈已试完
                 ParseBean pb = list.get(idx);
-                int t = pb.getType();
-                // 按列表顺序换下一个解析器,跳过超级解析(type 4,仅一个,无需再试)。
-                if (t != 4) {
-                    next = pb;
-                    autoParseIndex = idx;                 // 游标前移
-                    break;
-                }
+                // 换下一个解析器继续试。超级解析(type 4)不再跳过:
+                // 用户实测"超级解析嗅探失败→切到第3个解析就能播",type 4 失败不代表其他线路失败,
+                // 且只探索一轮(必回起点),不会死循环。
+                next = pb;
+                autoParseIndex = idx;                 // 游标前移
+                break;
             }
             if (next == null) {
                 if (host.view() != null) host.view().showErrorWithRetry(err, false);
@@ -597,7 +597,15 @@ final class PlayUrlResolver {
         // 先校验本轮:否则切集后,上一轮遗留的 jsonJx 回调会关掉新集的嗅探页 / 起播旧地址
         if (!isParseResultCurrent(gen)) return;
         if (isSuper) {
-            if (rs == null || !rs.has("url")) return;
+            if (rs == null || !rs.has("url")) {
+                // 超级解析的 json 并行兜底失败:不静默——触发自动换下一个解析器继续试,
+                // 避免"嗅探失败后无备胎可换直接弹错"(用户实测其他软件切到第3个解析就能播)。
+                if (host.view() != null) {
+                    PlaybackViewBridge bridge = host.view();
+                    bridge.runOnUi(() -> errorWithRetry(str(R.string.player_parse_error), false));
+                }
+                return;
+            }
             stopLoadWebView(false);
         }
         HashMap<String, String> headers = PlaybackController.extractHeaders(rs);

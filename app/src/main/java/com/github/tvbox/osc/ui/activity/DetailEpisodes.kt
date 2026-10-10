@@ -79,20 +79,6 @@ internal fun EpisodeRow(
     playIndex: Int,
     currentFlag: String?,
 ) {
-    // 默认折叠:只露出包含"当前播放集"的一排(5 集),跟随播放进度移动;
-    // 点「展开」显示全部,再点「收起」回到跟随当前集的一排
-    var expanded by remember { mutableStateOf(false) }
-    val showExpand = episodes.size > EPISODES_COLLAPSED_COUNT
-    // 折叠窗口:以当前播放集为基准,往前多留一集,窗口内恰好 5 集
-    val windowStart = if (showExpand) {
-        (playIndex - 1).coerceIn(0, episodes.size - EPISODES_COLLAPSED_COUNT)
-    } else 0
-    val visibleEpisodes = if (expanded || !showExpand) {
-        episodes
-    } else {
-        episodes.subList(windowStart, windowStart + EPISODES_COLLAPSED_COUNT)
-    }
-    // 展开显示全部时,playIndex 就是全集索引,直接高亮;折叠窗口时同理(playIndex 恒为显示列表内当前集索引)
     Column(
         modifier = Modifier
             .padding(start = 6.dp, end = 6.dp, top = 12.dp)
@@ -124,15 +110,6 @@ internal fun EpisodeRow(
                 text = stringResource(if (info.reverseSort) R.string.detail_order_asc else R.string.detail_order_desc),
                 onClick = { vm.toggleReverse() },
             )
-            if (showExpand) {
-                Spacer(Modifier.width(8.dp))
-                PillAction(
-                    // 默认折叠:显示「展开」;展开后显示「收起」
-                    iconRes = if (expanded) R.drawable.ic_episode_grid_all else R.drawable.ic_episode_reverse,
-                    text = stringResource(if (expanded) R.string.detail_collapse else R.string.detail_expand),
-                    onClick = { expanded = !expanded },
-                )
-            }
         }
         FlowRow(
             modifier = Modifier
@@ -140,21 +117,24 @@ internal fun EpisodeRow(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
+            maxItemsInEachRow = EPISODES_PER_ROW,
         ) {
-            visibleEpisodes.forEachIndexed { windowIndex, ep ->
-                // 窗口内索引换算为全集绝对索引(展开时窗口=全集,等价于 windowIndex)
-                val absoluteIndex = if (expanded || !showExpand) windowIndex else windowStart + windowIndex
+            episodes.forEachIndexed { index, ep ->
                 FilterChip(
-                    selected = absoluteIndex == playIndex,
-                    onClick = { vm.onEpisodeClick(absoluteIndex) },
+                    selected = index == playIndex,
+                    onClick = { vm.onEpisodeClick(index) },
                     label = {
                         Text(
-                            text = episodeLabel(ep.name, info.name, absoluteIndex + 1),
+                            text = episodeLabel(ep.name, info.name, index + 1),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.labelMedium,
                         )
                     },
-                    shape = RoundedCornerShape(20.dp),
+                    // 固定为等宽方形卡片:集数标签(如"1/2/3…")各集一致,编号超长(如 100 集)也不撑大
+                    modifier = Modifier.size(width = 56.dp, height = 40.dp),
+                    shape = RoundedCornerShape(10.dp),
                     colors = MaterialTheme.colorScheme.filterChipColors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainer,
                     ),
@@ -164,8 +144,8 @@ internal fun EpisodeRow(
     }
 }
 
-/** 选集折叠时默认露出的集数(正好一排 5 个) */
-private const val EPISODES_COLLAPSED_COUNT = 5
+/** 选集卡片每行固定几个(等宽固定尺寸,100 集也不撑大) */
+private const val EPISODES_PER_ROW = 5
 
 @Composable
 private fun PillAction(iconRes: Int, text: String, onClick: () -> Unit) {
