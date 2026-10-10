@@ -17,6 +17,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 
 sealed interface LoadState {
@@ -38,7 +43,15 @@ fun LoadStateBox(
 ) {
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         when (state) {
-            LoadState.Loading -> loadingContent()
+            LoadState.Loading -> Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.semantics {
+                    liveRegion = LiveRegionMode.Polite
+                    contentDescription = stringResource(R.string.common_loading_more)
+                },
+            ) {
+                loadingContent()
+            }
 
             LoadState.Empty -> if (emptyIconRes == null) {
                 StateText(emptyText)

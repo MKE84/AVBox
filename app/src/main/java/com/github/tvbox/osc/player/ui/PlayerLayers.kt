@@ -33,6 +33,11 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -243,7 +248,7 @@ private fun BoxScope.SideButton(
 ) {
     Image(
         painter = painterResource(iconRes),
-        contentDescription = contentDescription,
+        contentDescription = null,
         alpha = if (visible) 1f else 0f,
         modifier = Modifier
             .align(if (startSide) Alignment.CenterStart else Alignment.CenterEnd)
@@ -251,11 +256,17 @@ private fun BoxScope.SideButton(
             .size(iconSize)
             .then(
                 if (visible) {
-                    Modifier.pointerInput(Unit) {
-                        detectTapGestures(onTap = { onClick() })
-                    }
-                } else {
                     Modifier
+                        .semantics {
+                            role = Role.Button
+                            this.contentDescription = contentDescription
+                        }
+                        .pointerInput(Unit) {
+                            detectTapGestures(onTap = { onClick() })
+                        }
+                } else {
+                    // 隐藏态：同时移出语义树（不只有 alpha=0，读屏也读不到）
+                    Modifier.clearAndSetSemantics {}
                 }
             ),
     )

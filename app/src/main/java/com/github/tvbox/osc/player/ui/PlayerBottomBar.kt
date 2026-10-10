@@ -36,6 +36,10 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -303,9 +307,14 @@ private fun CurrentTimeText(state: PlayerUiState, modifier: Modifier = Modifier)
 @Composable
 private fun PreviewPlayPauseButton(state: PlayerUiState, actions: PlayerActions) {
     val playing = state.playbackActive
+    val label = stringResource(if (playing) R.string.common_pause else R.string.common_play)
     Box(
         modifier = Modifier
             .size(PreviewPlayPauseBox)
+            .semantics {
+                role = Role.Button
+                contentDescription = label
+            }
             .pointerInput(Unit) {
                 detectTapGestures(onTap = { actions.onPlayPauseClicked() })
             },
@@ -315,7 +324,7 @@ private fun PreviewPlayPauseButton(state: PlayerUiState, actions: PlayerActions)
             painter = painterResource(
                 if (playing) R.drawable.player_ic_pause else R.drawable.player_ic_play
             ),
-            contentDescription = stringResource(if (playing) R.string.common_pause else R.string.common_play),
+            contentDescription = null,
             colorFilter = ColorFilter.tint(Color.White.copy(alpha = 0.9f)),
             modifier = Modifier.size(22.dp),
         )

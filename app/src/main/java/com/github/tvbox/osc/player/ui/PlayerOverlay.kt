@@ -32,6 +32,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -243,6 +248,10 @@ internal fun CenterControlIcon(
         Modifier
             .size(box)
             .background(Color.Black.copy(alpha = 0.35f), shape)
+            .semantics {
+                role = Role.Button
+                contentDescription = label
+            }
             .pointerInput(onClick) {
                 detectTapGestures(onTap = { onClick() })
             },
@@ -250,7 +259,7 @@ internal fun CenterControlIcon(
     ) {
         Image(
             painter = icon,
-            contentDescription = label,
+            contentDescription = null,
             modifier = Modifier.size(box * 0.55f),
         )
     }
@@ -268,6 +277,10 @@ internal fun PlayerMenuButton(
 ) {
     var pressed by remember { mutableStateOf(false) }
     val buttonModifier = modifier
+        .semantics {
+            role = Role.Button
+            contentDescription = text
+        }
         .pointerInput(onClick, onLongClick) {
             detectTapGestures(
                 onPress = {
@@ -308,7 +321,12 @@ internal fun PlayerPillIconButton(
 ) {
     var pressed by remember { mutableStateOf(false) }
     Box(
-        modifier.pointerInput(onClick, onLongClick) {
+        modifier
+            .semantics {
+                role = Role.Button
+                contentDescription = label
+            }
+            .pointerInput(onClick, onLongClick) {
             detectTapGestures(
                 onPress = {
                     pressed = true
@@ -343,7 +361,9 @@ internal fun PlayerPillIconButton(
                 fontWeight = FontWeight.Medium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 2.dp),
+                modifier = Modifier
+                    .padding(top = 2.dp)
+                    .clearAndSetSemantics {},
             )
         }
     }

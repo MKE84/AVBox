@@ -17,6 +17,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import com.github.tvbox.osc.R
@@ -48,7 +53,11 @@ fun BoxScope.PlayerInfoOsd(state: PlayerUiState, actions: PlayerActions, maxWidt
                 end = playerDim(R.dimen.vs_12),
                 top = playerDim(R.dimen.vs_10),
                 bottom = playerDim(R.dimen.vs_10),
-            ),
+            )
+            .semantics {
+                role = Role.Button
+                contentDescription = stringResource(R.string.player_info)
+            },
         verticalArrangement = Arrangement.spacedBy(playerDim(R.dimen.vs_5)),
     ) {
         if (landscape) {

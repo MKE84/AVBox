@@ -27,6 +27,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalConfiguration
@@ -98,6 +102,10 @@ fun PlayerTopBar(state: PlayerUiState, actions: PlayerActions) {
                     Box(
                         Modifier
                             .size(TopBarLineHeight)
+                            .semantics {
+                                role = Role.Button
+                                contentDescription = stringResource(R.string.common_back)
+                            }
                             .pointerInput(Unit) {
                                 detectTapGestures(onTap = { actions.onBackClicked() })
                             },
@@ -105,7 +113,7 @@ fun PlayerTopBar(state: PlayerUiState, actions: PlayerActions) {
                     ) {
                         Image(
                             painter = painterResource(R.drawable.player_ic_back),
-                            contentDescription = stringResource(R.string.common_back),
+                            contentDescription = null,
                             modifier = Modifier.size(24.dp),
                         )
                     }

@@ -33,6 +33,8 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -91,6 +93,7 @@ fun SearchField(
                 onValueChange = onQueryChange,
                 modifier = Modifier
                     .weight(1f)
+                    .semantics { contentDescription = hint }
                     .onFocusChanged { fieldFocused = it.isFocused },
                 singleLine = true,
                 textStyle = MaterialTheme.typography.bodyMedium.copy(
