@@ -41,13 +41,14 @@ fun LoadStateBox(
     emptyIconRes: Int? = null,
     loadingContent: @Composable () -> Unit = { ContainedLoadingIndicator(Modifier.size(64.dp)) },
 ) {
+    val loadingLabel = stringResource(R.string.common_loading_more)
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         when (state) {
             LoadState.Loading -> Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier.semantics {
                     liveRegion = LiveRegionMode.Polite
-                    contentDescription = stringResource(R.string.common_loading_more)
+                    contentDescription = loadingLabel
                 },
             ) {
                 loadingContent()

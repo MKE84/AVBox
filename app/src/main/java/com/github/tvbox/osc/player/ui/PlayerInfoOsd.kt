@@ -35,6 +35,7 @@ fun BoxScope.PlayerInfoOsd(state: PlayerUiState, actions: PlayerActions, maxWidt
     if (!state.infoOsdVisible) return
     val edge = playerEdgePadding()
     val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val infoLabel = stringResource(R.string.player_info)
     Column(
         modifier = Modifier
             .align(Alignment.TopStart)
@@ -56,7 +57,7 @@ fun BoxScope.PlayerInfoOsd(state: PlayerUiState, actions: PlayerActions, maxWidt
             )
             .semantics {
                 role = Role.Button
-                contentDescription = stringResource(R.string.player_info)
+                contentDescription = infoLabel
             },
         verticalArrangement = Arrangement.spacedBy(playerDim(R.dimen.vs_5)),
     ) {

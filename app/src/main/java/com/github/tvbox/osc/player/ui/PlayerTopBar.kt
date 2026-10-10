@@ -49,6 +49,7 @@ private val PreviewTopPadding = 4.dp
 @Composable
 fun PlayerTopBar(state: PlayerUiState, actions: PlayerActions) {
     val rightVisible = state.topRightVisible && !state.previewMode
+    val backLabel = stringResource(R.string.common_back)
     val previewSizeVisible = state.previewMode && state.topLeftVisible
     val anyVisible = state.topLeftVisible || rightVisible
     // 左右边距按窗口宽度分档（竖屏预览 16dp / 横屏全屏与平板 48dp，见 playerEdgePadding）
@@ -104,7 +105,7 @@ fun PlayerTopBar(state: PlayerUiState, actions: PlayerActions) {
                             .size(TopBarLineHeight)
                             .semantics {
                                 role = Role.Button
-                                contentDescription = stringResource(R.string.common_back)
+                                contentDescription = backLabel
                             }
                             .pointerInput(Unit) {
                                 detectTapGestures(onTap = { actions.onBackClicked() })
