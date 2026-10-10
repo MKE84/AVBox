@@ -16,10 +16,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -41,13 +37,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.tvbox.osc.R
-import com.github.tvbox.osc.bean.Movie
 import com.github.tvbox.osc.ui.components.LocalSheetDismiss
-import com.github.tvbox.osc.ui.components.VodCard
 import com.github.tvbox.osc.ui.components.AVBoxBottomSheet
 import com.github.tvbox.osc.ui.theme.filterChipColors
 import com.github.tvbox.osc.ui.theme.warning
-import com.github.tvbox.osc.ui.page.openVodCardOrDetail
 
 /** 分区标题前的裸图标(22dp、onSurface 着色):画稿图标与内置图标共用 */
 @Composable
@@ -250,44 +243,6 @@ private fun sourceChipAccent(latency: Long): Color {
 }
 
 @Composable
-internal fun RelatedSection(
-    activity: DetailActivity,
-    vm: DetailViewModel,
-    onCardLongClick: (Movie.Video) -> Unit = {},
-) {
-    val relatedVideos by vm.relatedVideos.collectAsState()
-    if (relatedVideos.isEmpty()) return
-    Column(modifier = Modifier.padding(top = 20.dp)) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
-        ) {
-            SectionTitleIcon(painterResource(R.drawable.ic_detail_recommend))
-            Text(
-                text = stringResource(R.string.detail_recommend),
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(start = 8.dp),
-            )
-        }
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            itemsIndexed(
-                relatedVideos,
-                key = { _, v -> (v.sourceKey ?: "") + "|" + (v.id ?: "") },
-            ) { _, video ->
-                VodCard(
-                    video = video,
-                    onClick = { activity.openVodCardOrDetail(video) },
-                    onLongClick = { onCardLongClick(video) },
-                    modifier = Modifier.width(110.dp),
-                )
-            }
-        }
-    }
-}
 
 private val CR_LINK_REGEX = Regex("\\[a=cr:(?:\\{.*?\\}|\\[.*?\\])/](.*?)\\[/a]")
 private val WHITESPACE_REGEX = Regex("\\s")

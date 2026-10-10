@@ -256,18 +256,15 @@ internal fun DetailContent(
             }
         }
 
-        if (episodes.isNotEmpty()) {
-            item(key = "episodes") {
-                EpisodeRow(vm, info, episodes, playIndex, currentFlag)
-            }
-        }
-
+        // 换源(路线第一)置顶、选集(第二)紧随其后放最下面、相关推荐已移除
         item(key = "sources") {
             SourceSection(vm, currentSourceName = displaySourceName, revision = revision)
         }
 
-        item(key = "related") {
-            RelatedSection(activity, vm, onCardLongClick)
+        if (episodes.isNotEmpty()) {
+            item(key = "episodes") {
+                EpisodeRow(vm, info, episodes, playIndex, currentFlag)
+            }
         }
     }
 }

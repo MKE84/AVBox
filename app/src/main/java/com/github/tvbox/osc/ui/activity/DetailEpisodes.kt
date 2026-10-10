@@ -6,6 +6,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -20,7 +22,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.grid.itemsIndexed as gridItemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -70,6 +71,7 @@ private fun episodeLabel(raw: String?, vodName: String?, fallback: Int): String 
 }
 
 @Composable
+@OptIn(ExperimentalLayoutApi::class)
 internal fun EpisodeRow(
     vm: DetailViewModel,
     info: VodInfo,
@@ -77,6 +79,10 @@ internal fun EpisodeRow(
     playIndex: Int,
     currentFlag: String?,
 ) {
+    // 默认折叠:只露出第一排(5 集);点「展开」显示全部,再点「收起」回到一排
+    var expanded by remember { mutableStateOf(false) }
+    val showExpand = episodes.size > EPISODES_COLLAPSED_COUNT
+    val visibleEpisodes = if (expanded || !showExpand) episodes else episodes.take(EPISODES_COLLAPSED_COUNT)
     Column(
         modifier = Modifier
             .padding(start = 6.dp, end = 6.dp, top = 12.dp)
@@ -108,31 +114,24 @@ internal fun EpisodeRow(
                 text = stringResource(if (info.reverseSort) R.string.detail_order_asc else R.string.detail_order_desc),
                 onClick = { vm.toggleReverse() },
             )
-            Spacer(Modifier.width(8.dp))
-            PillAction(
-                iconRes = R.drawable.ic_episode_grid_all,
-                text = stringResource(R.string.common_all),
-                onClick = { vm.showEpisodeSheet() },
-            )
-        }
-        val listState = rememberLazyListState()
-        var prevReverseSort by remember { mutableStateOf(info.reverseSort) }
-        LaunchedEffect(playIndex, currentFlag, episodes.size, info.reverseSort) {
-            if (episodes.isEmpty()) return@LaunchedEffect
-            val reverseChanged = info.reverseSort != prevReverseSort
-            prevReverseSort = info.reverseSort
-            if (reverseChanged) {
-                listState.scrollToItem(0)
-            } else if (playIndex >= 0) {
-                listState.scrollToItem(minOf(playIndex, episodes.size - 1))
+            if (showExpand) {
+                Spacer(Modifier.width(8.dp))
+                PillAction(
+                    // 默认折叠:显示「展开」;展开后显示「收起」
+                    iconRes = if (expanded) R.drawable.ic_episode_grid_all else R.drawable.ic_episode_reverse,
+                    text = stringResource(if (expanded) R.string.detail_collapse else R.string.detail_expand),
+                    onClick = { expanded = !expanded },
+                )
             }
         }
-        LazyRow(
-            state = listState,
-            contentPadding = PaddingValues(horizontal = 16.dp),
+        FlowRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            itemsIndexed(episodes) { index, ep ->
+            visibleEpisodes.forEachIndexed { index, ep ->
                 FilterChip(
                     selected = index == playIndex,
                     onClick = { vm.onEpisodeClick(index) },
@@ -152,6 +151,9 @@ internal fun EpisodeRow(
         }
     }
 }
+
+/** 选集折叠时默认露出的集数(正好一排 5 个) */
+private const val EPISODES_COLLAPSED_COUNT = 5
 
 @Composable
 private fun PillAction(iconRes: Int, text: String, onClick: () -> Unit) {
