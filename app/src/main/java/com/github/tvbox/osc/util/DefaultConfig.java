@@ -27,6 +27,29 @@ import java.util.regex.Pattern;
  */
 public class DefaultConfig {
 
+    /**
+     * 内置订阅源(接口)。
+     *
+     * 作用:让装完直接能用 —— 首启 / 用户清空源之后,自动把这个源写进配置,
+     * 不需要手动粘贴地址。用户在设置里换成自己的源时以用户的为准(只在实例里为空时才注入)。
+     */
+    public static final String BUILTIN_API_URL = "https://sub.lytvs.top/get?token=cj_997a6934";
+
+    /** 把内置源写进配置(仅当当前没有源时)。返回最终生效的地址。 */
+    public static String ensureBuiltinApiUrl() {
+        try {
+            String current = com.github.tvbox.osc.util.KV.get(com.github.tvbox.osc.util.HawkConfig.API_URL, "");
+            if (current != null && !current.trim().isEmpty()) return current;
+            if (BUILTIN_API_URL.isEmpty()) return "";
+            com.github.tvbox.osc.util.KV.put(com.github.tvbox.osc.util.HawkConfig.API_URL, BUILTIN_API_URL);
+            LOG.i("echo-builtin-api-url injected");
+            return BUILTIN_API_URL;
+        } catch (Throwable th) {
+            LOG.e("DefaultConfig", th);
+            return "";
+        }
+    }
+
     public static List<MovieSort.SortData> adjustSort(String sourceKey, List<MovieSort.SortData> list, boolean withMy) {
         List<MovieSort.SortData> data = new ArrayList<>();
         if (sourceKey != null && list != null) {

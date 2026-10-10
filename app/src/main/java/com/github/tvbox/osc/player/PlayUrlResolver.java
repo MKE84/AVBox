@@ -434,6 +434,8 @@ final class PlayUrlResolver {
 
     /** 解析失败自动尝试下一个解析器(不提示),全部试完仍失败才弹错误 */
     private void errorWithRetry(String err, boolean finish) {
+        // 走到"重试"说明上一次结果不可用:短缓存必须作废,否则会拿同一份地址反复重试
+        SuperParse.clearResultCache();
         if (finish) {
             if (host.view() != null) host.view().showErrorWithRetry(err, true);
             return;
@@ -544,7 +546,9 @@ final class PlayUrlResolver {
                             parseThreadPool.execute(new Runnable() {
                                 @Override
                                 public void run() {
-                                    JSONObject res = SuperParse.doJsonJx(parseTargets.jsonJx, webUrl);
+                                    // 并行段 = json 聚合 与 HTTP 直出同时竞速,谁先出地址用谁。
+                                    // WebView 嗅探已在上面并行开着,三条腿谁先到谁起播,互不等待。
+                                    JSONObject res = SuperParse.doRaceJx(parseTargets, webUrl, sf);
                                     rsJsonJX(gen, res, true);
                                 }
                             });

@@ -93,6 +93,9 @@ public class App extends Application {
                 KV.put(HawkConfig.PLAY_TYPE, 2);
             }
         }
+        // 内置订阅源:首启 / 用户清空源之后自动补上,装完即用。
+        // 用户自己填过源就不动(只在为空时注入)。
+        com.github.tvbox.osc.util.DefaultConfig.ensureBuiltinApiUrl();
     }
 
     public static App getInstance() {

@@ -39,6 +39,7 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.X509TrustManager;
 
 import okhttp3.Cache;
+import okhttp3.ConnectionPool;
 import okhttp3.Dns;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttp;
@@ -388,6 +389,10 @@ public class OkGoHelper {
         builder.writeTimeout(DEFAULT_MILLISECONDS, TimeUnit.MILLISECONDS);
         builder.connectTimeout(DEFAULT_MILLISECONDS, TimeUnit.MILLISECONDS);
 
+        // 连接池:默认只有 5 条空闲连接、5 分钟回收。解析/采集/封面是"同一批域名反复请求"的形态,
+        // 池子太小会让并发请求排在 DNS+TCP+TLS 后面,表现成整体发涩。放大到 32 条并延长保活,
+        // 让重复请求直接复用连接。
+        builder.connectionPool(new ConnectionPool(32, 5, TimeUnit.MINUTES));
         builder.dns(new CustomDns());
         builder.proxySelector(proxySelector());
         builder.proxyAuthenticator(proxyAuthenticator());
@@ -401,7 +406,8 @@ public class OkGoHelper {
 
         OkHttpClient okHttpClient = builder.build();
         // 原在 initPicasso 内设置(非 Picasso 专属):提升每主机并发上限
-        okHttpClient.dispatcher().setMaxRequestsPerHost(10);
+        // 解析竞速会同时对同一域名的多个地址发起请求,10 会排队;提到 16 让竞速真正并行
+        okHttpClient.dispatcher().setMaxRequestsPerHost(16);
         OkGo.getInstance().setOkHttpClient(okHttpClient);
 
         defaultClient = okHttpClient;
@@ -428,6 +434,10 @@ public class OkGoHelper {
         builder.writeTimeout(DEFAULT_MILLISECONDS, TimeUnit.MILLISECONDS);
         builder.connectTimeout(DEFAULT_MILLISECONDS, TimeUnit.MILLISECONDS);
 
+        // 连接池:默认只有 5 条空闲连接、5 分钟回收。解析/采集/封面是"同一批域名反复请求"的形态,
+        // 池子太小会让并发请求排在 DNS+TCP+TLS 后面,表现成整体发涩。放大到 32 条并延长保活,
+        // 让重复请求直接复用连接。
+        builder.connectionPool(new ConnectionPool(32, 5, TimeUnit.MINUTES));
         builder.dns(new CustomDns());
         builder.proxySelector(proxySelector());
         builder.proxyAuthenticator(proxyAuthenticator());
@@ -441,7 +451,8 @@ public class OkGoHelper {
 
         OkHttpClient okHttpClient = builder.build();
         // 与 init 同步:漏掉这行会让每主机并发上限退回默认 5
-        okHttpClient.dispatcher().setMaxRequestsPerHost(10);
+        // 解析竞速会同时对同一域名的多个地址发起请求,10 会排队;提到 16 让竞速真正并行
+        okHttpClient.dispatcher().setMaxRequestsPerHost(16);
         OkGo.getInstance().setOkHttpClient(okHttpClient);
 
         defaultClient = okHttpClient;

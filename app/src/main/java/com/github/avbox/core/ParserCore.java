@@ -50,8 +50,29 @@ public final class ParserCore {
 
     // ==================== 静态白名单判定 ====================
 
-    /** 是否放行该解析器(与 ApiConfig 的过滤率一致) */
+    /**
+     * 是否放行该解析器。
+     *
+     * 改造(2026-10):原实现只放行 playm3u8.cn / ckplayer.vip 两个域名 —— 这是把
+     * "历史上比较好用的一小撮站"当成了**唯一准入**,结果配置里几十个解析站全被挡在门外,
+     * 表现成"解析池看起来很大、实际只有两个站在跑",失败率自然高。
+     *
+     * 现在的口径:解析站地址本身只做**格式合法性**校验(必须是 http(s) 且不是占位符),
+     * 质量好坏交给 ParseHealth 的实绩评分与熔断去筛 —— 好站自然排前面,坏站自然被冷落,
+     * 而不是靠一份写死的域名名单一刀切。
+     */
     public static boolean acceptable(String url) {
+        if (url == null) return false;
+        String u = url.trim().toLowerCase();
+        if (u.isEmpty()) return false;
+        if (!(u.startsWith("http://") || u.startsWith("https://"))) return false;
+        // 配置里的占位(如 "Web" 系列)不是真解析站
+        if (u.length() < 12) return false;
+        return true;
+    }
+
+    /** 历史优先站(只用于排序加成,不再作为准入条件) */
+    public static boolean isPreferred(String url) {
         if (url == null) return false;
         String u = url.trim().toLowerCase();
         return u.contains("playm3u8.cn") || u.contains("ckplayer.vip");
