@@ -71,6 +71,9 @@ class SearchViewModel : ViewModel() {
 
         private const val HOT_SEARCH_LIMIT = 20
 
+        /** 搜索最多使用的源数量:限 10 个,源越少反应越快 */
+        private const val SEARCH_SOURCE_LIMIT = 10
+
         private const val SUGGEST_URL = "https://suggest.video.iqiyi.com/?if=mobile&key="
 
         private const val SUGGEST_LIMIT = 20
@@ -235,9 +238,11 @@ class SearchViewModel : ViewModel() {
         pendingSources.clear()
         val home = ApiConfig.get().getHomeSourceBean()
         val checked = checkedSources
+        // 限制最多只搜 SEARCH_SOURCE_LIMIT 个源(home 源优先):源越多越慢,限 10 个反应最快
         val sources = ApiConfig.get().getSourceBeanList()
             .filter { it.isSearchable() && (checked == null || checked.containsKey(it.key)) }
             .sortedBy { it.key != home.key }
+            .take(SEARCH_SOURCE_LIMIT)
         arriveSeq = 0
         // 首帧不放任何 Pending 占位:结果边搜边出,出结果的源逐个出现,没结果的源不显示不转圈
         results.value = emptyList()

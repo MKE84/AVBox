@@ -466,6 +466,7 @@ class DetailViewModel : ViewModel() {
         val sources = ApiConfig.get().getSourceBeanList()
             .filter { it.isSearchable() && it.isQuickSearch() && (checked == null || checked.containsKey(it.key)) }
             .sortedBy { it.key != home.key }
+            .take(SOURCE_SEARCH_LIMIT)
         sourcesSearching.value = sources.isNotEmpty()
         relatedVideos.value = emptyList()
         if (sources.isEmpty()) return
@@ -1028,6 +1029,7 @@ class DetailViewModel : ViewModel() {
         private const val DETAIL_FALLBACK_DETAIL_TIMEOUT_MS = 6000L
         private const val SOURCE_SEARCH_TIMEOUT_MS = 30_000L
         private const val SOURCE_SEARCH_CONCURRENCY = 10
+        private const val SOURCE_SEARCH_LIMIT = 10
 
         // i18n: keep —— 源侧"没有数据"的哨兵值;误翻会把空结果判成源报错,详情页提示后自动关闭
         private const val SOURCE_EMPTY_MSG = "数据列表"
