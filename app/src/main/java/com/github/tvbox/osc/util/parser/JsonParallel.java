@@ -40,7 +40,7 @@ public class JsonParallel {
                 .readTimeout(4, java.util.concurrent.TimeUnit.SECONDS)
                 .writeTimeout(4, java.util.concurrent.TimeUnit.SECONDS)
                 .build();
-        final ExecutorService executorService = Executors.newFixedThreadPool(5);
+        final ExecutorService executorService = Executors.newFixedThreadPool(8);
         final List<Future<JSONObject>> futures = new ArrayList<>();
 
         void cancel() {
