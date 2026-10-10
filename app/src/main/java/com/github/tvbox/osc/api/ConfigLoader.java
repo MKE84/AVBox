@@ -416,7 +416,6 @@ final class ConfigLoader {
                 } finally {
                     if (response != null) SpiderLoader.closeQuietly(response.body());
                 }
-            } finally {
                 final String finalResult = result;
                 final String finalError = error;
                 mainHandler.post(new Runnable() {
