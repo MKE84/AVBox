@@ -31,7 +31,6 @@ import com.github.tvbox.osc.base.App;
 import com.github.tvbox.osc.bean.ParseBean;
 import com.github.tvbox.osc.bean.SourceBean;
 import com.github.tvbox.osc.util.AdBlocker;
-import com.github.tvbox.osc.util.ApiLog;
 import com.github.tvbox.osc.util.DefaultConfig;
 import com.github.tvbox.osc.util.HeaderGuard;
 import com.github.tvbox.osc.util.LOG;
@@ -98,7 +97,6 @@ final class PlayUrlResolver {
         public boolean handleMessage(@NonNull Message msg) {
             if (msg.what == MSG_PARSE_TIMEOUT) {
                 stopParse();
-                ApiLog.fail(ApiLog.KIND_API, "-", "嗅探/解析", "超时(" + PARSE_TIMEOUT_MS + "ms)");
                 // 嗅探超时也自动切换下一个解析器(不提示),全部试完才弹错误
                 errorWithRetry(str(R.string.player_error_sniff), false);
                 return true;
@@ -271,7 +269,6 @@ final class PlayUrlResolver {
         String videoUrl = loadFoundVideoUrls.poll();
         if (videoUrl == null) return;
         HashMap<String, String> header = loadFoundVideoUrlsHeader.get(videoUrl);
-        ApiLog.ok(ApiLog.KIND_API, "-", "嗅探命中", 0);
         if (host.view() != null) host.playUrl(videoUrl, header);
     }
 
@@ -332,7 +329,6 @@ final class PlayUrlResolver {
                     LOG.e("PlayUrlResolver", e);
                 }
             }
-            ApiLog.ok(ApiLog.KIND_API, pb.getName(), "嗅探启动:" + webUrl, 0);
             loadWebView(pb.getUrl() + webUrl);
         } else if (pb.getType() == 1) { // json 解析
             if (host.view() != null) host.view().showTip(str(R.string.player_resolving_url), true, false);
@@ -392,7 +388,6 @@ final class PlayUrlResolver {
                         @Override
                         public void onError(Response<String> response) {
                             super.onError(response);
-                            ApiLog.fail(ApiLog.KIND_API, "-", "解析(json:" + pb.getName() + ")", "网络错误");
                             errorWithRetry(str(R.string.player_parse_error), false);
                         }
                     });
@@ -476,7 +471,6 @@ final class PlayUrlResolver {
                 if (host.view() != null) host.view().showErrorWithRetry(err, false);
                 return;
             }
-            ApiLog.ok(ApiLog.KIND_API, next.getName(), "自动切换解析", 0);
             doParse(next);
         } catch (Throwable th) {
             if (host.view() != null) host.view().showErrorWithRetry(err, false);
@@ -841,7 +835,6 @@ final class PlayUrlResolver {
                     || u.contains("vurl") || u.contains(".webm") || u.contains("getvkey");
             if (!videoish) return;
             if (sniffMissLogged.incrementAndGet() > 6) return;
-            ApiLog.fail(ApiLog.KIND_API, parseNameForLog(), "嗅探未命中", abbrev(url) + " | webUrl=" + abbrev(webUrl));
         } catch (Throwable ignored) {
         }
     }
@@ -1004,7 +997,6 @@ final class PlayUrlResolver {
                     loadFoundVideoUrlsHeader.put(url, headers);
                     cacheSniffHit(url);
                     LOG.i("echo-loadFoundVideoUrl:" + url);
-                    ApiLog.ok(ApiLog.KIND_API, "嗅探命中", "起播", 0);
                     if (loadFoundCount.incrementAndGet() == 1) {
                         stopLoadWebView(false);
                         SuperParse.stopJsonJx();

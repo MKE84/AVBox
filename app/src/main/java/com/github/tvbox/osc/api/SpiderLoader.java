@@ -16,7 +16,6 @@ import com.github.catvod.crawler.python.IPyLoader;
 import com.github.tvbox.osc.R;
 import com.github.tvbox.osc.base.App;
 import com.github.tvbox.osc.bean.SourceBean;
-import com.github.tvbox.osc.util.ApiLog;
 import com.github.tvbox.osc.util.BootGuard;
 import com.github.tvbox.osc.util.DefaultConfig;
 import com.github.tvbox.osc.util.FileUtils;
@@ -351,17 +350,6 @@ final class SpiderLoader {
     // ---------- spider 获取(点播) ----------
 
     Spider getCSP(SourceBean sourceBean) {
-        // 日志关闭时零开销:一次 volatile 读布尔,后面所有埋点都跳过
-        final boolean logOn = ApiLog.enabled();
-        final long startMs = logOn ? System.currentTimeMillis() : 0;
-        final String kind = logOn ? ApiLog.kindOf(sourceBean.getApi()) : null;
-        final String sourceName = logOn
-                ? (sourceBean.getName() == null ? sourceBean.getKey() : sourceBean.getName())
-                : null;
-        if (logOn) {
-            // 登记源类型,供 BoundedCall 记录日志时归类(避免跨包反查源列表)
-            ApiLog.registerSource(sourceBean.getKey(), sourceBean.getApi());
-        }
         Spider spider;
         if (sourceBean.getApi().endsWith(".js") || sourceBean.getApi().contains(".js?")) {
             currentPyKey = "";
@@ -386,15 +374,7 @@ final class SpiderLoader {
                 }
             }
         }
-        long cost = System.currentTimeMillis() - startMs;
         boolean failed = spider == null || spider instanceof SpiderNull;
-        if (logOn) {
-            if (failed) {
-                ApiLog.fail(kind, sourceName, "加载源", "加载失败(空 spider)", cost);
-            } else {
-                ApiLog.ok(kind, sourceName, "加载源", cost);
-            }
-        }
         return failed ? new SpiderNull() : spider;
     }
 

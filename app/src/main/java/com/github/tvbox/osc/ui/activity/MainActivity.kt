@@ -46,6 +46,8 @@ class MainActivity : BaseActivity() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R && !PermissionHelper.isStorageGranted(this)) {
             PermissionHelper.requestStorage(this) { _, _ -> }
         }
+        // 崩溃日志需写 /storage/emulated/0/AVBox/,统一申请所有文件访问(全进程仅弹一次)
+        PermissionHelper.requestStorageOnce(this)
         PermissionHelper.requestNotificationIfNeeded(this)
         findViewById<ComposeView>(R.id.compose_view).setContent {
             AVBoxTheme {

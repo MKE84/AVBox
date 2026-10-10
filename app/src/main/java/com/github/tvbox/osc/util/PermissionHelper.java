@@ -48,6 +48,24 @@ public final class PermissionHelper {
         XXPermissions.with(activity).permissions(permissions).request(callback);
     }
 
+    /** 存储权限一次性请求闸门(见 {@link #requestStorageOnce}) */
+    private static volatile boolean storageAsked;
+
+    /**
+     * 启动时申请"所有文件访问"(MANAGE_EXTERNAL_STORAGE):崩溃日志需要写
+     * /storage/emulated/0/AVBox/,未授权时写公共目录会失败。全进程只弹一次,
+     * 拒绝后再申请也只会反复拉起系统设置页(同通知权限的"权限页风暴"问题)。
+     */
+    public static void requestStorageOnce(Activity activity) {
+        if (activity == null) return;
+        if (storageAsked) return;
+        if (isStorageGranted(activity)) return;
+        storageAsked = true;
+        requestStorage(activity, (permissions, allGranted) -> {
+            // 拒绝不影响主流程:崩溃日志会回退到 app 专属外部目录(文件管理器仍可见)
+        });
+    }
+
     /**
      * 申请通知权限(仅 Android 13+ 需要;低版本该权限由系统默认授予,申请也无意义)。
      *

@@ -7,7 +7,6 @@ import com.github.catvod.crawler.Spider;
 import com.github.catvod.crawler.js.JsSpider;
 import com.undcover.freedom.pyramid.PythonSpider;
 import com.github.catvod.net.OkHttp;
-import com.github.tvbox.osc.util.ApiLog;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -47,7 +46,6 @@ public class SpiderCore {
     public static Spider create(Context ctx, String key, String api) {
         if (ctx == null || TextUtils.isEmpty(api)) return null;
         SourceKind kind = detect(api);
-        ApiLog.registerSource(key, api);
         switch (kind) {
             case PY:
                 return py(ctx, key, api);
@@ -77,7 +75,6 @@ public class SpiderCore {
             s.init(ctx, normalize(api));
             return s;
         } catch (Exception e) {
-            ApiLog.fail(ApiLog.KIND_API, key, "core.api", e.getMessage());
             return null;
         }
     }
@@ -90,7 +87,6 @@ public class SpiderCore {
             s.init(ctx, api);
             return s;
         } catch (Exception e) {
-            ApiLog.fail(ApiLog.KIND_PY, key, "core.py", e.getMessage());
             return null;
         }
     }
@@ -103,7 +99,6 @@ public class SpiderCore {
             s.init(ctx, api);
             return s;
         } catch (Exception e) {
-            ApiLog.fail(ApiLog.KIND_JS, key, "core.js", e.getMessage());
             return null;
         }
     }

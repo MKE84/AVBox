@@ -8,7 +8,6 @@ import com.github.catvod.crawler.Spider;
 import com.github.tvbox.osc.api.ApiConfig;
 import com.github.tvbox.osc.bean.AbsXml;
 import com.github.tvbox.osc.bean.SourceBean;
-import com.github.tvbox.osc.util.ApiLog;
 import com.github.tvbox.osc.util.BoundedCall;
 import com.github.tvbox.osc.util.LOG;
 import com.google.gson.Gson;
@@ -84,11 +83,9 @@ final class SearchLoader {
             if (!TextUtils.isEmpty(search)) {
                 resultParser.json(result, search, key, searchToken);
             } else {
-                ApiLog.fail(ApiLog.kindOfKey(key), key, "搜索", "返回空");
                 resultParser.json(result, "", key, searchToken);
             }
         } catch (Throwable th) {
-            ApiLog.fail(ApiLog.kindOfKey(key), key, "搜索", th.getMessage());
             LOG.e("SourceViewModel", th);
             resultParser.json(result, "", key, searchToken);
         }

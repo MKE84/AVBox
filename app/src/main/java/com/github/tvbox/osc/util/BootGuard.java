@@ -1,5 +1,6 @@
 package com.github.tvbox.osc.util;
 
+import android.content.Context;
 import android.os.SystemClock;
 
 
@@ -65,7 +66,11 @@ public final class BootGuard {
     public static void install() {
         final Thread.UncaughtExceptionHandler previous = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
-            // 不写标记的崩溃不参与停用判定,否则界面 bug 也会把源算成"崩过"
+            // 先记录堆栈(写文件 + 屏幕显示)
+            String stack = captureStack(thread, throwable);
+            writeCrashStack(stack);
+            showCrashOnScreen(stack);
+            // 不写标记的崩溃不参与停用判定
             if (looksSourceRelatedSafely(throwable)) {
                 writeCrashMarker();
             } else {
@@ -73,6 +78,79 @@ public final class BootGuard {
             }
             if (previous != null) previous.uncaughtException(thread, throwable);
         });
+    }
+
+    /** 把线程+异常拼成可读的堆栈文本 */
+    private static String captureStack(Thread thread, Throwable throwable) {
+        if (throwable == null) return "(throwable is null)";
+        StringBuilder sb = new StringBuilder(2048);
+        sb.append("thread=").append(thread != null ? thread.getName() : "?").append('\n');
+        sb.append("time=").append(System.currentTimeMillis()).append('\n');
+        java.io.StringWriter sw = new java.io.StringWriter();
+        throwable.printStackTrace(new java.io.PrintWriter(sw));
+        sb.append(sw);
+        // 追加 cause 链(有些框架会把真异常包装)
+        Throwable cause = throwable.getCause();
+        int depth = 0;
+        while (cause != null && cause != throwable && depth < 5) {
+            sb.append("\nCaused by: ");
+            java.io.StringWriter cw = new java.io.StringWriter();
+            cause.printStackTrace(new java.io.PrintWriter(cw));
+            sb.append(cw);
+            cause = cause.getCause();
+            depth++;
+        }
+        return sb.toString();
+    }
+
+    /** 把堆栈文本写入共享存储 /storage/emulated/0/AVBox/crash_*.txt,
+     *  用户可在手机文件管理器直接读取。失败则回退 app 外部专属目录(也可见)。 */
+    static void writeCrashStack(String stack) {
+        if (stack == null) return;
+        String name = "crash_" + new java.text.SimpleDateFormat("yyyyMMdd_HHmmss",
+                java.util.Locale.US).format(new java.util.Date()) + ".txt";
+        byte[] bytes;
+        try { bytes = stack.getBytes("UTF-8"); } catch (Throwable e) { return; }
+        // 优先写公共目录 /storage/emulated/0/AVBox/
+        String pub = "/storage/emulated/0/AVBox";
+        java.io.File pubDir = new java.io.File(pub);
+        try {
+            if (!pubDir.isDirectory()) pubDir.mkdirs();
+            java.io.File f = new java.io.File(pubDir, name);
+            try (java.io.FileOutputStream out = new java.io.FileOutputStream(f)) {
+                out.write(bytes); out.flush();
+                LOG.i("boot-guard: crash -> " + f.getAbsolutePath());
+                return;
+            }
+        } catch (Throwable ignored) {
+        }
+        // 回退: app 外部专属目录(文件管理器可见)
+        try {
+            Context ctx = AppContextHolder.context();
+            if (ctx == null) return;
+            java.io.File extDir = ctx.getExternalFilesDir(null);
+            if (extDir == null) extDir = ctx.getFilesDir(); // 最差回退
+            java.io.File f = new java.io.File(extDir, name);
+            try (java.io.FileOutputStream out = new java.io.FileOutputStream(f)) {
+                out.write(bytes); out.flush();
+                LOG.i("boot-guard: crash(fallback) -> " + f.getAbsolutePath());
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /** 崩溃时直接启动 CrashDisplayActivity,让用户截图取证(无电脑场景)。 */
+    static void showCrashOnScreen(String stack) {
+        try {
+            Context ctx = AppContextHolder.context();
+            if (ctx == null || stack == null) return;
+            android.content.Intent intent = new android.content.Intent(ctx, CrashDisplayActivity.class);
+            intent.putExtra(CrashDisplayActivity.EXTRA_STACK, stack);
+            intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK | android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            ctx.startActivity(intent);
+            android.os.SystemClock.sleep(800); // 给新 Activity 一点时间再走原 kill 流程
+        } catch (Throwable ignored) {
+        }
     }
 
     /**

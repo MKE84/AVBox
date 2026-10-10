@@ -10,7 +10,6 @@ import android.text.TextUtils;
 import com.github.tvbox.osc.R;
 import com.github.tvbox.osc.base.App;
 import com.github.tvbox.osc.util.ApiLineSignal;
-import com.github.tvbox.osc.util.ApiLog;
 import com.github.tvbox.osc.util.BootGuard;
 import com.github.tvbox.osc.util.FileUtils;
 import com.github.tvbox.osc.util.HawkConfig;
@@ -417,13 +416,7 @@ final class ConfigLoader {
                 } finally {
                     if (response != null) SpiderLoader.closeQuietly(response.body());
                 }
-                // 全局接口日志:记录本次配置下载结果(成功/失败 + 耗时),接口日志页可见
-                long cost = System.currentTimeMillis() - startCost;
-                if (TextUtils.isEmpty(error)) {
-                    ApiLog.ok(ApiLog.KIND_API, configKey, "拉取配置", cost);
-                } else {
-                    ApiLog.fail(ApiLog.KIND_API, configKey, "拉取配置", error, cost);
-                }
+            } finally {
                 final String finalResult = result;
                 final String finalError = error;
                 mainHandler.post(new Runnable() {

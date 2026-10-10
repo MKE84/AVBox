@@ -443,12 +443,12 @@
     <string name="osd_frame_rate_match">Frame rate match</string>
     <string name="osd_tunnel">Tunnel</string>
     <string name="osd_preload">Preload</string>
-    <string name="settings_api_log">API Log</string>
-    <string name="settings_api_log_desc">Records py / js / jar API calls and errors</string>
-    <string name="settings_api_log_enable">Enable API log</string>
-    <string name="settings_api_log_enable_subtitle">Off by default. When on, every API call is logged with success or failure for easier source troubleshooting</string>
-    <string name="settings_api_log_refresh">Refresh</string>
-    <string name="settings_api_log_clear">Clear</string>
-    <string name="settings_api_log_empty">No logs yet</string>
-    <string name="settings_api_log_off">Logging is off. Turn on the switch above to start recording</string>
+
+
+
+
+
+
+
+
 </resources>
