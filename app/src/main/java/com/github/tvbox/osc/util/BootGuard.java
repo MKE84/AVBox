@@ -144,8 +144,8 @@ public final class BootGuard {
         try {
             Context ctx = AppContextHolder.context();
             if (ctx == null || stack == null) return;
-            android.content.Intent intent = new android.content.Intent(ctx, CrashDisplayActivity.class);
-            intent.putExtra(CrashDisplayActivity.EXTRA_STACK, stack);
+            android.content.Intent intent = new android.content.Intent(ctx, com.github.tvbox.osc.ui.activity.CrashDisplayActivity.class);
+            intent.putExtra(com.github.tvbox.osc.ui.activity.CrashDisplayActivity.EXTRA_STACK, stack);
             intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK | android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP);
             ctx.startActivity(intent);
             android.os.SystemClock.sleep(800); // 给新 Activity 一点时间再走原 kill 流程
