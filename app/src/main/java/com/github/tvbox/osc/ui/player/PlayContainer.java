@@ -22,7 +22,6 @@ import com.github.tvbox.osc.R;
 import android.widget.FrameLayout;
 import com.github.tvbox.osc.bean.VodInfo;
 import com.github.tvbox.osc.dlna.CastVideo;
-import com.github.tvbox.osc.event.RefreshEvent;
 import com.github.tvbox.osc.player.ExoPlayer;
 import com.github.tvbox.osc.player.PreloadCoordinator;
 import com.github.tvbox.osc.player.MyVideoView;
@@ -52,9 +51,6 @@ import com.github.tvbox.osc.util.SubtitleHelper;
 import androidx.media3.common.text.Cue;
 import androidx.media3.ui.CaptionStyleCompat;
 
-import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
-import org.greenrobot.eventbus.ThreadMode;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -136,9 +132,6 @@ public class PlayContainer extends FrameLayout implements CustomAdapt, PlaybackH
     public void onServiceStopped() {
         mVideoView = null;
         engine = null;
-        if (EventBus.getDefault().isRegistered(this)) {
-            EventBus.getDefault().unregister(this);
-        }
     }
 
     boolean isAttached() {
@@ -241,9 +234,6 @@ public class PlayContainer extends FrameLayout implements CustomAdapt, PlaybackH
         qualitySelectedListener = null;
         if (engine != null && !handedOver) engine.detach(this);
         cancelPreloadToast();
-        if (EventBus.getDefault().isRegistered(this)) {
-            EventBus.getDefault().unregister(this);
-        }
         trackSelector.invalidatePendingSwitch();
         mVideoView = null;
         if (mController != null) mController.stopOther();
@@ -279,7 +269,6 @@ public class PlayContainer extends FrameLayout implements CustomAdapt, PlaybackH
     }
 
     private void initView() {
-        EventBus.getDefault().register(this);
         mHandler = new Handler(new Handler.Callback() {
             @Override
             public boolean handleMessage(@NonNull Message msg) {
